@@ -172,7 +172,19 @@
 			>
 		</File>
 		<File
+			RelativePath=".\lg_test.cc"
+			>
+		</File>
+		<File
 			RelativePath=".\main.cc"
+			>
+		</File>
+		<File
+			RelativePath=".\test_utils.cc"
+			>
+		</File>
+		<File
+			RelativePath=".\test_utils.h"
 			>
 		</File>
 	</Files>
