@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="afx2lg"
-	ProjectGUID="{87FA9F72-19A3-4DC5-AB70-DCA36E889C3C}"
-	RootNamespace="afx2lg"
+	Name="test"
+	ProjectGUID="{DA8DE085-4112-4F3D-B88F-B17FD9B2FF4B}"
+	RootNamespace="test"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -19,13 +19,12 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\obj\afx2lg"
+			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)\obj\test"
 			ConfigurationType="1"
 			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="$(TargetDir)\test.exe"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -42,14 +41,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;"
+				AdditionalIncludeDirectories="..\..\..\gtest\include;..\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				WarnAsError="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -93,14 +91,13 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\obj\afx2lg"
+			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)\obj\test"
 			ConfigurationType="1"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="$(TargetDir)\test.exe"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -116,15 +113,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
+				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;"
+				AdditionalIncludeDirectories="..\..\..\gtest\include;..\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				WarnAsError="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -171,48 +167,10 @@
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
+		<File
+			RelativePath=".\axefx_test.cc"
 			>
-		</Filter>
-		<Filter
-			Name="common"
-			>
-			<File
-				RelativePath=".\common_types.h"
-				>
-			</File>
-			<File
-				RelativePath=".\preset.h"
-				>
-			</File>
-			<File
-				RelativePath=".\stdafx.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\stdafx.h"
-				>
-			</File>
-		</Filter>
+		</File>
 		<File
 			RelativePath=".\main.cc"
 			>
