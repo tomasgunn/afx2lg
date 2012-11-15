@@ -1,3 +1,6 @@
+// Copyright (c) 2012, Tomas Gunnarsson
+// All rights reserved.
+
 #include "common_types.h"
 
 #include "lg/lg_entry.h"

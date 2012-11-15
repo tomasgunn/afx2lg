@@ -1,3 +1,6 @@
+// Copyright (c) 2012, Tomas Gunnarsson
+// All rights reserved.
+
 #pragma once
 
 #ifndef LG_ENTRY_H_

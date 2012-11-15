@@ -1,3 +1,6 @@
+// Copyright (c) 2012, Tomas Gunnarsson
+// All rights reserved.
+
 #pragma once
 
 // #define _HAS_EXCEPTIONS 0  <- can't due to regex.

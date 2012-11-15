@@ -1,3 +1,6 @@
+// Copyright (c) 2012, Tomas Gunnarsson
+// All rights reserved.
+
 #include "common_types.h"
 #include "axefx/axe_fx_sysex_parser.h"
 

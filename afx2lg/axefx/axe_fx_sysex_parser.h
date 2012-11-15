@@ -1,3 +1,6 @@
+// Copyright (c) 2012, Tomas Gunnarsson
+// All rights reserved.
+
 #pragma once
 #ifndef AXE_FX_SYSEX_PARSER_H_
 #define AXE_FX_SYSEX_PARSER_H_
