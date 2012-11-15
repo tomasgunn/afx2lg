@@ -1,5 +1,5 @@
-#include <stdafx.h>
-#include "axe_fx_sysex_parser.h"
+#include "common_types.h"
+#include "axefx/axe_fx_sysex_parser.h"
 
 namespace {
 const byte kSysExStart = 0xF0;

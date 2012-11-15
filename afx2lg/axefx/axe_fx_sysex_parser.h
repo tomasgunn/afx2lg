@@ -2,9 +2,7 @@
 #ifndef AXE_FX_SYSEX_PARSER_H_
 #define AXE_FX_SYSEX_PARSER_H_
 
-#include <map>
-#include <string>
-
+#include "common_types.h"
 #include "preset.h"
 
 class AxeFxSysExParser {

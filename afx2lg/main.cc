@@ -1,16 +1,9 @@
-// afx2lg.cpp : Defines the entry point for the console application.
-//
-
 #include "stdafx.h"
 
-#include <memory>
-#include <string>
-#include <vector>
+#include "axefx/axe_fx_sysex_parser.h"
+#include "lg/lg_parser.h"
 
 #include <atlfile.h>
-
-#include "axe_fx_sysex_parser.h"
-#include "lg_parser.h"
 
 bool ReadFileIntoBuffer(const std::string& path, std::auto_ptr<char>* out,
                         size_t* size) {
@@ -43,7 +36,7 @@ bool ReadFileIntoBuffer(const std::string& path, std::auto_ptr<char>* out,
   return SUCCEEDED(hr);
 }
 
-class LgSetupFileWriter : public LgParserCallback {
+class LgSetupFileWriter : public lg::LgParserCallback {
  public:
   LgSetupFileWriter(const PresetMap& presets) : presets_(presets) {}
   ~LgSetupFileWriter() {}
@@ -78,10 +71,9 @@ void PrintUsage() {
     "The generated output will be written to stdout, so just pipe it\n"
     "to a file of your choosing.\n\n"
     "Example:\n\n"
-    "  afx2lg -s=BankA.syx -s=BankB.syx -s=BankC.syx -t=template.txt > out.txt\n\n"
+    "  afx2lg -s=BankA.syx -s=BankB.syx -s=BankC.syx -t=input.txt > out.txt\n\n"
     "Then you import the output file [out.txt] in Control Center by using\n"
     "the 'File->Import from...->Text...' command.\n\n";
-
   fprintf(stderr, "%hs", kUsage);
 }
 
@@ -132,14 +124,14 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  LgParser lg_parser;
+  lg::LgParser lg_parser;
   std::auto_ptr<char> buffer;
   size_t size = 0;
   if (ReadFileIntoBuffer(input_template, &buffer, &size)) {
     LgSetupFileWriter callback(parser.presets());
     lg_parser.ParseBuffer(&callback, buffer.get(), buffer.get() + size);
   } else {
-    printf("Failed to open file %s\n", input_template.c_str());
+    fprintf(stderr, "Failed to open file %s\n", input_template.c_str());
   }
 
 	return 0;
