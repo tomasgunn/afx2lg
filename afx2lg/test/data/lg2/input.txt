@@ -1,0 +1,501 @@
+;===============================================================
+;=====   LittleGiant2 setup                                =====
+;=====                                                     =====
+;===== Filename : C:/Users/Foo/Bar/input                   =====
+;===== Created  : 13/11/2012                               =====
+;===== Version  : 3.0                                      =====
+;===============================================================
+
+;===============================================================
+;=====   GLOBAL DATA                                       =====
+;===============================================================
+
+DEFAULTEXPR 01        Ext1
+DEFAULTEXPR 02        Out1Volume
+DEFAULTEXPR 02        Out2Volume
+CONTROLLER_TYPE       LG
+SLAVECONTROLLER_TYPE  FCB
+OPERATIONMODE         REGULAR
+TRIGGERNOTEOFFSET     0
+DIM_LED_MODE          neverDim
+NR_OF_FCBS            1
+MIDI1OUTFILTER        111111111111111111
+MIDI2OUTFILTER        111111111111111111
+NUM_BEATS_PER_MEASURE 0
+MIDISTART_NUM_TAPS    0
+MIDICONTROL_CHANNEL   0
+LED_DIMMING           7
+METRONOME_LEDMASK_L   0
+METRONOME_LEDMASK_H   32
+USE_METRONOME         False
+USE_DIRECT_BANK_1     True
+USE_DIRECT_BANK_2     False
+USE_DIRECT_BANK_12    False
+BROWSE_BANKLIST       True
+USE_ROTARY_FOR_TEMPO  False
+USE_SLAVECONTROLLER   False
+USE_MIDIFILTER        False
+MAP_INCOMING_CHANNELS False
+USE_MENULOCK          False
+USE_UPDOWNLOCK        False
+ACCEPT_MIDICONTROL    False
+BLOCK_PC_RESEND       False
+AUTO_SWITCH_DELAY     False
+USE_AUTOENGAGE        False
+CALCULATE_TAPTEMPO_CC False
+DISABLE_MIDI_IN_LED   False
+MIDILEDS_4_DIR12      False
+ENABLE_EXPRDISPLAY    True
+DELAYED_EXPRDISPLAY   False
+DISPLAY_PRESETNAME    True
+DISPLAY_STOMPBOXNAMES False
+SONGS_ARE_BANKS       False
+BANKPRESETDISPLAY     True
+DIRBANKPRESETDISPLAY  False
+DISABLE_MIDI_OUT_LED  False
+SHOW_MIDICLK_ON_BEAT  False
+SHOW_CLK_BPM          True
+SEND_MIDICLK_ON_BEAT  False
+SEND_MIDIMSG_ON_BEAT  False
+PC_OFFSET             False
+INFINITE_SETLIST      False
+INFINITE_BANKLIST     False
+USE_DWN_FOR_NEXT_SONG False
+USE_DWN_FOR_NEXT_BANK False
+USE_UPDWN_AS_D1D2     False
+MIDIIN_TO_MIDIOUT     False
+MIDIIN_TO_USB         False
+MSG_TO_MIDIOUT        True
+MSG_TO_USB            False
+DEFAULT_BANKLIST      BANKLIST 001
+TIPHEEL DELAY         0
+NUM_BANKS             10
+GLOBAL_SWITCHES_L     0
+GLOBAL_SWITCHES_H     0
+MIDICHANNEL 01        01 [Active]     AxeFX
+MIDICHANNEL 02        02 [Not active] Channel 02
+MIDICHANNEL 03        03 [Not active] Channel 03
+MIDICHANNEL 04        04 [Not active] Channel 04
+MIDICHANNEL 05        05 [Not active] Channel 05
+MIDICHANNEL 06        06 [Not active] Channel 06
+MIDICHANNEL 07        07 [Not active] Channel 07
+MIDICHANNEL 08        08 [Not active] Channel 08
+MIDICHANNEL 09        09 [Not active] Channel 09
+MIDICHANNEL 10        10 [Not active] Channel 10
+MIDICHANNEL 11        11 [Not active] Channel 11
+MIDICHANNEL 12        12 [Not active] Channel 12
+MIDICHANNEL 13        13 [Not active] Channel 13
+MIDICHANNEL 14        14 [Not active] Channel 14
+MIDICHANNEL 15        15 [Not active] Channel 15
+MIDICHANNEL 16        16 [Not active] Channel 16
+DATAVARIABLE001       000 - Scene
+EXPRPEDAL   01 CONFIG 000
+EXPRPEDAL   01 DEAD_H 000
+EXPRPEDAL   01 DEAD_T 000
+EXPRPEDAL   02 CONFIG 000
+EXPRPEDAL   02 DEAD_H 000
+EXPRPEDAL   02 DEAD_T 000
+EXPRPEDAL   03 CONFIG 021
+EXPRPEDAL   03 DEAD_H 000
+EXPRPEDAL   03 DEAD_T 000
+EXPRPEDAL   04 CONFIG 021
+EXPRPEDAL   04 DEAD_H 000
+EXPRPEDAL   04 DEAD_T 000
+EXPRPEDAL   05 CONFIG 000
+EXPRPEDAL   05 DEAD_H 000
+EXPRPEDAL   05 DEAD_T 000
+EXPRPEDAL   06 CONFIG 000
+EXPRPEDAL   06 DEAD_H 000
+EXPRPEDAL   06 DEAD_T 000
+EXPRPEDAL   07 CONFIG 000
+EXPRPEDAL   07 DEAD_H 000
+EXPRPEDAL   07 DEAD_T 000
+EXPRPEDAL   08 CONFIG 000
+EXPRPEDAL   08 DEAD_H 000
+EXPRPEDAL   08 DEAD_T 000
+PEDALCURVE  00        005
+PEDALCURVE  01        000
+PEDALCURVE  02        010
+PEDALCURVE  03        002
+;===============================================================
+;=====   MACROS                                            =====
+;===============================================================
+
+* MACRO : ResetScene
++*  Scene1
+-*  Scene2
+-*  Scene3
+-*  Scene4
+-*  Scene5
+-*  Scene6
+-*  Scene7
+-*  Scene8
+IF  E.Tuner
+-   Tuner
+ENDIF           
+;---------------------------------------------------------------
+* MACRO : CurrentOff
+IF  V001 EQ  000
+-*  Scene1
+ENDIF           
+IF  V001 EQ  001
+-*  Scene2
+ENDIF           
+IF  V001 EQ  002
+-*  Scene3
+ENDIF           
+IF  V001 EQ  003
+-*  Scene4
+ENDIF           
+IF  V001 EQ  004
+-*  Scene5
+ENDIF           
+IF  V001 EQ  005
+-*  Scene6
+ENDIF           
+IF  V001 EQ  006
+-*  Scene7
+ENDIF           
+IF  V001 EQ  007
+-*  Scene8
+ENDIF           
+;---------------------------------------------------------------
+* MACRO : AllButCurrentOff
+IF !V001 EQ  000
+-*  Scene1
+ENDIF           
+IF !V001 EQ  001
+-*  Scene2
+ENDIF           
+IF !V001 EQ  002
+-*  Scene3
+ENDIF           
+IF !V001 EQ  003
+-*  Scene4
+ENDIF           
+IF !V001 EQ  004
+-*  Scene5
+ENDIF           
+IF !V001 EQ  005
+-*  Scene6
+ENDIF           
+IF !V001 EQ  006
+-*  Scene7
+ENDIF           
+IF !V001 EQ  007
+-*  Scene8
+ENDIF           
+;---------------------------------------------------------------
+* MACRO : CurrentOn
+IF  V001 EQ  000
++*  Scene1
+ENDIF           
+IF  V001 EQ  001
++*  Scene2
+ENDIF           
+IF  V001 EQ  002
++*  Scene3
+ENDIF           
+IF  V001 EQ  003
++*  Scene4
+ENDIF           
+IF  V001 EQ  004
++*  Scene5
+ENDIF           
+IF  V001 EQ  005
++*  Scene6
+ENDIF           
+IF  V001 EQ  006
++*  Scene7
+ENDIF           
+IF  V001 EQ  007
++*  Scene8
+ENDIF           
+;---------------------------------------------------------------
+
+;===============================================================
+;=====   PRESET DATA                                       =====
+;===============================================================
+
+* PATCH : PATCH 001
++ 01 CC    000 000
++ 01 PC    000    
++ [M] ResetScene
+;---------------------------------------------------------------
+* PATCH : PATCH 002
++ 01 CC    000 000
++ 01 PC    001    
++ [M] ResetScene
+;---------------------------------------------------------------
+* PATCH : PATCH 003
++ 01 CC    000 000
++ 01 PC    002    
++ [M] ResetScene
+;---------------------------------------------------------------
+* PATCH : PATCH 004
++ 01 CC    000 000
++ 01 PC    003    
++ [M] ResetScene
+;---------------------------------------------------------------
+* STOMPBOX : Scene1
++ SET VAR. 001 000
++ 01 CC    034 000
++ -*  Scene2
++ -*  Scene3
++ -*  Scene4
++ -   Scene5
++ -*  Scene6
++ -*  Scene7
++ -*  Scene8
+- IF  V001 EQ  000
+- +*  Scene1
+- ENDIF           
+;---------------------------------------------------------------
+* STOMPBOX : Scene2
++ SET VAR. 001 001
++ 01 CC    034 001
++ -*  Scene1
++ -*  Scene3
++ -*  Scene4
++ -*  Scene5
++ -*  Scene6
++ -*  Scene7
++ -*  Scene8
+- IF  V001 EQ  001
+- +*  Scene2
+- ENDIF           
+;---------------------------------------------------------------
+* STOMPBOX : Scene3
++ SET VAR. 001 002
++ 01 CC    034 002
++ -*  Scene2
++ -*  Scene1
++ -*  Scene1
++ -*  Scene1
++ -*  Scene1
++ -*  Scene1
++ -*  Scene4
+- IF  V001 EQ  002
+- +*  Scene3
+- ENDIF           
+;---------------------------------------------------------------
+* STOMPBOX : Scene4
++ SET VAR. 001 003
++ 01 CC    034 003
++ -*  Scene2
++ -*  Scene3
++ -*  Scene1
++ -*  Scene5
++ -*  Scene6
++ -*  Scene7
++ -*  Scene8
+- IF  V001 EQ  003
+- +*  Scene4
+- ENDIF           
+;---------------------------------------------------------------
+* STOMPBOX : Scene5
++ SET VAR. 001 004
++ 01 CC    034 004
++ -*  Scene2
++ -*  Scene3
++ -*  Scene4
++ -*  Scene1
++ -*  Scene6
++ -*  Scene7
++ -*  Scene8
+- IF  V001 EQ  004
+- +*  Scene5
+- ENDIF           
+;---------------------------------------------------------------
+* STOMPBOX : Scene6
++ SET VAR. 001 005
++ 01 CC    034 005
++ -*  Scene2
++ -*  Scene3
++ -*  Scene4
++ -*  Scene5
++ -*  Scene1
++ -*  Scene7
++ -*  Scene8
+- IF  V001 EQ  005
+- +*  Scene6
+- ENDIF           
+;---------------------------------------------------------------
+* STOMPBOX : Scene7
++ SET VAR. 001 006
++ 01 CC    034 006
++ -*  Scene2
++ -*  Scene3
++ -*  Scene4
++ -*  Scene5
++ -*  Scene6
++ -*  Scene1
++ -*  Scene8
+- IF  V001 EQ  006
+- +*  Scene7
+- ENDIF           
+;---------------------------------------------------------------
+* STOMPBOX : Scene8
++ SET VAR. 001 007
++ 01 CC    034 007
++ -*  Scene2
++ -*  Scene3
++ -*  Scene4
++ -*  Scene5
++ -*  Scene6
++ -*  Scene7
++ -*  Scene1
+- IF  V001 EQ  007
+- +*  Scene8
+- ENDIF           
+;---------------------------------------------------------------
+* STOMPBOX : Tuner
++ 01 CC    015 127
++ TUNERDISPLAY ON 
+- TUNERDISPLAY OFF
+- 01 CC    015 000
+;---------------------------------------------------------------
+* STOMPBOX : loop_rec
++ IF  E.loop_play
++ 01 CC    031 127
++ ELSE            
++ 01 CC    028 127
++ ENDIF           
+- IF  E.loop_play
+- 01 CC    031 000
+- ELSE            
+- 01 CC    028 000
+- +*  loop_play
+- ENDIF           
+;---------------------------------------------------------------
+* STOMPBOX : loop_play
++ IF  E.loop_rec
++ -*  loop_rec
++ 01 CC    028 000
++ ELSE            
++ 01 CC    029 127
++ ENDIF           
+- 01 CC    029 000
+;---------------------------------------------------------------
+* STOMPBOX : Metronome
++ 01 CC    122 127
+- 01 CC    122 000
+;---------------------------------------------------------------
+* STOMPBOX : Ext3
++ 01 CC    018 127
+- 01 CC    018 000
+;---------------------------------------------------------------
+* EFFECT : TapAndTune
++ IF !E.Tuner
++ 01 CC    014 000
++ LONGPR.DELAY 018
++ +   Tuner
++ ELSE            
++ -   Tuner
++ ENDIF           
+;---------------------------------------------------------------
+* EFFECT : VolIncr
++ 01 CC    035 127
+;---------------------------------------------------------------
+* EFFECT : VolDecr
++ 01 CC    036 127
+;---------------------------------------------------------------
+* EFFECT : metronome/undo
++ LONGPR.DELAY 016
++ 01 CC    121 127
+- IF  E.Metronome
+- -   Metronome
+- ELSE            
+- +   Metronome
+- ENDIF           
+;---------------------------------------------------------------
+* EFFECT : loop_once
++ 01 CC    030 127
++ IF !E.loop_play
++ +*  loop_play
++ ENDIF           
++ -*  loop_play
+;---------------------------------------------------------------
+* EFFECT : previous_bank
++ RESTORE BANK    
+;---------------------------------------------------------------
+
+;===============================================================
+;=====   EXPRESSIONPEDAL DATA                              =====
+;===============================================================
+
+* EXPRESSIONPEDAL : Ext1
++ 00 ControlChange    016
+  Range           :   000 - 127 
+  Sweep curve     :   1
+;---------------------------------------------------------------
+* EXPRESSIONPEDAL : Ext2
++ 00 ControlChange    017
+  Range           :   000 - 127 
+  Sweep curve     :   1
+;---------------------------------------------------------------
+* EXPRESSIONPEDAL : Out1Volume
++ 00 ControlChange    011
+  Range           :   000 - 127 
+  Sweep curve     :   2
+;---------------------------------------------------------------
+* EXPRESSIONPEDAL : Out2Volume
++ 00 ControlChange    012
+  Range           :   000 - 127 
+  Sweep curve     :   2
+;---------------------------------------------------------------
+
+;===============================================================
+;=====   PRESETGROUP DATA                                  =====
+;===============================================================
+
+
+;===============================================================
+;=====   BANK DATA                                         =====
+;===============================================================
+
+* BANK : BANK 001
+
+D1 BANK       D1
+switch 01 : PA PATCH 001
+switch 02 : PA PATCH 002
+switch 03 : PA PATCH 003
+switch 04 : PA PATCH 004
+switch 05 : SB Scene1
+switch 06 : SB Scene2
+switch 07 : SB Scene3
+switch 08 : SB Scene4
+switch 10 : ME TapAndTune
+ext.sw.05 : SB Ext3
+ext.sw.07 : CL
+;---------------------------------------------------------------
+* BANK : D1
+
+switch 01 : SB loop_rec
+switch 02 : SB loop_play
+switch 03 : ME loop_once
+switch 04 : ME metronome/undo
+switch 07 : ME VolDecr
+switch 08 : ME VolIncr
+;---------------------------------------------------------------
+
+;===============================================================
+;=====   SONG DATA                                         =====
+;===============================================================
+
+
+;===============================================================
+;=====   BANKLIST DATA                                     =====
+;===============================================================
+
+* BANKLIST : BANKLIST 001
+;-------------------------------
+BANK 001         
+;---------------------------------------------------------------
+
+;===============================================================
+;=====   SETLIST DATA                                      =====
+;===============================================================
+
+
+
