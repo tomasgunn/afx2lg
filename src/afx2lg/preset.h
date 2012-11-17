@@ -8,7 +8,7 @@
 
 struct Preset {
   int id;
-  std::wstring name;
+  std::string name;
   // this might grow... or not.
 };
 

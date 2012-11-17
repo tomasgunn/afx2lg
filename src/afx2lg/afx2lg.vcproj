@@ -26,6 +26,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="$(TargetDir)\test.exe"
+				ExcludedFromBuild="true"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"

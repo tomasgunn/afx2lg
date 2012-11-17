@@ -8,26 +8,29 @@
 #include "common_types.h"
 #include "preset.h"
 
-class AxeFxSysExParser {
+namespace axefx {
+
+struct FractalSysExHeader;
+struct PresetIdHeader;
+struct PresetProperty;
+
+class SysExParser {
  public:
-  AxeFxSysExParser();
-  ~AxeFxSysExParser();
+  SysExParser();
+  ~SysExParser();
 
   void ParseSysExBuffer(const byte* begin, const byte* end);
 
   const PresetMap& presets() const { return presets_; }
 
  protected:
-  struct FractalSysExHeader;
-  struct PresetIdHeader;
-  struct PresetProperty;
-
-  void ParseSingleSysEx(const byte* sys_ex, int size,
+  void ParseSingleSysEx(int* preset_chunk_id, const byte* sys_ex, int size,
                         Preset* preset);
-  void ParseFractalSysEx(const FractalSysExHeader& header, int size,
-                         Preset* preset);
+  void ParseFractalSysEx(int* preset_chunk_id, const FractalSysExHeader& header,
+                         int size, Preset* preset);
   void ParsePresetId(const PresetIdHeader& header, int size, Preset* preset);
-  void ParsePresetProperties(const PresetProperty& header, int size,
+  void ParsePresetProperties(int* preset_chunk_id,
+                             const PresetProperty& header, int size,
                              Preset* preset);
   void ParsePresetEpilogue(const FractalSysExHeader& header, int size,
                            Preset* preset);
@@ -35,5 +38,7 @@ class AxeFxSysExParser {
  private:
   PresetMap presets_;
 };
+
+}  // namespace axefx
 
 #endif

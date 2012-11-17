@@ -156,6 +156,22 @@
 				RelativePath="axe_fx_sysex_parser.h"
 				>
 			</File>
+			<File
+				RelativePath=".\blocks.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\blocks.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sysex_types.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\sysex_types.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

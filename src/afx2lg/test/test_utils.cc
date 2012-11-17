@@ -1,4 +1,7 @@
-#include "test_utils.h"
+// Copyright (c) 2012, Tomas Gunnarsson
+// All rights reserved.
+
+#include "test/test_utils.h"
 
 #include "gtest/gtest.h"
 
@@ -18,7 +21,7 @@ FilePath GetTestFilePath(const std::string& test_file) {
 
 bool ReadTestFileIntoBuffer(const std::string& file,
                             std::auto_ptr<byte>* buffer,
-                            size_t* file_size) {
+                            std::streampos* file_size) {
   FilePath path(GetTestFilePath(file));
   std::ifstream f;
   f.open(path.c_str(), std::fstream::in | std::ios::binary);

@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  AxeFxSysExParser parser;
+  axefx::SysExParser parser;
   for (size_t i = 0; i < syx_files.size(); ++i) {
     std::auto_ptr<char> buffer;
     size_t size = 0;

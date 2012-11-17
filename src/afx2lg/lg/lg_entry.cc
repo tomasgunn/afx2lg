@@ -209,8 +209,7 @@ void Patch::SetName(const std::string& name) {
 }
 
 void Patch::Update(const Preset& p) {
-  // A pretty naive translation from wide to ascii, but works for our purposes.
-  std::string name(p.name.begin(), p.name.end());
+  std::string name(p.name);
   CheckNameSizeLimit(&name);
 
   if (bank_)

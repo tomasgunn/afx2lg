@@ -8,10 +8,18 @@
 
 #include <assert.h>
 
+#ifdef WIN32
+#ifdef _DEBUG
+#define ASSERT(expr)  ((expr) ? ((void)0) : __debugbreak())
+#else
+#define ASSERT(expr)  ((void)0)
+#endif
+#else  // !WIN32
 #ifdef _DEBUG
 #define ASSERT(expr)  assert(expr)
 #else
 #define ASSERT(expr)  ((void)0)
+#endif
 #endif
 
 // #define _HAS_EXCEPTIONS 0  <- can't due to regex.

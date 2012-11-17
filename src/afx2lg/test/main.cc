@@ -1,3 +1,6 @@
+// Copyright (c) 2012, Tomas Gunnarsson
+// All rights reserved.
+
 #include "gtest/gtest.h"
 
 std::string g_process_path;

@@ -1,3 +1,6 @@
+// Copyright (c) 2012, Tomas Gunnarsson
+// All rights reserved.
+
 #include "gtest/gtest.h"
 
 #include "common_types.h"
@@ -23,7 +26,7 @@ class MockCallback : public lg::LgParserCallback {
 
 TEST(LittleGiant, BasicReadInputFile) {
   std::auto_ptr<byte> buffer;
-  size_t file_size;
+  std::streampos file_size;
   ASSERT_TRUE(ReadTestFileIntoBuffer("lg2/input.txt", &buffer,
                                      &file_size));
   MockCallback callback;
