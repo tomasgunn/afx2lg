@@ -6,6 +6,8 @@
 #include "axefx/blocks.h"
 #include "axefx/sysex_types.h"
 
+#include <algorithm>
+
 namespace axefx {
 
 SysExParser::SysExParser() {
@@ -45,8 +47,8 @@ void SysExParser::ParsePresetProperties(int* preset_chunk_id,
   if (values[0].As16bit() == 0x2078 && values[1].b2 == 0x04) {
     const PresetName* preset_name =
         reinterpret_cast<const PresetName*>(&values[3]);
-    ASSERT(reinterpret_cast<const byte*>(preset_name) + sizeof(PresetName)
-           < reinterpret_cast<const byte*>(&header) + size);
+    ASSERT(reinterpret_cast<const uint8_t*>(preset_name) + sizeof(PresetName)
+           < reinterpret_cast<const uint8_t*>(&header) + size);
     preset->name = preset_name->ToString();
 #if defined(_DEBUG)
     // In v7, the second triplet is 02 04 00 (2.2)
@@ -71,8 +73,8 @@ void SysExParser::ParsePresetProperties(int* preset_chunk_id,
         value_count, values[1].As16bit());
 #if 0
     const BlockState* state = reinterpret_cast<const BlockState*>(&values[5]);
-    while (reinterpret_cast<const byte*>(state + 1) <
-           reinterpret_cast<const byte*>(&header) + size) {
+    while (reinterpret_cast<const uint8_t*>(state + 1) <
+           reinterpret_cast<const uint8_t*>(&header) + size) {
       if (state->block_id.As16bit()) {
         printf("block (%i/%X): %hs\n",
           state->block_id.As16bit(), state->block_id.As16bit(),
@@ -95,38 +97,123 @@ void SysExParser::ParsePresetProperties(int* preset_chunk_id,
     // the parameter block is.
     printf("Value count: %i - val[0]=0x%X\n",
         value_count, values[1].As16bit());
-    for (int i = 2; i < value_count; ++i) {
-      if (values[i].b1 == 0x6A) {
-        // Bypass and X/Y state are stored in values[i].b3.
+    // While skimming over stuff we don't know what is.
+    bool found_blocks = false;
+    for (int i = 20; i < value_count; ++i) {
+      // Bypass and X/Y states can be stored in the higher order byte.
+      int block_id = (values[i].As16bit() & 0xFFF);
+/*      if (!found_blocks &&
+          (block_id < kFirstBlockId || block_id > kLastBlockId)) {
+        continue;
+      }*/
+
+      found_blocks = true;
+
+      if (block_id == 0x6A) {
+        /*
+        // For < fw9 versions, bypass and X/Y state are stored in values[i].b3.
         bool x = (values[i].b3 & 0x2) == 0;  // y = !x
         bool bypassed = (values[i].b3 & 0x1) != 0;
+        */
+        BlockSceneState bypass_xy(values[i + 30].As16bit());
+        int param_count = values[i+1].As16bit() / sizeof(uint16_t);
 
-        const Fractal16bit& byp = values[i + 30];
-        printf("  %i Found Amp1 type=%hs(byp=%i x=%i) (%i) %i (preset %i %hs)\n",
-            i, GetAmpName(values[i+2].As16bit()),
-            bypassed,
-            x,
+        printf(" @%i Found %hs type=%hs (%i) %i (preset %i %hs) - params=%i\n",
+            i, GetBlockName(block_id), GetAmpName(values[i+2].As16bit()),
             values[i+2].As16bit(),
             values[i+1].As16bit(),
-            preset->id, preset->name.c_str());
-      } else if (values[i].As16bit() == 0x6B) {
+            preset->id, preset->name.c_str(),
+            param_count);
+        i += (param_count - 1);
+      /*} else if (values[i].As16bit() == 0x6B) {
         printf("  %i Found Amp2 type=%hs (%i) (preset %i %hs)\n",
             i, GetAmpName(values[i+2].As16bit()),
-            values[i+2].As16bit(), preset->id, preset->name.c_str());
+            values[i+2].As16bit(), preset->id, preset->name.c_str());*/
+      } else {
+        int param_count = values[i+1].As16bit() / sizeof(uint16_t);
+        printf(" Block: %hs - %i params\n",
+            GetBlockName(values[i].b1), param_count);
+        i += (param_count - 1);
       }
     }
   }
 }
 
-void SysExParser::ParsePresetEpilogue(const FractalSysExHeader& header,
-                                      int size,
-                                      Preset* preset) {
-#ifdef _DEBUG
-  printf("=================================================================\n");
-#endif
+void SysExParser::AppendBlockData(BlockData* block_data,
+                                  const FractalSysExHeader& header,
+                                  int size) {
+  const Fractal16bit* values = reinterpret_cast<const Fractal16bit*>(&header.function_id);
+  // As far as I've seen, property blocks always start with this 16bit/3byte ID.
+  ASSERT(values[0].As16bit() == 0x2078);
+  int value_count = (size - sizeof(FractalSysExHeader) - 1) / sizeof(values[0]);
+
+  block_data->reserve(block_data->size() + value_count);
+  ASSERT(values[value_count].b2 == kSysExEnd);
+  for (int i = 1; i < value_count; ++i)
+    block_data->push_back(values[i].As16bit());
 }
 
-void SysExParser::ParseFractalSysEx(int* preset_chunk_id,
+void SysExParser::ParseBlockData(const BlockData& data,
+                                 Preset* preset) {
+  if (data.size() < 100) {  // TODO: Pick a reasonable minimum.
+    ASSERT(false);
+    return;
+  }
+
+  // Values (indexes are inclusive):
+  // 0 == 0x204 (516) for fw9 and higher. 0x202 for older.
+  // 1 == 0 ?
+  // 2-32 == Preset name.
+  // 33-35 == 0 ?
+  // 36-?  == 8 value entries per effect block.  First value of each such block
+  //          is the block id.  Possibly the second is the one-based row?
+  // 132 == 10 <- This is the id of the terminating 8 value block.
+  // 140 == First effect block.
+  //        All blocks have 'id' as their first value.
+  //        Parameter count is the second value.  This is used to get to the
+  //        offset of the next effect parameter block.
+  //        Guess: Parameters are stored twice, first X, then Y?
+  //        Note that X/Y is only supported for these block types:
+  //          Amp, Cab, Chorus, Delay, Drive, Flanger, Pitch Shifter, Phaser, Reverb, and Wahwah
+  //        So, e.g. multidelay will not have Y state.
+  //        What about the bypass,x/y state that now has per-scene info?
+  //
+
+  BlockData::const_iterator p = data.begin();
+  if (*p != 0x204) {
+    fprintf(stderr, "Unsupported syx file - 0x%04X\n", *p);
+    return;
+  }
+  //============================================================================
+  p += 2;
+  preset->name.assign(p, p + 31);
+  std::string::size_type index = preset->name.length() - 1;
+  while (index > 0 && preset->name[index] == ' ' || preset->name[index] == '\0')
+    --index;  
+  preset->name.resize(index + 1);
+  p += 31;
+  printf("================== %i %hs =============================\n",
+      preset->id, preset->name.c_str());
+  //============================================================================
+  ++p;
+  std::vector<uint16_t> blocks;
+  for (int x = 0; x < 12; ++x) {
+    for (int y = 0; y < 4; ++y) {
+      if (*p && !IsShunt(*p)) {
+        blocks.push_back(*p);
+        printf("  Block: %hs\n", GetBlockName(*p));
+      }
+      ++p;
+      ++p;  // This value is usually 2... not sure what that means.
+    }
+  }
+  //============================================================================
+  while (std::find(blocks.begin(), blocks.end(), *p) == blocks.end())
+    ++p;
+  printf("  %i parameter block for: %hs\n", p[1], GetBlockName(*p));
+}
+
+void SysExParser::ParseFractalSysEx(BlockData* block_data,
                                     const FractalSysExHeader& header,
                                     int size,
                                     Preset* preset) {
@@ -142,19 +229,22 @@ void SysExParser::ParseFractalSysEx(int* preset_chunk_id,
       break;
 
     case PRESET_PROPERTY:
-      ParsePresetProperties(preset_chunk_id,
-          static_cast<const PresetProperty&>(header), size, preset);
+//      ParsePresetProperties(preset_chunk_id,
+//          static_cast<const PresetProperty&>(header), size, preset);
+      AppendBlockData(block_data, header, size);
       break;
 
     case PRESET_EPILOGUE:
-      ParsePresetEpilogue(header, size, preset);
+      ParseBlockData(*block_data, preset);
+
       if (!preset->name.empty()) {
         presets_.insert(std::make_pair(preset->id, *preset));
         preset->id = -1;
         preset->name;
       }
       // Reset the counter for parsing the next preset.
-      *preset_chunk_id = -1;
+      //*preset_chunk_id = -1;
+      block_data->clear();
       break;
 
     default:
@@ -163,8 +253,8 @@ void SysExParser::ParseFractalSysEx(int* preset_chunk_id,
   }
 }
 
-void SysExParser::ParseSingleSysEx(int* preset_chunk_id,
-                                   const byte* sys_ex,
+void SysExParser::ParseSingleSysEx(BlockData* block_data,
+                                   const uint8_t* sys_ex,
                                    int size,
                                    Preset* preset) {
   ASSERT(sys_ex[0] == kSysExStart);
@@ -181,13 +271,14 @@ void SysExParser::ParseSingleSysEx(int* preset_chunk_id,
     return;
   }
 
-  ParseFractalSysEx(preset_chunk_id,
+  ParseFractalSysEx(block_data,
       *reinterpret_cast<const FractalSysExHeader*>(sys_ex), size, preset);
 }
 
-void SysExParser::ParseSysExBuffer(const byte* begin, const byte* end) {
-  const byte* sys_ex_begins = NULL;
-  const byte* pos = begin;
+void SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end) {
+  BlockData block_data;
+  const uint8_t* sys_ex_begins = NULL;
+  const uint8_t* pos = begin;
   Preset preset;
   preset.id = -1;
   int preset_chunk_id = 0;
@@ -197,7 +288,7 @@ void SysExParser::ParseSysExBuffer(const byte* begin, const byte* end) {
       sys_ex_begins = &pos[0];
     } else if (pos[0] == kSysExEnd) {
       ASSERT(sys_ex_begins);
-      ParseSingleSysEx(&preset_chunk_id, sys_ex_begins,
+      ParseSingleSysEx(&block_data, sys_ex_begins,
                        (pos - sys_ex_begins) + 1, &preset);
       sys_ex_begins = NULL;
       ++preset_chunk_id;

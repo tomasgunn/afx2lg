@@ -11,8 +11,8 @@
 #include <string>
 
 bool ReadTestFileIntoBuffer(const std::string& file,
-                            std::auto_ptr<byte>* buffer,
-                            std::streampos* file_size);
+                            std::auto_ptr<uint8_t>* buffer,
+                            int* file_size);
 
 
 #endif

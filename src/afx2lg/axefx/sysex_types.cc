@@ -7,8 +7,8 @@
 
 namespace axefx {
 
-byte CalculateChecksum(const byte* sys_ex, int size) {
-  byte checksum = 0;
+uint8_t CalculateChecksum(const uint8_t* sys_ex, int size) {
+  uint8_t checksum = 0;
   int i = 0;
   for (; i < size - 2; ++i)
     checksum ^= sys_ex[i];
@@ -17,7 +17,7 @@ byte CalculateChecksum(const byte* sys_ex, int size) {
 }
 
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx
-bool VerifyChecksum(const byte* sys_ex, int size) {
+bool VerifyChecksum(const uint8_t* sys_ex, int size) {
   return size >= 3 &&
          sys_ex[0] == kSysExStart &&
          sys_ex[size - 1] == kSysExEnd &&
@@ -65,8 +65,8 @@ std::string PresetName::ToString() const {
       break;
     ret.push_back(ch);
   }
-  std::wstring::size_type index = ret.find_last_not_of(L' ');
-  index == std::wstring::npos ?
+  std::string::size_type index = ret.find_last_not_of(L' ');
+  index == std::string::npos ?
       ret.resize(ret.length()) : ret.resize(index + 1);
   return ret;
 }

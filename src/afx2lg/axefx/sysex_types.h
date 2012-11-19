@@ -10,14 +10,14 @@
 
 namespace axefx {
 
-const byte kSysExStart = 0xF0;
-const byte kSysExEnd = 0xF7;
+const uint8_t kSysExStart = 0xF0;
+const uint8_t kSysExEnd = 0xF7;
 const int kSysExTerminationByteCount = 2;  // checksum + kSysExEnd == 2 bytes.
-const byte kFractalMidiId[] = { 0x00, 0x01, 0x74 };
+const uint8_t kFractalMidiId[] = { 0x00, 0x01, 0x74 };
 
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx
-byte CalculateChecksum(const byte* sys_ex, int size);
-bool VerifyChecksum(const byte* sys_ex, int size);
+uint8_t CalculateChecksum(const uint8_t* sys_ex, int size);
+bool VerifyChecksum(const uint8_t* sys_ex, int size);
 
 enum AxeFxModel {
   AXE_FX_STANDARD = 0x01,  // or 0?
@@ -36,7 +36,7 @@ enum FunctionId {
 
 // Convert two septets (7bit integers), into a 16 bit integer.
 struct SeptetPair {
-  byte ms, ls;
+  uint8_t ms, ls;
 
   uint16_t As16bit() const;
 };
@@ -44,7 +44,7 @@ struct SeptetPair {
 // This could be a wide char stored in 3 bytes, but we treat it as
 // ASCII for now.
 struct SeptetChar {
-  byte b1, b2, b3;
+  uint8_t b1, b2, b3;
   char AsChar() const;
 };
 
@@ -55,16 +55,16 @@ struct SeptetChar {
 // models where there were only two bytes and the  most significant one
 // came first.
 struct Fractal16bit {
-  byte b1, b2, b3;
+  uint8_t b1, b2, b3;
 
   uint16_t As16bit() const;
 };
 
 struct FractalSysExHeader {
-  byte sys_ex_start;  // kSysExStart.
-  byte manufacture_id[arraysize(kFractalMidiId)];  // kFractalMidiId.
-  byte model_id;  // kAxeFx2ModelId
-  byte function_id;
+  uint8_t sys_ex_start;  // kSysExStart.
+  uint8_t manufacture_id[arraysize(kFractalMidiId)];  // kFractalMidiId.
+  uint8_t model_id;  // kAxeFx2ModelId
+  uint8_t function_id;
 
   AxeFxModel model() const;
   FunctionId function() const;
@@ -76,7 +76,7 @@ struct PresetIdHeader : public FractalSysExHeader {
 };
 
 struct PresetProperty : public FractalSysExHeader {
-  const byte payload[1];
+  const uint8_t payload[1];
 };
 
 struct PresetName {

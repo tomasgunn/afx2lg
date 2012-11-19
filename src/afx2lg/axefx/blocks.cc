@@ -5,6 +5,11 @@
 
 namespace axefx {
 
+inline bool IsBitSet(uint8_t byte, int index) {
+  ASSERT(index >= 0 && index < 8);
+  return (byte >> index) & 1;
+}
+
 // If we really need this, it would be better to keep it in a separate file
 // (e.g. json) that can be updated separately.
 // Data comes from:
@@ -98,6 +103,7 @@ struct BlockMap {
   const char* name;
 };
 
+// Keep sorted.
 const BlockMap kBlocks[] = {
   {100, "Compressor 1"},
   {101, "Compressor 2"},
@@ -172,6 +178,9 @@ const BlockMap kBlocks[] = {
   {170, "Tone Match"},
 };
 
+const int kFirstBlockId = kBlocks[0].block_id;
+const int kLastBlockId = kBlocks[arraysize(kBlocks) - 1].block_id;
+
 const char* GetAmpName(uint16_t amp_id) {
   if (amp_id >= arraysize(kAmpNames))
     return "AmpUnknown";
@@ -184,6 +193,26 @@ const char* GetBlockName(uint16_t block_id) {
       return kBlocks[i].name;
   }
   return "BlockUnknown";
+}
+
+bool IsShunt(uint16_t block_id) {
+  return block_id >= 200 && block_id < (200 + (12*4));
+}
+
+
+BlockSceneState::BlockSceneState(uint16_t bypass_state)
+    : bypass_(bypass_state & 0xFF),
+      xy_(bypass_state >> 8) {
+}
+
+BlockSceneState::~BlockSceneState() {}
+
+bool BlockSceneState::IsBypassedInScene(int scene) const {
+  return IsBitSet(bypass_, scene);
+}
+
+bool BlockSceneState::IsConfigYEnabledInScene(int scene) const {
+  return IsBitSet(xy_, scene);
 }
 
 }  // namespace axefx

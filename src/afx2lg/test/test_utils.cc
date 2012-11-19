@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 
+#include <climits>
 #include <fstream>
 
 using testing::internal::FilePath;
@@ -20,8 +21,8 @@ FilePath GetTestFilePath(const std::string& test_file) {
 }
 
 bool ReadTestFileIntoBuffer(const std::string& file,
-                            std::auto_ptr<byte>* buffer,
-                            std::streampos* file_size) {
+                            std::auto_ptr<uint8_t>* buffer,
+                            int* file_size) {
   FilePath path(GetTestFilePath(file));
   std::ifstream f;
   f.open(path.c_str(), std::fstream::in | std::ios::binary);
@@ -29,10 +30,14 @@ bool ReadTestFileIntoBuffer(const std::string& file,
     return false;
 
   f.seekg(0, std::ios::end);
-  *file_size = f.tellg();
+  std::streampos size = f.tellg();
   f.seekg(0, std::ios::beg);
 
-  buffer->reset(new byte[*file_size]);
+  if (size >= INT_MAX)
+    return false;
+
+  *file_size = static_cast<int>(size);
+  buffer->reset(new uint8_t[*file_size]);
   f.read(reinterpret_cast<char*>(buffer->get()), *file_size);
   
   return true;

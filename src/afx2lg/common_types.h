@@ -34,20 +34,6 @@ char (&ArraySizeHelper(T (&array)[N]))[N];
 
 #define arraysize(array) (sizeof(ArraySizeHelper(array)))
 
-typedef unsigned char byte;
-typedef unsigned __int16 uint16_t;
-
-/*
-// Common STL headers.
-#include <algorithm>
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
-
-namespace std {
-// merge the tr1 namespace into std for convenience.
-using namespace tr1;
-}*/
+#include <stdint.h>
 
 #endif  // COMMON_TYPES_H_

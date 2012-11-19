@@ -8,32 +8,39 @@
 #include "common_types.h"
 #include "preset.h"
 
+#include <vector>
+
 namespace axefx {
 
 struct FractalSysExHeader;
 struct PresetIdHeader;
 struct PresetProperty;
 
+typedef std::vector<uint16_t> BlockData;
+
 class SysExParser {
  public:
   SysExParser();
   ~SysExParser();
 
-  void ParseSysExBuffer(const byte* begin, const byte* end);
+  void ParseSysExBuffer(const uint8_t* begin, const uint8_t* end);
 
   const PresetMap& presets() const { return presets_; }
 
  protected:
-  void ParseSingleSysEx(int* preset_chunk_id, const byte* sys_ex, int size,
+  void ParseSingleSysEx(BlockData* block_data, const uint8_t* sys_ex, int size,
                         Preset* preset);
-  void ParseFractalSysEx(int* preset_chunk_id, const FractalSysExHeader& header,
+  void ParseFractalSysEx(BlockData* block_data,
+                         const FractalSysExHeader& header,
                          int size, Preset* preset);
   void ParsePresetId(const PresetIdHeader& header, int size, Preset* preset);
   void ParsePresetProperties(int* preset_chunk_id,
                              const PresetProperty& header, int size,
                              Preset* preset);
-  void ParsePresetEpilogue(const FractalSysExHeader& header, int size,
-                           Preset* preset);
+  void AppendBlockData(BlockData* block_data,
+                       const FractalSysExHeader& header,
+                       int size);
+  void ParseBlockData(const BlockData& data, Preset* preset);
 
  private:
   PresetMap presets_;
