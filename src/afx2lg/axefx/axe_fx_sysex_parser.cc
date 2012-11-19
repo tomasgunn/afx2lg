@@ -155,13 +155,14 @@ void SysExParser::AppendBlockData(BlockData* block_data,
 
 void SysExParser::ParseBlockData(const BlockData& data,
                                  Preset* preset) {
-  if (data.size() < 100) {  // TODO: Pick a reasonable minimum.
+  if (data.empty()) {
     ASSERT(false);
     return;
   }
 
   // Values (indexes are inclusive):
-  // 0 == 0x204 (516) for fw9 and higher. 0x202 for older.
+  // 0 == 516 for fw9 and higher. 514 for older.  Version field? or multiply by
+  //    2 to get value count?
   // 1 == 0 ?
   // 2-32 == Preset name.
   // 33-35 == 0 ?
@@ -180,11 +181,13 @@ void SysExParser::ParseBlockData(const BlockData& data,
   //
 
   BlockData::const_iterator p = data.begin();
-  if (*p != 0x204) {
-    fprintf(stderr, "Unsupported syx file - 0x%04X\n", *p);
+  uint16_t version = *p;
+  if (version != 0x204 && version != 0x202) {
+    fprintf(stderr, "Unsupported syx file - 0x%04X\n", version);
     return;
   }
   //============================================================================
+  ASSERT(p[1] == 0);
   p += 2;
   preset->name.assign(p, p + 31);
   std::string::size_type index = preset->name.length() - 1;
@@ -196,21 +199,57 @@ void SysExParser::ParseBlockData(const BlockData& data,
       preset->id, preset->name.c_str());
   //============================================================================
   ++p;
+  // TODO: Keep the blocks variable only in debug mode as a sanity check that
+  // what's in the matrix also exists in the parameter section.
   std::vector<uint16_t> blocks;
   for (int x = 0; x < 12; ++x) {
     for (int y = 0; y < 4; ++y) {
       if (*p && !IsShunt(*p)) {
         blocks.push_back(*p);
-        printf("  Block: %hs\n", GetBlockName(*p));
+        printf("  Block(%i,%i): %hs\n", x, y, GetBlockName(*p));
       }
       ++p;
       ++p;  // This value is usually 2... not sure what that means.
     }
   }
   //============================================================================
-  while (std::find(blocks.begin(), blocks.end(), *p) == blocks.end())
-    ++p;
-  printf("  %i parameter block for: %hs\n", p[1], GetBlockName(*p));
+
+  // The per-block parameter blobs aren't necessarily stored in the same order
+  // they appear in the matrix.
+  int block_count = 0;
+  while (p < data.end() && *p) {
+    uint16_t block_id = *(p++);
+    uint16_t params = *(p++);
+    if (block_id >= 1 && block_id < kFirstBlockId) {
+      // Optional modifier section.
+      // The AxeFx supports 16 modifiers
+      // (http://wiki.fractalaudio.com/index.php?title=Controllers_and_modifiers)
+      // I'm guessing their IDs are 1-16, but only check for IDs smaller than the
+      // lowest known effect block id.
+      printf("  Skipping modifier %i\n", *p);
+    } else {
+      if ((block_id >> 8) != 0) {
+        // In versions before fw9, the X/Y state was stored in the  highest bit
+        // but I've seen AxeEdit save files like this even with the version being
+        // 0x204, so no check for that.
+        uint8_t state = block_id >> 8;
+        block_id &= 0x00FF;
+        bool y_config_active = (state & 0x80) != 0;
+        uint8_t global_block_index = state & 0x0F;
+        printf("  block state (old way): 0x%02X\n", state);
+      }
+      if (!blocks.empty()) {
+        std::vector<uint16_t>::iterator it = std::find(blocks.begin(), blocks.end(), block_id);
+        if (it != blocks.end())
+          blocks.erase(it);
+      }
+      const char* block_name = GetBlockName(block_id);
+      printf("  %i parameter block for: %hs\n", params, block_name);
+    }
+    p += params;
+    block_count++;
+  }
+  ASSERT(blocks.empty());
 }
 
 void SysExParser::ParseFractalSysEx(BlockData* block_data,
@@ -229,8 +268,6 @@ void SysExParser::ParseFractalSysEx(BlockData* block_data,
       break;
 
     case PRESET_PROPERTY:
-//      ParsePresetProperties(preset_chunk_id,
-//          static_cast<const PresetProperty&>(header), size, preset);
       AppendBlockData(block_data, header, size);
       break;
 

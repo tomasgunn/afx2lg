@@ -14,6 +14,7 @@ inline bool IsBitSet(uint8_t byte, int index) {
 // (e.g. json) that can be updated separately.
 // Data comes from:
 // http://wiki.fractalaudio.com/axefx2/index.php?title=AMP_(block):_list
+// TODO: Come up with a better list :) Some entries missing etc (see below).
 const char* const kAmpNames[] = {
   "59 Bassguy ('59 Fender Bassman)",
   "65 Bassguy ('65 Fender Bassman)",
@@ -53,7 +54,7 @@ const char* const kAmpNames[] = {
   "Citrus RV50 (Orange Rockerverb)",
   "Jazz 120 (Roland JC-120)",
   "Energyball (Engl Powerball)",
-  "ODS-100 Clean / Lead (Dumble OD Special)",
+  "ODS-100 Clean / Lead (Dumble OD Special)",  // two amps?
   "FAS Rhythm",
   "FAS Lead 1",
   "FAS Lead 2",
@@ -61,7 +62,7 @@ const char* const kAmpNames[] = {
   "Das Metall (Diezel VH4)",
   "Brit Pre (Marshall JMP-1)",
   "Buttery (Budda Twinmaster)",
-  "Boutique 1 / 2 (Matchless Chieftain)",
+  "Boutique 1 / 2 (Matchless Chieftain)",  // two amps?
   "Cameron Ch.1 / Ch.2 (Cameron CCV)",
   "SV Bass (Ampeg SVT)",
   "Tube Pre (generic tube preamp)",
@@ -80,8 +81,8 @@ const char* const kAmpNames[] = {
   "5153 Green / Blue / Red (EVH 5150 III)",
   "Solo 88 Rhythm (Soldano X88)",
   "Division13 CJ (Divided by 13 CJ11)",
-  "Herbie CH2- / CH2+ / CH3 (Diezel Herbert)",
-  "Dizzy V4 2 / 3 / 4 (Diezel VH4)",
+  "Herbie CH2- / CH2+ / CH3 (Diezel Herbert)",  // multiple amps?
+  "Dizzy V4 2 / 3 / 4 (Diezel VH4)",  // Is this several different amps?
   "Dirty Shirley (Friedman Dirty Shirley)",
   "Suhr Badger 18 / 30",
   "Prince Tone 2 (Fender Princeton)",
@@ -94,13 +95,14 @@ const char* const kAmpNames[] = {
   "FAS Crunch",
   "Two Stone J-35 (Two-Rock Jet 35)",
   "Fox ODS (Fuchs Overdrive Supreme)",
+  "Hot Kitty (Bad Cat Hot Cat)",
   "Band-Commander (1968 Fender Bandmaster)",
   "Super Verb (1964 Fender Super Reverb)",
 };
 
 struct BlockMap {
   int block_id;
-  const char* name;
+  const char* const name;
 };
 
 // Keep sorted.
