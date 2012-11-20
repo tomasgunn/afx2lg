@@ -6,7 +6,7 @@
 #ifndef LG_ENTRY_H_
 #define LG_ENTRY_H_
 
-#include "preset.h"
+#include "axefx/preset.h"
 
 #include <memory>
 #include <vector>
@@ -89,7 +89,7 @@ class Patch : public NamedEntry {
   virtual ~Patch() {}
   virtual void AppendLine(const char* line, const char* eol);
   virtual void SetName(const std::string& name);
-  void Update(const Preset& p);
+  void Update(const axefx::Preset& p);
   void SetPreset(int preset_number);
   void SetBank(const shared_ptr<Bank>& bank);
 

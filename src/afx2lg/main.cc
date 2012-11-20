@@ -41,7 +41,7 @@ bool ReadFileIntoBuffer(const std::string& path, std::auto_ptr<char>* out,
 
 class LgSetupFileWriter : public lg::LgParserCallback {
  public:
-  LgSetupFileWriter(const PresetMap& presets) : presets_(presets) {}
+  LgSetupFileWriter(const axefx::PresetMap& presets) : presets_(presets) {}
   ~LgSetupFileWriter() {}
 
   virtual void WriteLine(const char* line, int length) {
@@ -49,12 +49,12 @@ class LgSetupFileWriter : public lg::LgParserCallback {
     fprintf(stdout, "%hs", str.c_str());
   }
 
-  virtual const PresetMap& GetPresetMap() {
+  virtual const axefx::PresetMap& GetPresetMap() {
     return presets_;
   }
 
  private:
-  const PresetMap& presets_;
+  const axefx::PresetMap& presets_;
 };
 
 void PrintUsage() {

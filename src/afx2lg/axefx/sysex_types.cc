@@ -1,8 +1,6 @@
 // Copyright (c) 2012, Tomas Gunnarsson
 // All rights reserved.
 
-#include "axefx/axe_fx_sysex_parser.h"
-
 #include "axefx/sysex_types.h"
 
 namespace axefx {

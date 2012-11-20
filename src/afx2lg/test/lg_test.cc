@@ -12,17 +12,16 @@ class MockCallback : public lg::LgParserCallback {
   MockCallback() {}
   virtual ~MockCallback() {}
 
-  virtual const PresetMap& GetPresetMap() { return map_; }
+  virtual const axefx::PresetMap& GetPresetMap() { return map_; }
   virtual void WriteLine(const char* line, int length) {
     std::string str(line, length);
     // printf("%hs", str.c_str());
     lines_.push_back(str);
   }
 
-  PresetMap map_;
+  axefx::PresetMap map_;
   std::vector<std::string> lines_;
 };
-
 
 TEST(LittleGiant, BasicReadInputFile) {
   std::auto_ptr<uint8_t> buffer;

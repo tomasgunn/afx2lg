@@ -6,7 +6,9 @@
 #ifndef LG_PARSER_H_
 #define LG_PARSER_H_
 
-#include "preset.h"
+// TODO: it's not that clean to have LG depend on AxeFx.
+#include "axefx/axe_fx_sysex_parser.h"
+#include "axefx/preset.h"
 #include "lg/lg_entry.h"
 
 namespace lg {
@@ -15,7 +17,7 @@ using std::tr1::shared_ptr;
 
 class LgParserCallback {
  public:
-  virtual const PresetMap& GetPresetMap() = 0;
+  virtual const axefx::PresetMap& GetPresetMap() = 0;
   virtual void WriteLine(const char* line, int length) = 0;
 };
 

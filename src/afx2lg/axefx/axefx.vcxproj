@@ -73,11 +73,15 @@
   <ItemGroup>
     <ClCompile Include="axe_fx_sysex_parser.cc" />
     <ClCompile Include="blocks.cc" />
+    <ClCompile Include="preset.cc" />
+    <ClCompile Include="preset_parameters.cc" />
     <ClCompile Include="sysex_types.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="axe_fx_sysex_parser.h" />
     <ClInclude Include="blocks.h" />
+    <ClInclude Include="preset.h" />
+    <ClInclude Include="preset_parameters.h" />
     <ClInclude Include="sysex_types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

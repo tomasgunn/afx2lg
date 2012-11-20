@@ -66,17 +66,17 @@ void LgParser::ParseBuffer(LgParserCallback* callback,
   // so we'll know how many to add to the entry list.
   size_t bank_size = banks_.size();
 
-  const PresetMap& presets = callback->GetPresetMap();
-  PresetMap::const_iterator it = presets.begin();
+  const axefx::PresetMap& presets = callback->GetPresetMap();
+  axefx::PresetMap::const_iterator it = presets.begin();
   for (; it != presets.end(); ++it) {
-    Patches::value_type p = LookupPatch(it->second.id);
+    Patches::value_type p = LookupPatch(it->second->id());
     if (p.get()) {
-      p->Update(it->second);
+      p->Update(*it->second.get());
     } else {
       // Use a template to add a patch.
       p.reset(new Patch(*patches_[0].get()));
       p->SetBank(shared_ptr<Bank>());
-      p->Update(it->second);
+      p->Update(*it->second.get());
 
       if (!new_bank.get()) {
         new_bank.reset(new Bank(*template_bank.get()));

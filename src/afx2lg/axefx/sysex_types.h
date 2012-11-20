@@ -6,7 +6,8 @@
 #define AXE_FX_SYSEX_TYPES_H_
 
 #include "common_types.h"
-#include "axefx/axe_fx_sysex_parser.h"
+
+#include <string>
 
 namespace axefx {
 

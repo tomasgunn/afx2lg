@@ -208,8 +208,11 @@ void Patch::SetName(const std::string& name) {
   }
 }
 
-void Patch::Update(const Preset& p) {
-  std::string name(p.name);
+void Patch::Update(const axefx::Preset& p) {
+  std::string name(p.name());
+  // TODO: We need to also make sure each name is unique with in the list
+  // of names for the LG since it relies on names and not IDs to map between
+  // patches,banks and banklists.
   CheckNameSizeLimit(&name);
 
   if (bank_)
@@ -220,11 +223,11 @@ void Patch::Update(const Preset& p) {
     str += " " + name + "\n";
     lines_.push_back(str);
     name_ = name;
-    SetPreset(p.id);
+    SetPreset(p.id());
   } else {
     NamedEntry::SetName(name);
-    if (p.id != preset())
-      SetPreset(p.id);
+    if (p.id() != preset())
+      SetPreset(p.id());
   }
 }
 

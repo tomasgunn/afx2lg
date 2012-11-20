@@ -198,9 +198,9 @@ const char* GetBlockName(uint16_t block_id) {
 }
 
 bool IsShunt(uint16_t block_id) {
+  // NOTE: The maximum value is just a guess.
   return block_id >= 200 && block_id < (200 + (12*4));
 }
-
 
 BlockSceneState::BlockSceneState(uint16_t bypass_state)
     : bypass_(bypass_state & 0xFF),
