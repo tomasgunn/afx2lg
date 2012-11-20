@@ -120,7 +120,10 @@ int main(int argc, char* argv[]) {
     size_t size = 0;
     if (ReadFileIntoBuffer(syx_files[i], &buffer, &size)) {
       const byte* b = reinterpret_cast<const byte*>(buffer.get());
-      parser.ParseSysExBuffer(b, b + size);
+      if (!parser.ParseSysExBuffer(b, b + size)) {
+        fprintf(stderr, "Failed to parse '%hs'\n\n", syx_files[i].c_str());
+        return -1;
+      }
     } else {
       fprintf(stderr, "Failed to open '%hs'\n\n", syx_files[i].c_str());
       return -1;

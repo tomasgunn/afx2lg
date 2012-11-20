@@ -7,6 +7,18 @@
 
 namespace axefx {
 
+bool IsFractalSysEx(const uint8_t* sys_ex, int size) {
+  ASSERT(sys_ex[0] == kSysExStart);
+  ASSERT(sys_ex[size - 1] == kSysExEnd);
+
+  if (size < (sizeof(kFractalMidiId) + kSysExTerminationByteCount) ||
+      memcmp(&sys_ex[1], &kFractalMidiId[0], sizeof(kFractalMidiId)) != 0) {
+    return false;
+  }
+
+  return VerifyChecksum(sys_ex, size);
+}
+
 uint8_t CalculateChecksum(const uint8_t* sys_ex, int size) {
   uint8_t checksum = 0;
   int i = 0;

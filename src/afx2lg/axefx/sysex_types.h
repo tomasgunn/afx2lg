@@ -15,6 +15,8 @@ const uint8_t kSysExEnd = 0xF7;
 const int kSysExTerminationByteCount = 2;  // checksum + kSysExEnd == 2 bytes.
 const uint8_t kFractalMidiId[] = { 0x00, 0x01, 0x74 };
 
+bool IsFractalSysEx(const uint8_t* sys_ex, int size);
+
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx
 uint8_t CalculateChecksum(const uint8_t* sys_ex, int size);
 bool VerifyChecksum(const uint8_t* sys_ex, int size);
@@ -27,8 +29,8 @@ enum AxeFxModel {
 
 enum FunctionId {
   PRESET_ID = 0x77,
-  PRESET_PROPERTY = 0x78,
-  PRESET_EPILOGUE = 0x79,
+  PRESET_PARAMETERS = 0x78,
+  PRESET_CHECKSUM = 0x79,
 };
 
 #pragma pack(push)
@@ -75,6 +77,17 @@ struct PresetIdHeader : public FractalSysExHeader {
   SeptetPair unknown;
 };
 
+struct ParameterBlockHeader : public FractalSysExHeader {
+  uint8_t value_count;  // I've only ever seen this be 0x40.
+  uint8_t reserved;  // Always 0.
+  Fractal16bit values[1];  // Actual size is |parameter_count|.
+};
+
+struct PresetChecksumHeader : public FractalSysExHeader {
+  Fractal16bit checksum;
+};
+
+// TODO: Improve or remove.
 struct PresetProperty : public FractalSysExHeader {
   const uint8_t payload[1];
 };

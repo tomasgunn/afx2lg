@@ -33,7 +33,7 @@ TEST(AxeFxII, ParseBankFile) {
   ASSERT_TRUE(ReadTestFileIntoBuffer("axefx2/V7_Bank_A.syx", &buffer,
                                      &file_size));
   axefx::SysExParser parser;
-  parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size);
+  EXPECT_TRUE(parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size));
   const PresetMap& presets = parser.presets();
   EXPECT_EQ(128, presets.size());
 }
@@ -44,7 +44,7 @@ TEST(AxeFxII, ParseFw9bBankFile) {
   ASSERT_TRUE(ReadTestFileIntoBuffer("axefx2/9b_A.syx", &buffer,
                                      &file_size));
   axefx::SysExParser parser;
-  parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size);
+  EXPECT_TRUE(parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size));
   const PresetMap& presets = parser.presets();
   EXPECT_EQ(128, presets.size());
 }
@@ -61,7 +61,8 @@ TEST(AxeFxII, ParseMultipleBankFiles) {
     std::auto_ptr<uint8_t> buffer;
     int file_size;
     ASSERT_TRUE(ReadTestFileIntoBuffer(files[i], &buffer, &file_size));
-    parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size);
+    EXPECT_TRUE(parser.ParseSysExBuffer(buffer.get(),
+                                        buffer.get() + file_size));
   }
   const PresetMap& presets = parser.presets();
   EXPECT_EQ(arraysize(files) * 128, presets.size());
@@ -74,7 +75,7 @@ TEST(AxeFxII, ParsePresetFile) {
                                      &buffer, &file_size));
 
   axefx::SysExParser parser;
-  parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size);
+  EXPECT_TRUE(parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size));
   const PresetMap& presets = parser.presets();
   EXPECT_EQ(1, presets.size());
   PresetMap::const_iterator front = presets.begin();
@@ -92,7 +93,7 @@ TEST(AxeFxII, ParseXyPresetFile) {
   ASSERT_TRUE(ReadTestFileIntoBuffer("axefx2/xy_test2.syx",
                                      &buffer, &file_size));
   axefx::SysExParser parser;
-  parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size);
+  EXPECT_TRUE(parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size));
   const PresetMap& presets = parser.presets();
   EXPECT_EQ(1, presets.size());
   EXPECT_EQ("Y Is Default", presets.begin()->second.name);
@@ -104,7 +105,7 @@ TEST(AxeFxII, ParseScenesXYBypassFile) {
   ASSERT_TRUE(ReadTestFileIntoBuffer("axefx2/one_amp_8scenes_xy_1.syx",
                                      &buffer, &file_size));
   axefx::SysExParser parser;
-  parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size);
+  EXPECT_TRUE(parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size));
   const PresetMap& presets = parser.presets();
   EXPECT_EQ(1, presets.size());
   EXPECT_EQ("BYPASS", presets.begin()->second.name);

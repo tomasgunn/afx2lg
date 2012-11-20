@@ -13,34 +13,41 @@
 namespace axefx {
 
 struct FractalSysExHeader;
+struct ParameterBlockHeader;
 struct PresetIdHeader;
 struct PresetProperty;
 
-typedef std::vector<uint16_t> BlockData;
+class PresetParameters : public std::vector<uint16_t> {
+ public:
+  PresetParameters();
+  ~PresetParameters();
+
+  bool AppendFromSysEx(const ParameterBlockHeader& header, int header_size);
+
+  uint16_t Checksum() const;
+};
 
 class SysExParser {
  public:
   SysExParser();
   ~SysExParser();
 
-  void ParseSysExBuffer(const uint8_t* begin, const uint8_t* end);
+  bool ParseSysExBuffer(const uint8_t* begin, const uint8_t* end);
 
   const PresetMap& presets() const { return presets_; }
 
  protected:
-  void ParseSingleSysEx(BlockData* block_data, const uint8_t* sys_ex, int size,
-                        Preset* preset);
-  void ParseFractalSysEx(BlockData* block_data,
+  void ParseFractalSysEx(PresetParameters* block_data,
                          const FractalSysExHeader& header,
                          int size, Preset* preset);
   void ParsePresetId(const PresetIdHeader& header, int size, Preset* preset);
-  void ParsePresetProperties(int* preset_chunk_id,
+
+  // TODO: Remove
+  void ParsePresetParameters(int* preset_chunk_id,
                              const PresetProperty& header, int size,
                              Preset* preset);
-  void AppendBlockData(BlockData* block_data,
-                       const FractalSysExHeader& header,
-                       int size);
-  void ParseBlockData(const BlockData& data, Preset* preset);
+
+  void ParseBlockData(const PresetParameters& data, Preset* preset);
 
  private:
   PresetMap presets_;
