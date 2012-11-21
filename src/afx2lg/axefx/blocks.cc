@@ -5,14 +5,20 @@
 
 namespace axefx {
 
+const int kFirstBlockId = 100;
+
 inline bool IsBitSet(uint8_t byte, int index) {
   ASSERT(index >= 0 && index < 8);
   return (byte >> index) & 1;
 }
 
+#ifdef _DEBUG
+
 // If we really need this, it would be better to keep it in a separate file
 // (e.g. json) that can be updated separately.
-// Data comes from:
+// AxeEdit uses .profile files (a copy of one is in this directory)
+// to track valid values for parameters per AxeFx firmware version.
+// This data comes from and is only for basic testing.
 // http://wiki.fractalaudio.com/axefx2/index.php?title=AMP_(block):_list
 // TODO: Come up with a better list :) Some entries missing etc (see below).
 const char* const kAmpNames[] = {
@@ -100,106 +106,28 @@ const char* const kAmpNames[] = {
   "Super Verb (1964 Fender Super Reverb)",
 };
 
-struct BlockMap {
-  int block_id;
-  const char* const name;
-};
-
-// Keep sorted.
-const BlockMap kBlocks[] = {
-  {100, "Compressor 1"},
-  {101, "Compressor 2"},
-  {102, "GraphicEQ 1"},
-  {103, "GraphicEQ 2"},
-  {104, "Parametric EQ 1"},
-  {105, "Parametric EQ 2"},
-  {106, "Amp 1"},
-  {107, "Amp 2"},
-  {108, "Cabinet 1"},
-  {109, "Cabinet 2"},
-  {110, "Reverb 1"},
-  {111, "Reverb 2"},
-  {112, "Delay 1"},
-  {113, "Delay 2"},
-  {114, "Multidelay 1"},
-  {115, "Multidelay 2"},
-  {116, "Chorus 1"},
-  {117, "Chorus 2"},
-  {118, "Flanger 1"},
-  {119, "Flanger 2"},
-  {120, "Rotary 1"},
-  {121, "Rotary 2"},
-  {122, "Phaser 1"},
-  {123, "Phaser 2"},
-  {124, "Wahwah 1"},
-  {125, "Wahwah 2"},
-  {126, "Formant"},
-  {127, "Vol/Pan 1"},
-  {128, "Panner/Tremolo 1"},
-  {129, "Panner/Tremolo 2"},
-  {130, "Pitch 1"},
-  {131, "Filter 1"},
-  {132, "Filter 2"},
-  {133, "Drive 1"},
-  {134, "Drive 2"},
-  {135, "Enhancer"},
-  {136, "Effects Loop"},
-  {137, "Mixer 1"},
-  {138, "Mixer 2"},
-  {139, "NoiseGate"},
-  {140, "Output"},
-  {141, "Controllers"},
-  {142, "Feedback Send"},
-  {143, "Feedback Return"},
-  {144, "Synth 1"},
-  {145, "Synth 2"},
-  {146, "Vocoder"},
-  {147, "Megatap Delay"},
-  {148, "Crossover 1"},
-  {149, "Crossover 2"},
-  {150, "Gate/Expander 1"},
-  {151, "Gate/Expander 2"},
-  {152, "RingMod"},
-  {153, "Pitch 2"},
-  {154, "Multiband Comp 1"},
-  {155, "Multiband Comp 2"},
-  {156, "Quad Chorus 1"},
-  {157, "Quad Chorus 2"},
-  {158, "Resonator 1"},
-  {159, "Resonator 2"},
-  {160, "GraphicEQ 3"},
-  {161, "GraphicEQ 4"},
-  {162, "Parametric EQ 3"},
-  {163, "Parametric EQ 4"},
-  {164, "Filter 3"},
-  {165, "Filter 4"},
-  {166, "Vol/Pan 2"},
-  {167, "Vol/Pan 3"},
-  {168, "Vol/Pan 4"},
-  {169, "Looper"},
-  {170, "Tone Match"},
-};
-
-const int kFirstBlockId = kBlocks[0].block_id;
-const int kLastBlockId = kBlocks[arraysize(kBlocks) - 1].block_id;
-
 const char* GetAmpName(uint16_t amp_id) {
   if (amp_id >= arraysize(kAmpNames))
     return "AmpUnknown";
   return kAmpNames[amp_id];
 }
+#endif
 
-const char* GetBlockName(uint16_t block_id) {
-  for (int i = 0; i < arraysize(kBlocks); ++i) {
-    if (block_id == kBlocks[i].block_id)
-      return kBlocks[i].name;
+bool BlockSupportsXY(AxeFxBlockType type) {
+  switch(type) {
+    case BLOCK_TYPE_AMP:
+    case BLOCK_TYPE_CAB:
+    case BLOCK_TYPE_CHORUS:
+    case BLOCK_TYPE_DELAY:
+    case BLOCK_TYPE_DRIVE:
+    case BLOCK_TYPE_FLANGER:
+    case BLOCK_TYPE_PITCH:
+    case BLOCK_TYPE_PHASER:
+    case BLOCK_TYPE_REVERB:
+    case BLOCK_TYPE_WAH:
+      return true;
   }
-  return "BlockUnknown";
-}
-
-bool IsShunt(uint16_t block_id) {
-  // NOTE: The maximum value is just a guess.
-  return block_id >= 200 && block_id < (200 + (12*4));
+  return false;
 }
 
 BlockSceneState::BlockSceneState(uint16_t bypass_state)
@@ -215,6 +143,78 @@ bool BlockSceneState::IsBypassedInScene(int scene) const {
 
 bool BlockSceneState::IsConfigYEnabledInScene(int scene) const {
   return IsBitSet(xy_, scene);
+}
+
+BlockInMatrix::BlockInMatrix() : block_(0), input_mask_(0) {}
+
+bool BlockInMatrix::is_shunt() const {
+  // NOTE: The maximum value is just a guess.
+  return block_ >= 200 && block_ < (200 + (12 * 4));
+}
+
+BlockParameters::BlockParameters()
+    : block_(BLOCK_INVALID),
+      config_(CONFIG_X),
+      global_block_index_(0) {
+}
+
+BlockParameters::~BlockParameters() {}
+
+// Populates the block parameters from a 16bit value array.
+// Returns the number of 16bit items eaten.
+int BlockParameters::Initialize(const uint16_t* data, int count) {
+  if (count < 2 || count < (data[1] + 2)) {
+    ASSERT(false);
+    return 0;
+  }
+
+  uint16_t block_id = data[0];
+  uint8_t state = block_id >> 8;
+  if (state) {
+    if ((state & 0x80) != 0)
+      config_ = CONFIG_Y;
+    global_block_index_ = state & 0x0F;
+    block_id &= 0x00FF;
+  }
+
+  block_ = static_cast<AxeFxIIBlockID>(block_id);
+  params_.reserve(data[1]);
+  for (uint16_t i = 0; i < data[1]; ++i)
+    params_.push_back(data[i + 2]);
+  return params_.size() + 2;
+}
+
+AxeFxBlockType BlockParameters::type() const {
+  return GetBlockType(block_);
+}
+
+AxeFxIIBlockID BlockParameters::block() const {
+  return block_;
+}
+
+bool BlockParameters::supports_xy() const {
+  return !is_modifier() && BlockSupportsXY(type());
+}
+
+int BlockParameters::param_count() const {
+  return params_.size();
+}
+
+bool BlockParameters::is_modifier() const {
+  return block_ >= 1 && block_ < kFirstBlockId;
+}
+
+uint16_t BlockParameters::GetParamValue(int index, bool get_x_value) const {
+  ASSERT(get_x_value || supports_xy());
+  ASSERT(!supports_xy() || (static_cast<size_t>(index) < params_.size() / 2));
+  ASSERT(supports_xy() || static_cast<size_t>(index) < params_.size());
+  return get_x_value ? params_[index] : params_[(params_.size() / 2) + index];
+}
+
+BlockSceneState BlockParameters::GetBypassState() const {
+  int bypass_id = GetBlockBypassParamID(type());
+  return bypass_id == -1 ? BlockSceneState(0) :
+                           BlockSceneState(GetParamValue(bypass_id, true));
 }
 
 }  // namespace axefx

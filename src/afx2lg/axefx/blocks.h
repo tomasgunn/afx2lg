@@ -6,28 +6,29 @@
 #define AXE_FX_BLOCKS_H_
 
 #include "common_types.h"
+#include "axefx/axefx_ii_ids.h"
+
+#include <vector>
 
 namespace axefx {
 
-// TODO: Write a tool (Python?) that generates C++ structures and enums for
-// all of the types from the axeml file that ship with AxeEdit.
-
 extern const int kFirstBlockId;
-extern const int kLastBlockId;
 
+bool BlockSupportsXY(AxeFxBlockType type);
+
+#ifdef _DEBUG
 // TODO: This list is really version specific, so it should take
 // more arguments (or be a member method of Preset).
 const char* GetAmpName(uint16_t amp_id);
+#endif
 
-// TODO: This is also version specific.
-const char* GetBlockName(uint16_t block_id);
-
-bool IsShunt(uint16_t block_id);
+#pragma pack(push)
+#pragma pack(1)
 
 // Represents an effect block's bypass and x/y state per scene.
 class BlockSceneState {
  public:
-  BlockSceneState(uint16_t bypass_state);
+  explicit BlockSceneState(uint16_t bypass_state);
   ~BlockSceneState();
 
   bool IsBypassedInScene(int scene) const;
@@ -36,6 +37,61 @@ class BlockSceneState {
  private:
   uint8_t bypass_;
   uint8_t xy_;
+};
+
+class BlockInMatrix {
+ public:
+  BlockInMatrix();
+
+  bool is_shunt() const;
+  AxeFxIIBlockID block() const { return static_cast<AxeFxIIBlockID>(block_); }
+  const uint16_t& input_mask() const { return input_mask_; }
+
+ private:
+  uint16_t block_;
+  // |input_mask| is a bit mask of 4 bits that shows how the current block
+  // receives its input from the previous column.
+  // 0010 means the current block connects with the block at x-1,1.
+  // 1001 means connections with blocks x-1,0 and x-1,3.
+  uint16_t input_mask_;
+};
+
+typedef BlockInMatrix Matrix[12][4];
+
+#pragma pack(pop)
+
+enum BlockConfig {
+  CONFIG_X,
+  CONFIG_Y,
+};
+
+class BlockParameters {
+ public:
+  BlockParameters();
+  ~BlockParameters();
+
+  // Populates the block parameters from a 16bit value array.
+  // Returns the number of 16bit items eaten or 0 if the buffer
+  // wasn't big enough.
+  int Initialize(const uint16_t* data, int count);
+
+  AxeFxBlockType type() const;
+  AxeFxIIBlockID block() const;
+
+  bool supports_xy() const;
+  int param_count() const;
+  bool is_modifier() const;
+  BlockConfig active_config() const;
+
+  uint16_t GetParamValue(int index, bool get_x_value) const;
+
+  BlockSceneState GetBypassState() const;
+
+ private:
+  AxeFxIIBlockID block_;
+  BlockConfig config_;
+  int global_block_index_;
+  std::vector<uint16_t> params_;
 };
 
 }  // namespace axefx

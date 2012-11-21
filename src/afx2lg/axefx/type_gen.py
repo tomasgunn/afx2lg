@@ -21,7 +21,8 @@ namespace axefx {
 
 %s
 
-AxeFxBlockType GetBlockTypeFromID(AxeFxIIBlockID id);
+AxeFxBlockType GetBlockType(AxeFxIIBlockID id);
+const char* GetBlockName(AxeFxIIBlockID id);
 int GetBlockBypassParamID(AxeFxBlockType type);
 
 }  // namespace axefx
@@ -38,17 +39,21 @@ SOURCE_FILE_TEMPLATE = """// Copyright (c) 2012, Tomas Gunnarsson
 
 namespace axefx {
 
-AxeFxBlockType GetBlockTypeFromID(AxeFxIIBlockID id) {
+AxeFxBlockType GetBlockType(AxeFxIIBlockID id) {
   switch (id) {
-%s
-  }
+%s  }
   return BLOCK_TYPE_INVALID;
+}
+
+const char* GetBlockName(AxeFxIIBlockID id) {
+  switch (id) {
+%s  }
+  return "";
 }
 
 int GetBlockBypassParamID(AxeFxBlockType type) {
   switch (type) {
-%s
-  }
+%s  }
   return -1;
 }
 
@@ -61,6 +66,8 @@ BLOCK_TYPE_TEMPLATE = """enum AxeFxBlockType {
 };"""
 
 BLOCK_ID_TEMPLATE = """enum AxeFxIIBlockID {
+  BLOCK_INVALID = 0,  // Use 0 and not -1 to be compatible with the matrix.
+  BLOCK_SHUNT_200 = 200,
   %s
 };"""
 
@@ -99,7 +106,7 @@ class AxeMlParser:
         block_name = "BLOCK_%s" % (attrs["name"].replace(' ', '_')\
             .replace('/','_').upper())
         self.block_ids += ["%s = %s" % (block_name, attrs["id"])]
-        self.block_to_type_id[block_name] = attrs["typeID"]
+        self.block_to_type_id[block_name] = [attrs["typeID"], attrs["name"]]
     elif name == "EffectParameters":
       if "typeID" in attrs:
         self.current_type_name = "BLOCK_TYPE_%s" % (attrs["name"].upper())
@@ -127,7 +134,13 @@ class AxeMlParser:
   def GenerateBlockTypeFromID(self):
     ret = ""
     for b, t in self.block_to_type_id.items():
-      ret += "    case %s:\n      return %s;\n" % (b, self.type_id_to_name[t])
+      ret += "    case %s:\n      return %s;\n" % (b, self.type_id_to_name[t[0]])
+    return ret
+
+  def GenerateBlockNameFromID(self):
+    ret = ""
+    for b, t in self.block_to_type_id.items():
+      ret += '    case %s:\n      return "%s";\n' % (b, t[1])
     return ret
 
   def GenerateBlockBypassParamID(self):
@@ -187,6 +200,7 @@ def main(args):
   header = HEADER_FILE_TEMPLATE % (header)
 
   source = SOURCE_FILE_TEMPLATE % (x.GenerateBlockTypeFromID(),
+                                   x.GenerateBlockNameFromID(),
                                    x.GenerateBlockBypassParamID())
   WriteIfChanged(h_file, header)
   WriteIfChanged(cc_file, source)
