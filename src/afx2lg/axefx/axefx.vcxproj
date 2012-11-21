@@ -92,7 +92,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">python $(SolutionDir)axefx/type_gen.py $(SolutionDir)axefx/AxeFxII_7.axeml $(SolutionDir)axefx/</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">python $(SolutionDir)axefx/type_gen.py $(SolutionDir)axefx/AxeFxII_7.axeml $(SolutionDir)axefx/</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)axefx\axefx_ii_ids.h;$(SolutionDir)axefx\axefx_ii_ids.cc</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)axefx\axefx_ii_ids.h,$(SolutionDir)axefx\axefx_ii_ids.cc</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)axefx\axefx_ii_ids.h;$(SolutionDir)axefx\axefx_ii_ids.cc</Outputs>
     </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
