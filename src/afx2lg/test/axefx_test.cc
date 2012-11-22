@@ -50,6 +50,22 @@ TEST(AxeFxII, ParseFw9bBankFile) {
   EXPECT_TRUE(parser.ParseSysExBuffer(buffer.get(), buffer.get() + file_size));
   const PresetMap& presets = parser.presets();
   EXPECT_EQ(128, presets.size());
+
+#ifdef _DEBUG
+  PresetMap::const_iterator i = presets.begin();
+  for (; i != presets.end(); ++i) {
+    const Preset& p = *(i->second.get());
+    shared_ptr<BlockParameters> amp1 = p.LookupBlock(BLOCK_AMP_1);
+    if (amp1) {
+      printf("Preset: %i %s\n", (*i).first, p.name().c_str());
+      int amp_id = amp1->GetParamValue(DISTORT_TYPE,
+          amp1->active_config() == CONFIG_X);
+      if (amp1->global_block_index())
+        printf(" - global=%i\n", amp1->global_block_index());
+      printf(" - amp=%i (guessing='%s')\n", amp_id, GetAmpName(amp_id));
+    }
+  }
+#endif
 }
 
 TEST(AxeFxII, ParseMultipleBankFiles) {

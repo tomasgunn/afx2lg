@@ -35,6 +35,8 @@ class Preset {
   // still valid (from AxeFx' edit buffer).
   bool from_edit_buffer() const;
 
+  shared_ptr<BlockParameters> LookupBlock(AxeFxIIBlockID block) const;
+
   // Parse methods.
   bool SetPresetId(const PresetIdHeader& header, int size);
   bool AddParameterData(const ParameterBlockHeader& header, int size);

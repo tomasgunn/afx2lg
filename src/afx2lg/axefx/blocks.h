@@ -81,7 +81,8 @@ class BlockParameters {
   bool supports_xy() const;
   int param_count() const;
   bool is_modifier() const;
-  BlockConfig active_config() const;
+  BlockConfig active_config() const { return config_; }
+  int global_block_index() const { return global_block_index_; }
 
   uint16_t GetParamValue(int index, bool get_x_value) const;
 

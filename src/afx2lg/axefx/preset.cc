@@ -23,6 +23,17 @@ bool Preset::from_edit_buffer() const {
   return id_ == kPresetIdBuffer;
 }
 
+shared_ptr<BlockParameters> Preset::LookupBlock(AxeFxIIBlockID block) const {
+  // TODO: Use a map for lookups?
+  std::vector<shared_ptr<BlockParameters> >::const_iterator i =
+      block_parameters_.begin();
+  for (; i != block_parameters_.end(); ++i) {
+    if ((*i)->block() == block)
+      return (*i);
+  }
+  return shared_ptr<BlockParameters>();
+}
+
 bool Preset::SetPresetId(const PresetIdHeader& header, int size) {
   ASSERT(header.function() == PRESET_ID);
   ASSERT(size == (sizeof(header) + kSysExTerminationByteCount));
@@ -68,7 +79,7 @@ bool Preset::Finalize(const PresetChecksumHeader& header, int size) {
   p += 2;
   name_.assign(p, p + 31);
   std::string::size_type index = name_.length() - 1;
-  while (index > 0 && name_[index] == ' ' || name_[index] == '\0')
+  while (index > 0 && (name_[index] == ' ' || name_[index] == '\0'))
     --index;  
   name_.resize(index + 1);
   p += 31;
