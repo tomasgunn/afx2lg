@@ -6,6 +6,7 @@
 #include "axefx/sysex_types.h"
 
 #include <algorithm>
+#include <iostream>
 
 namespace axefx {
 
@@ -46,8 +47,15 @@ bool Preset::SetPresetId(const PresetIdHeader& header, int size) {
   } else {
     const int kMaxAxeFxPresetCount = 0x80 * 3;
     id_ = header.preset_number.As16bit();
+#ifdef _DEBUG
+    if (id_ > 384)
+      std::cerr << "wrn: high preset id " << id_ << std::endl;
+#endif
+#if 0
+    // System backup files have ID's that are higher than 384...
     if (id_ < 0 || id_ > kMaxAxeFxPresetCount)
       id_ = kInvalidPresetId;
+#endif
   }
 
   return valid();
@@ -69,8 +77,13 @@ bool Preset::Finalize(const PresetChecksumHeader& header, int size) {
   PresetParameters::const_iterator p = params_.begin();
   uint16_t version = *p;
   // 0 == 516 for fw9 and higher. 514 for older.
-  if (version != 0x204 && version != 0x202) {
-    fprintf(stderr, "Unsupported syx file - 0x%04X\n", version);
+  // 0x105 means that this is a system sysex dump file.
+  if (version != 0x204 && version != 0x202 && version != 0x105) {
+    std::cerr << "Unsupported syx file - 0x" << std::hex << version << std::dec
+              << std::endl;
+    // For system backup files, this value can actually be a block id.
+    // In that case, the rest of the data is the global configuration of the
+    // block.
     return false;
   }
 

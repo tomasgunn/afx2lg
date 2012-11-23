@@ -6,37 +6,29 @@
 #include "axefx/axe_fx_sysex_parser.h"
 #include "lg/lg_parser.h"
 
-#include <atlfile.h>
+#include <climits>
+#include <fstream>
+#include <iostream>
 
 bool ReadFileIntoBuffer(const std::string& path, std::auto_ptr<char>* out,
-                        size_t* size) {
-  CAtlFile file;
-  HRESULT hr = file.Create(path.c_str(), GENERIC_READ, FILE_SHARE_READ,
-                           OPEN_EXISTING);
-  if (SUCCEEDED(hr)) {
-    ULONGLONG file_size = 0;
-    hr = file.GetSize(file_size);
-    if (file_size > 0x1FFFFFFF) {
-      hr = HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
-    } else {
-      out->reset(new char[static_cast<DWORD>(file_size)]);
-      if (!out->get()) {
-        hr = E_OUTOFMEMORY;
-      } else {
-        DWORD read = 0;
-        hr = file.Read(out->get(), static_cast<DWORD>(file_size), read);
-        *size = read;
-      }
-    }
-  }
+                        size_t* file_size) {
+  std::ifstream f;
+  f.open(path.c_str(), std::fstream::in | std::ios::binary);
+  if (!f.is_open())
+    return false;
 
-  if (FAILED(hr)) {
-    out->reset();
-    fprintf(stderr, "Failed to open '%hs' (0x%08X)\n\n",
-        path.c_str(), hr);
-  }
+  f.seekg(0, std::ios::end);
+  std::streampos size = f.tellg();
+  f.seekg(0, std::ios::beg);
 
-  return SUCCEEDED(hr);
+  if (size >= INT_MAX)
+    return false;
+
+  *file_size = static_cast<size_t>(size);
+  out->reset(new char[*file_size]);
+  f.read(out->get(), *file_size);
+  
+  return true;
 }
 
 class LgSetupFileWriter : public lg::LgParserCallback {
@@ -45,8 +37,7 @@ class LgSetupFileWriter : public lg::LgParserCallback {
   ~LgSetupFileWriter() {}
 
   virtual void WriteLine(const char* line, int length) {
-    std::string str(line, length);
-    fprintf(stdout, "%hs", str.c_str());
+    std::cout << std::string(line, length);
   }
 
   virtual const axefx::PresetMap& GetPresetMap() {
@@ -58,7 +49,7 @@ class LgSetupFileWriter : public lg::LgParserCallback {
 };
 
 void PrintUsage() {
-  const char kUsage[] =
+  std::cerr <<
     "Usage:\n\n"
     "  afx2lg -s=f1.syx [-s=f2.syx [-s=f.syx [...]]] -t=t.txt\n"
     "\n"
@@ -77,7 +68,6 @@ void PrintUsage() {
     "  afx2lg -s=BankA.syx -s=BankB.syx -s=BankC.syx -t=input.txt > out.txt\n\n"
     "Then you import the output file [out.txt] in Control Center by using\n"
     "the 'File->Import from...->Text...' command.\n\n";
-  fprintf(stderr, "%hs", kUsage);
 }
 
 bool ParseArgs(int argc,
@@ -90,13 +80,13 @@ bool ParseArgs(int argc,
   for (int i = 1; i < argc; ++i) {
     const char* arg = argv[i];
     if (arg[0] != '-' || strlen(arg) < 4 || arg[2] != '=') {
-      fprintf(stderr, "Unknown/malformed argument: '%s'\n\n", arg);
+      std::cerr << "Unknown/malformed argument: '" << arg << "'\n\n";
       return false;
     } else if (arg[1] == 's') {
       syx_files->push_back(&arg[3]);
     } else if (arg[1] == 't') {
       if (!input_template->empty()) {
-        fprintf(stderr, "The template file can only be specified once\n\n");
+        std::cerr << "The template file can only be specified once\n\n";
         return false;
       }
       *input_template = &arg[3];
@@ -119,13 +109,13 @@ int main(int argc, char* argv[]) {
     std::auto_ptr<char> buffer;
     size_t size = 0;
     if (ReadFileIntoBuffer(syx_files[i], &buffer, &size)) {
-      const byte* b = reinterpret_cast<const byte*>(buffer.get());
+      const uint8_t* b = reinterpret_cast<const uint8_t*>(buffer.get());
       if (!parser.ParseSysExBuffer(b, b + size)) {
-        fprintf(stderr, "Failed to parse '%hs'\n\n", syx_files[i].c_str());
+        std::cerr << "Failed to parse " << syx_files[i] << std::endl;
         return -1;
       }
     } else {
-      fprintf(stderr, "Failed to open '%hs'\n\n", syx_files[i].c_str());
+      std::cerr << "Failed to open " << syx_files[i] << std::endl;
       return -1;
     }
   }
@@ -137,7 +127,7 @@ int main(int argc, char* argv[]) {
     LgSetupFileWriter callback(parser.presets());
     lg_parser.ParseBuffer(&callback, buffer.get(), buffer.get() + size);
   } else {
-    fprintf(stderr, "Failed to open file %s\n", input_template.c_str());
+    std::cerr << "Failed to open " << input_template << std::endl;
   }
 
 	return 0;

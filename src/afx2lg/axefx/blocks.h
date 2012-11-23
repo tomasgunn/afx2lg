@@ -56,7 +56,9 @@ class BlockInMatrix {
   uint16_t input_mask_;
 };
 
-typedef BlockInMatrix Matrix[12][4];
+const int kMatrixRows = 4;
+const int kMatrixColumns = 12;
+typedef BlockInMatrix Matrix[kMatrixColumns][kMatrixRows];
 
 #pragma pack(pop)
 

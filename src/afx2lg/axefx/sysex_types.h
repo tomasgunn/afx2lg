@@ -19,8 +19,7 @@ const uint8_t kFractalMidiId[] = { 0x00, 0x01, 0x74 };
 bool IsFractalSysEx(const uint8_t* sys_ex, int size);
 
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx
-uint8_t CalculateChecksum(const uint8_t* sys_ex, int size);
-bool VerifyChecksum(const uint8_t* sys_ex, int size);
+uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, int size);
 
 enum AxeFxModel {
   AXE_FX_STANDARD = 0x01,  // or 0?
@@ -29,9 +28,9 @@ enum AxeFxModel {
 };
 
 enum FunctionId {
-  PRESET_ID = 0x77,
-  PRESET_PARAMETERS = 0x78,
-  PRESET_CHECKSUM = 0x79,
+  PRESET_ID = 0x77,  // Use PresetIdHeader.
+  PRESET_PARAMETERS = 0x78,  // Use ParameterBlockHeader.
+  PRESET_CHECKSUM = 0x79,  // Use PresetChecksumHeader.
 };
 
 #pragma pack(push)
@@ -42,13 +41,6 @@ struct SeptetPair {
   uint8_t ms, ls;
 
   uint16_t As16bit() const;
-};
-
-// This could be a wide char stored in 3 bytes, but we treat it as
-// ASCII for now.
-struct SeptetChar {
-  uint8_t b1, b2, b3;
-  char AsChar() const;
 };
 
 // AxeFx-II uses three bytes for 16bit values.  The bytes are stored in
@@ -86,31 +78,6 @@ struct ParameterBlockHeader : public FractalSysExHeader {
 
 struct PresetChecksumHeader : public FractalSysExHeader {
   Fractal16bit checksum;
-};
-
-// TODO: Improve or remove.
-struct PresetProperty : public FractalSysExHeader {
-  const uint8_t payload[1];
-};
-
-struct PresetName {
-  // According to the manual the preset name can be as long as 23 characters.
-  // In sysex files I've seen, the name is padded with space but appears
-  // to be able to be as long as 31 chars + zero terminator.
-  SeptetChar chars[23];
-
-  std::string ToString() const;
-};
-
-struct BlockState {
-  Fractal16bit block_id;
-  Fractal16bit state1;  // usually 2 :-/
-  Fractal16bit state2;
-  Fractal16bit state3;
-  Fractal16bit state4;
-  Fractal16bit state5;
-  Fractal16bit state6;
-  Fractal16bit state7;
 };
 
 #pragma pack(pop)
