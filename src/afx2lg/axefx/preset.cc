@@ -48,7 +48,7 @@ bool Preset::SetPresetId(const PresetIdHeader& header, int size) {
     const int kMaxAxeFxPresetCount = 0x80 * 3;
     id_ = header.preset_number.As16bit();
 #ifdef _DEBUG
-    if (id_ > 384)
+    if (id_ >= 384)
       std::cerr << "wrn: high preset id " << id_ << std::endl;
 #endif
 #if 0
@@ -64,8 +64,10 @@ bool Preset::SetPresetId(const PresetIdHeader& header, int size) {
 bool Preset::AddParameterData(const ParameterBlockHeader& header, int size) {
   ASSERT(valid());
   bool ret = params_.AppendFromSysEx(header, size);
-  if (!ret)
+  if (!ret) {
     id_ = kInvalidPresetId;
+    ASSERT(false);
+  }
   return ret;
 }
 

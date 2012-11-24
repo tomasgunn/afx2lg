@@ -139,7 +139,16 @@ TEST_F(AxeFxII, ParseSystemBackup) {
   // This is currently done on a best effort basis.  There's plenty of stuff
   // in there that I have no idea what is :)
   ASSERT_TRUE(ParseFile("axefx2/system_backup.syx"));
-  EXPECT_EQ(1, parser_.presets().size());
+  // Theory: The global system backup file might contain 127 preset slots by
+  // default (All simple BYPASS presets, first one has an id of 384 presumably
+  // to avoid conflict with regular presets).  As global blocks get used, these
+  // presets get overwritten with the block state.  As such, the |version| field
+  // (which could simply be a type field of sorts) contains the block id
+  // instead.  There is one (hence 127 above, not 128) strange |version| value
+  // that I've seen that is different from all the others, and that is
+  // 0x6f54 / 28500.  No idea what's stored there really, but could be things
+  // like CC's and other global settings.
+  EXPECT_EQ(105, parser_.presets().size());
 #ifdef _DEBUG
   PresetMap::const_iterator i = parser_.presets().begin();
   for (; i != parser_.presets().end(); ++i) {

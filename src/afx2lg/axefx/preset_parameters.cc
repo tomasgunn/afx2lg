@@ -5,6 +5,8 @@
 
 #include "axefx/sysex_types.h"
 
+static const int kValuesPerHeader = 64;
+
 namespace axefx {
 
 PresetParameters::PresetParameters() {}
@@ -20,7 +22,7 @@ bool PresetParameters::AppendFromSysEx(const ParameterBlockHeader& header,
     ASSERT(false);
     return false;
   }
-  ASSERT(header.value_count == 0x40);
+  ASSERT(header.value_count == kValuesPerHeader);
   ASSERT(header.values[header.value_count].b2 == kSysExEnd);
   reserve(size() + header.value_count);
   for (int i = 0; i < header.value_count; ++i)
