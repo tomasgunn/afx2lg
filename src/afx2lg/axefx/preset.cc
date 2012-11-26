@@ -8,6 +8,26 @@
 #include <algorithm>
 #include <iostream>
 
+namespace {
+// Returns true if the string is zero terminated and all characters before the
+// terminator are ascii characters.  |count| must include the size of the buffer
+// not the assumed length of the string.
+// A string of zero length, is not considered ascii by this function.
+// Any characters below ' ' are not considered ascii!!! :)
+bool IsAsciiString(const char* p, int count) {
+  int i = 0;
+  for (; i < count; ++i) {
+    if (!p[i])
+      break;
+
+    if ((p[i] & 0x80) != 0 || p[i] < ' ')
+      return false;
+  }
+
+  return i != 0 && p[i] == '\0';
+}
+}
+
 namespace axefx {
 
 const int kInvalidPresetId = -1;
@@ -78,7 +98,6 @@ bool Preset::Finalize(const PresetChecksumHeader& header, int size) {
     // data by default.
     AxeFxIIBlockID id = static_cast<AxeFxIIBlockID>(*p);
     if (GetBlockType(id) != BLOCK_TYPE_INVALID) {
-      std::cout << "Global block: " << GetBlockName(id) << std::endl;
       shared_ptr<BlockParameters> block_params(new BlockParameters());
       int values_eaten = block_params->Initialize(&(*p), params_.end() - p);
       ASSERT(values_eaten);
@@ -90,8 +109,11 @@ bool Preset::Finalize(const PresetChecksumHeader& header, int size) {
       // name, followed by 0x3F0 (1008) bytes that are (presumably) the actual
       // IR.  In cases I've seen, the last 16bit value in the IR data is 0xFFFF.
       const char* name = reinterpret_cast<const char*>(&(*p));
-      if (isalnum(name[0]) && (name[1] == 0 || isalnum(name[1]))) {
+      if ((params_.size() * sizeof(params_[0])) > 32 &&
+           IsAsciiString(name, 32)) {
+#ifdef _DEBUG
         std::cout << "User IR: " << name << std::endl;
+#endif
       }
     }
     return true;
