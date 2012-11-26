@@ -139,33 +139,32 @@ TEST_F(AxeFxII, ParseSystemBackup) {
   // This is currently done on a best effort basis.  There's plenty of stuff
   // in there that I have no idea what is :)
   ASSERT_TRUE(ParseFile("axefx2/system_backup.syx"));
-  // Theory: The global system backup file might contain 127 preset slots by
-  // default (All simple BYPASS presets, first one has an id of 384 presumably
-  // to avoid conflict with regular presets).  As global blocks get used, these
-  // presets get overwritten with the block state.  As such, the |version| field
-  // (which could simply be a type field of sorts) contains the block id
-  // instead.  There is one (hence 127 above, not 128) strange |version| value
-  // that I've seen that is different from all the others, and that is
-  // 0x6f54 / 28500.  No idea what's stored there really, but could be things
-  // like CC's and other global settings.
-  EXPECT_EQ(105, parser_.presets().size());
-#ifdef _DEBUG
+  // The global system backup file contains 128 preset slots by default.
+  // All are simple BYPASS presets by default with version=261.
+  // My guess is that 261 means 'available' in this case (could coincide with
+  // being one higher than the list of the highest shunt value).
+  // The preset slot IDs are in the 'bank D' range, that is 384-511.
+  // As global blocks get used, these slots get overwritten with the block
+  // state.  Then the |version| field will contain the block id instead,
+  // followed by regular block data.
+  EXPECT_EQ(128, parser_.presets().size());
   PresetMap::const_iterator i = parser_.presets().begin();
   for (; i != parser_.presets().end(); ++i) {
     const Preset& p = *(i->second.get());
-    EXPECT_EQ("BYPASS", p.name());
+    EXPECT_TRUE(p.is_global_setting());
+#ifdef _DEBUG
     shared_ptr<BlockParameters> amp1 = p.LookupBlock(BLOCK_AMP_1);
-    std::cout << "Preset: " << i->first << " " << p.name() << std::endl;
     if (amp1) {
-      int amp_id = amp1->GetParamValue(DISTORT_TYPE,
-                                       amp1->active_config() == CONFIG_X);
+      int amp_id_x = amp1->GetParamValue(DISTORT_TYPE, true);
+      int amp_id_y = amp1->GetParamValue(DISTORT_TYPE, false);
       if (amp1->global_block_index())
         std::cout << " - global=" << amp1->global_block_index() << std::endl;
-      std::cout << " - amp=" << amp_id << "(guessing='" << GetAmpName(amp_id)
-                << ")\n";
+      std::cout << " - amp=" << amp_id_x << "," << amp_id_y
+                << "(x='" << GetAmpName(amp_id_x)<< ", "
+                << "y='" << GetAmpName(amp_id_y) << ")\n";
     }
-  }
 #endif
+  }
 }
 
 }  // namespace axefx

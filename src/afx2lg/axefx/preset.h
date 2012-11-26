@@ -31,6 +31,9 @@ class Preset {
   const Matrix& matrix() const { return matrix_; }
 
   bool valid() const;
+
+  bool is_global_setting() const;
+
   // Returns true if the preset doesn't have an ID assigned to it, but is
   // still valid (from AxeFx' edit buffer).
   bool from_edit_buffer() const;

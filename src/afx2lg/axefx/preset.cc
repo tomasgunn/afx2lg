@@ -20,6 +20,10 @@ bool Preset::valid() const {
   return id_ != kInvalidPresetId;
 }
 
+bool Preset::is_global_setting() const {
+  return valid() && id_ >= (3 * 128);
+}
+
 bool Preset::from_edit_buffer() const {
   return id_ == kPresetIdBuffer;
 }
@@ -47,15 +51,6 @@ bool Preset::SetPresetId(const PresetIdHeader& header, int size) {
   } else {
     const int kMaxAxeFxPresetCount = 0x80 * 3;
     id_ = header.preset_number.As16bit();
-#ifdef _DEBUG
-    if (id_ >= 384)
-      std::cerr << "wrn: high preset id " << id_ << std::endl;
-#endif
-#if 0
-    // System backup files have ID's that are higher than 384...
-    if (id_ < 0 || id_ > kMaxAxeFxPresetCount)
-      id_ = kInvalidPresetId;
-#endif
   }
 
   return valid();
@@ -77,15 +72,36 @@ bool Preset::Finalize(const PresetChecksumHeader& header, int size) {
     return false;
 
   PresetParameters::const_iterator p = params_.begin();
+
+  if (is_global_setting()) {
+    // For system backups, we treat each preset block as an opaque block of
+    // data by default.
+    AxeFxIIBlockID id = static_cast<AxeFxIIBlockID>(*p);
+    if (GetBlockType(id) != BLOCK_TYPE_INVALID) {
+      std::cout << "Global block: " << GetBlockName(id) << std::endl;
+      shared_ptr<BlockParameters> block_params(new BlockParameters());
+      int values_eaten = block_params->Initialize(&(*p), params_.end() - p);
+      ASSERT(values_eaten);
+      if (values_eaten)
+        block_parameters_.push_back(block_params);
+    } else if (*p != 0) {
+      // Check if this is a user IR.
+      // User IR's are stored with 32 char ascii strings, which contain the
+      // name, followed by 0x3F0 (1008) bytes that are (presumably) the actual
+      // IR.  In cases I've seen, the last 16bit value in the IR data is 0xFFFF.
+      const char* name = reinterpret_cast<const char*>(&(*p));
+      if (isalnum(name[0]) && (name[1] == 0 || isalnum(name[1]))) {
+        std::cout << "User IR: " << name << std::endl;
+      }
+    }
+    return true;
+  }
+
   uint16_t version = *p;
   // 0 == 516 for fw9 and higher. 514 for older.
-  // 0x105 means that this is a system sysex dump file.
-  if (version != 0x204 && version != 0x202 && version != 0x105) {
+  if (version != 0x204 && version != 0x202) {
     std::cerr << "Unsupported syx file - 0x" << std::hex << version << std::dec
               << std::endl;
-    // For system backup files, this value can actually be a block id.
-    // In that case, the rest of the data is the global configuration of the
-    // block.
     return false;
   }
 
