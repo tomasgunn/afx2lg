@@ -21,7 +21,7 @@ bool Preset::valid() const {
 }
 
 bool Preset::is_global_setting() const {
-  return valid() && id_ >= (3 * 128);
+  return id_ >= (3 * 128) && id_ < (4 * 128);
 }
 
 bool Preset::from_edit_buffer() const {
