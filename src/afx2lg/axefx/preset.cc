@@ -96,26 +96,6 @@ bool Preset::Finalize(const PresetChecksumHeader& header, int size) {
   if (is_global_setting()) {
     // For system backups, we treat each preset block as an opaque block of
     // data by default.
-    AxeFxIIBlockID id = static_cast<AxeFxIIBlockID>(*p);
-    if (GetBlockType(id) != BLOCK_TYPE_INVALID) {
-      shared_ptr<BlockParameters> block_params(new BlockParameters());
-      int values_eaten = block_params->Initialize(&(*p), params_.end() - p);
-      ASSERT(values_eaten);
-      if (values_eaten)
-        block_parameters_.push_back(block_params);
-    } else if (*p != 0) {
-      // Check if this is a user IR.
-      // User IR's are stored with 32 char ascii strings, which contain the
-      // name, followed by 0x3F0 (1008) bytes that are (presumably) the actual
-      // IR.  In cases I've seen, the last 16bit value in the IR data is 0xFFFF.
-      const char* name = reinterpret_cast<const char*>(&(*p));
-      if ((params_.size() * sizeof(params_[0])) > 32 &&
-           IsAsciiString(name, 32)) {
-#ifdef _DEBUG
-        std::cout << "User IR: " << name << std::endl;
-#endif
-      }
-    }
     return true;
   }
 

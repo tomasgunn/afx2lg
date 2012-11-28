@@ -29,6 +29,7 @@ class Preset {
   int id() const { return id_; }
   const std::string& name() const { return name_; }
   const Matrix& matrix() const { return matrix_; }
+  const PresetParameters& params() const { return params_; }
 
   bool valid() const;
 
