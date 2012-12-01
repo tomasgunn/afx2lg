@@ -68,7 +68,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>MinSpace</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>..\..\..\gtest\include;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_VARIADIC_MAX=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -92,6 +92,7 @@
     <ClCompile Include="axefx_test.cc" />
     <ClCompile Include="lg_test.cc" />
     <ClCompile Include="main.cc" />
+    <ClCompile Include="midi_test.cc" />
     <ClCompile Include="test_utils.cc" />
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +110,9 @@
     <ProjectReference Include="..\lg\lg_parser.vcxproj">
       <Project>{e24fb759-5e59-4bc3-aeff-8d5b41b281e1}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\midi\midi.vcxproj">
+      <Project>{5ab4d0c9-8fc6-4a76-afce-0a867b9b171d}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
