@@ -1,0 +1,28 @@
+#!/usr/bin/python
+# Copyright (c) 2012 Tomas Gunnarsson. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+vars = {
+}
+
+deps = {
+  "src/gtest": "http://googletest.googlecode.com/svn/trunk",
+  "src/tools/gyp": "http://gyp.googlecode.com/svn/trunk",
+}
+
+deps_os = {
+}
+
+include_rules = [
+]
+
+skip_child_includes = [
+]
+
+hooks = [
+  {
+    "pattern": ".",
+    "action": ["python", "src/build/gyp_afx2lg.py"],
+  },
+]
