@@ -5,13 +5,13 @@
 #ifndef TEST_TEST_UTILS_H_
 #define TEST_TEST_UTILS_H_
 
-#include "common_types.h"
+#include "common/common_types.h"
 
 #include <memory>
 #include <string>
 
 bool ReadTestFileIntoBuffer(const std::string& file,
-                            std::auto_ptr<uint8_t>* buffer,
+                            std::unique_ptr<uint8_t>* buffer,
                             int* file_size);
 
 

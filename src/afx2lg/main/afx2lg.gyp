@@ -13,12 +13,12 @@
         '..',
       ],
       'dependencies': [
-        '../axefx.gyp:axefx',
+        '../axefx/axefx.gyp:axefx',
         '../lg/lg.gyp:lg',
       ],
       'sources': [
-        '../common_types.h',
-        '../main.cc',
+        '../common/common_types.h',
+        'main.cc',
       ],
     },
   ],

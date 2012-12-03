@@ -3,7 +3,7 @@
 
 #include "gtest/gtest.h"
 
-#include "common_types.h"
+#include "common/common_types.h"
 #include "midi/midi_in.h"
 #include "midi/midi_out.h"
 #include "test_utils.h"

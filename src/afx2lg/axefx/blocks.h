@@ -5,7 +5,7 @@
 #ifndef AXE_FX_BLOCKS_H_
 #define AXE_FX_BLOCKS_H_
 
-#include "common_types.h"
+#include "common/common_types.h"
 #include "axefx/axefx_ii_ids.h"
 
 #include <vector>

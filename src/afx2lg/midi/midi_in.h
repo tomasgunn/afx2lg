@@ -5,7 +5,7 @@
 #ifndef MIDI_MIDI_IN_H_
 #define MIDI_MIDI_IN_H_
 
-#include "common_types.h"
+#include "common/common_types.h"
 #include "common/thread_loop.h"
 #include "midi/midi_out.h"  // for MidiDeviceInfo.
 

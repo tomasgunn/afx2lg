@@ -20,7 +20,7 @@ class AxeFxII : public testing::Test {
   }
 
   bool ParseFile(const char* file_path) {
-    std::auto_ptr<uint8_t> buffer;
+    std::unique_ptr<uint8_t> buffer;
     int file_size;
     bool ok = ReadTestFileIntoBuffer(file_path, &buffer, &file_size);
     ASSERT(ok);

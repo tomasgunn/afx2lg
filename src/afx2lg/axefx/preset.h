@@ -5,7 +5,7 @@
 #ifndef AXEFX_PRESET_H_
 #define AXEFX_PRESET_H_
 
-#include "common_types.h"
+#include "common/common_types.h"
 
 #include "axefx/blocks.h"
 #include "axefx/preset_parameters.h"

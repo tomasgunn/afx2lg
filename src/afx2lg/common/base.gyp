@@ -12,12 +12,12 @@
       'target_name': 'base',
       'type': 'static_library',
       'include_dirs': [
-        '.',
+        '..',
       ],
       'sources': [
-        'common_types.h',  # todo: move.
-        'common/thread_loop.cc',  # todo: rename common->base
-        'common/thread_loop.h',
+        'common_types.h',
+        'thread_loop.cc',  # todo: rename common->base
+        'thread_loop.h',
       ],
     },
   ],

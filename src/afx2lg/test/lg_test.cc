@@ -3,7 +3,7 @@
 
 #include "gtest/gtest.h"
 
-#include "common_types.h"
+#include "common/common_types.h"
 #include "lg/lg_parser.h"
 #include "test_utils.h"
 
@@ -24,7 +24,7 @@ class MockCallback : public lg::LgParserCallback {
 };
 
 TEST(LittleGiant, BasicReadInputFile) {
-  std::auto_ptr<uint8_t> buffer;
+  std::unique_ptr<uint8_t> buffer;
   int file_size;
   ASSERT_TRUE(ReadTestFileIntoBuffer("lg2/input.txt", &buffer,
                                      &file_size));

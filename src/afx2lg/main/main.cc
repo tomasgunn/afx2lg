@@ -1,8 +1,6 @@
 // Copyright (c) 2012, Tomas Gunnarsson
 // All rights reserved.
 
-#include "stdafx.h"
-
 #include "axefx/axe_fx_sysex_parser.h"
 #include "lg/lg_parser.h"
 
@@ -10,7 +8,7 @@
 #include <fstream>
 #include <iostream>
 
-bool ReadFileIntoBuffer(const std::string& path, std::auto_ptr<char>* out,
+bool ReadFileIntoBuffer(const std::string& path, std::unique_ptr<char>* out,
                         size_t* file_size) {
   std::ifstream f;
   f.open(path.c_str(), std::fstream::in | std::ios::binary);
@@ -186,7 +184,7 @@ int main(int argc, char* argv[]) {
   axefx::PresetMap presets;
   axefx::SysExParser parser;
   for (size_t i = 0; i < syx_files.size(); ++i) {
-    std::auto_ptr<char> buffer;
+    std::unique_ptr<char> buffer;
     size_t size = 0;
     if (ReadFileIntoBuffer(syx_files[i].path(), &buffer, &size)) {
       const uint8_t* b = reinterpret_cast<const uint8_t*>(buffer.get());
@@ -207,7 +205,7 @@ int main(int argc, char* argv[]) {
   }
 
   lg::LgParser lg_parser;
-  std::auto_ptr<char> buffer;
+  std::unique_ptr<char> buffer;
   size_t size = 0;
   if (ReadFileIntoBuffer(input_template, &buffer, &size)) {
     LgSetupFileWriter callback(presets);

@@ -5,7 +5,7 @@
 #ifndef MIDI_MIDI_OUT_H_
 #define MIDI_MIDI_OUT_H_
 
-#include "common_types.h"
+#include "common/common_types.h"
 
 #include <functional>
 #include <memory>

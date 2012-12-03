@@ -5,7 +5,7 @@
 #ifndef AXE_FX_SYSEX_TYPES_H_
 #define AXE_FX_SYSEX_TYPES_H_
 
-#include "common_types.h"
+#include "common/common_types.h"
 
 #include <string>
 

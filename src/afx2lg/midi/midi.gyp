@@ -10,19 +10,19 @@
       'defines': [
       ],
       'include_dirs': [
-        '.',
+        '..',
       ],
       'sources': [
-        'midi/midi_in.cc',
-        'midi/midi_in.h',
-        'midi/midi_out.cc',
-        'midi/midi_out.h',
+        'midi_in.cc',
+        'midi_in.h',
+        'midi_out.cc',
+        'midi_out.h',
       ],
       'conditions': [
         ['OS=="win"', {
           'sources': [
-            'midi/midi_in_win.cc',
-            'midi/midi_out_win.cc',
+            'midi_in_win.cc',
+            'midi_out_win.cc',
           ],
           'link_settings': {
             'libraries': [
