@@ -15,7 +15,7 @@ extern std::string g_process_path;
 FilePath GetTestFilePath(const std::string& test_file) {
   FilePath ret(g_process_path);
   ret.Set(ret.RemoveFileName());
-  ret.Set(FilePath::ConcatPaths(ret, FilePath("../test/data")));
+  ret.Set(FilePath::ConcatPaths(ret, FilePath("../../afx2lg/test/data")));
   ret.Set(FilePath::ConcatPaths(ret, FilePath(test_file)));
   return ret;
 }

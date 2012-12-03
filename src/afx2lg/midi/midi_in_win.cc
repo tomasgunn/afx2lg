@@ -8,8 +8,6 @@
 
 #include <iostream>
 
-#pragma warning(disable: 4351)
-
 namespace midi {
 class MidiInWin : public MidiIn {
  public:

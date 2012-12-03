@@ -1127,9 +1127,9 @@
           # '<(windows_sdk_path)/Include/winrt',
           # '$(VSInstallDir)/VC/atlmfc/include',
         ],
-        'msvs_cygwin_dirs': ['<(DEPTH)/third_party/cygwin'],
+        # 'msvs_cygwin_dirs': ['<(DEPTH)/third_party/cygwin'],
         'msvs_disabled_warnings': [
-          # TODO(tommi): Add as needed.
+          4100, 4189, 4351,
         ],
         'msvs_settings': {
           'VCCLCompilerTool': {

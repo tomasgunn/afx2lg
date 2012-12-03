@@ -69,7 +69,6 @@ bool Preset::SetPresetId(const PresetIdHeader& header, int size) {
     // http://forum.fractalaudio.com/axe-fx-ii-discussion/58581-help-loading-presets-using-sysex-librarian.html#post732659
     id_ = kPresetIdBuffer;
   } else {
-    const int kMaxAxeFxPresetCount = 0x80 * 3;
     id_ = header.preset_number.As16bit();
   }
 
