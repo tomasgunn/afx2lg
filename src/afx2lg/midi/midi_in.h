@@ -6,16 +6,14 @@
 #define MIDI_MIDI_IN_H_
 
 #include "common_types.h"
+#include "common/thread_loop.h"
 #include "midi/midi_out.h"  // for MidiDeviceInfo.
 
 #include <memory>
-#include <string>
-#include <vector>
 
 namespace midi {
 
 using std::tr1::shared_ptr;
-using std::unique_ptr;
 
 // Interface class for a midi-in connection + device enumeration.
 class MidiIn {
@@ -23,7 +21,9 @@ class MidiIn {
   virtual ~MidiIn() {}
 
   // Create an instance of MidiIn.
-  static unique_ptr<MidiIn> Create(const shared_ptr<MidiDeviceInfo>& device);
+  static shared_ptr<MidiIn> Create(
+      const shared_ptr<MidiDeviceInfo>& device,
+      const shared_ptr<common::ThreadLoop>& worker_thread);
 
   // Enumerate all midi output devices.
   static bool EnumerateDevices(DeviceInfos* devices);
@@ -31,8 +31,11 @@ class MidiIn {
   const shared_ptr<MidiDeviceInfo>& device() const { return device_; }
 
  protected:
-  MidiIn(const shared_ptr<MidiDeviceInfo>& device);
+  MidiIn(const shared_ptr<MidiDeviceInfo>& device,
+         const shared_ptr<common::ThreadLoop>& worker_thread);
+
   shared_ptr<MidiDeviceInfo> device_;
+  std::weak_ptr<common::ThreadLoop> worker_;
 };
 
 }  // namespace midi

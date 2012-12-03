@@ -94,6 +94,7 @@
     <ClCompile Include="main.cc" />
     <ClCompile Include="midi_test.cc" />
     <ClCompile Include="test_utils.cc" />
+    <ClCompile Include="thread_loop_test.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test_utils.h" />
@@ -106,6 +107,9 @@
     <ProjectReference Include="..\axefx\axefx.vcxproj">
       <Project>{15235a01-4c0d-4a51-b2dd-67728afde404}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\common\common.vcxproj">
+      <Project>{20b5dde2-abdc-447b-867a-9f52acdac90a}</Project>
     </ProjectReference>
     <ProjectReference Include="..\lg\lg_parser.vcxproj">
       <Project>{e24fb759-5e59-4bc3-aeff-8d5b41b281e1}</Project>

@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midi", "midi\midi.vcxproj", "{5AB4D0C9-8FC6-4A76-AFCE-0A867B9B171D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "common\common.vcxproj", "{20B5DDE2-ABDC-447B-867A-9F52ACDAC90A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -49,6 +51,10 @@ Global
 		{5AB4D0C9-8FC6-4A76-AFCE-0A867B9B171D}.Debug|Win32.Build.0 = Debug|Win32
 		{5AB4D0C9-8FC6-4A76-AFCE-0A867B9B171D}.Release|Win32.ActiveCfg = Release|Win32
 		{5AB4D0C9-8FC6-4A76-AFCE-0A867B9B171D}.Release|Win32.Build.0 = Release|Win32
+		{20B5DDE2-ABDC-447B-867A-9F52ACDAC90A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{20B5DDE2-ABDC-447B-867A-9F52ACDAC90A}.Debug|Win32.Build.0 = Debug|Win32
+		{20B5DDE2-ABDC-447B-867A-9F52ACDAC90A}.Release|Win32.ActiveCfg = Release|Win32
+		{20B5DDE2-ABDC-447B-867A-9F52ACDAC90A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -13,8 +13,9 @@
 namespace midi {
 class MidiInWin : public MidiIn {
  public:
-  MidiInWin(const shared_ptr<MidiDeviceInfo>& device)
-      : MidiIn(device),
+  MidiInWin(const shared_ptr<MidiDeviceInfo>& device,
+            const shared_ptr<common::ThreadLoop>& worker_thread)
+      : MidiIn(device, worker_thread),
         midi_in_(NULL),
         headers_(),
         buffers_() {
@@ -24,7 +25,10 @@ class MidiInWin : public MidiIn {
     Close();
   }
 
-  bool Init() {
+  bool Init(const shared_ptr<MidiInWin>& shared_this) {
+    weak_this_ = shared_this;
+    ASSERT(shared_this.get() == this);
+
     MMRESULT res = midiInOpen(&midi_in_, device_->id(),
         reinterpret_cast<DWORD_PTR>(&MidiInCallback),
         reinterpret_cast<DWORD_PTR>(this), CALLBACK_FUNCTION);
@@ -49,32 +53,36 @@ class MidiInWin : public MidiIn {
   void Close() {
     if (midi_in_) {
       midiInStop(midi_in_);
-#if 1
-      // Doing this will cause a crash in the driver at shutdown :-(
+      midiInReset(midi_in_);  // Must call before unpreparing the buffers.
       for (int i = 0; i < arraysize(headers_); ++i)
         midiInUnprepareHeader(midi_in_, &headers_[i], sizeof(headers_[i]));
-#endif
 
       midiInClose(midi_in_);
       midi_in_ = NULL;
     }
   }
 
-  // MidiIn implementation.
-
-
  protected:
+  static void ReAddBuffer(const std::weak_ptr<MidiInWin>& me, MIDIHDR* header) {
+    std::shared_ptr<MidiInWin> locked(me.lock());
+    if (locked && locked->midi_in_) {
+      MMRESULT res = midiInAddBuffer(locked->midi_in_, header, sizeof(*header));
+      ASSERT(res == MMSYSERR_NOERROR);
+    }
+  }
+
   void OnLongData(MIDIHDR* header) {
     if (header->dwBytesRecorded) {
-      std::cout << std::hex;
-      for (DWORD i = 0; i < header->dwBytesRecorded; ++i) {
-        std::cout << (static_cast<uint32_t>(header->lpData[i]) & 0xFF) << " ";
+      // We need to add the buffer asynchronously. We can't do it from here or
+      // we'll deadlock.
+      shared_ptr<common::ThreadLoop> worker(worker_.lock());
+      if (worker) {
+        worker->QueueTask(std::bind(&MidiInWin::ReAddBuffer, weak_this_,
+                          header));
       }
-      std::cout << std::dec << std::endl;
-      MMRESULT res = midiInAddBuffer(midi_in_, header, sizeof(*header));
-      ASSERT(res == MMSYSERR_NOERROR);
     } else {
-      std::cout << "No bytes recorded, not pushing buffer back, assuming shutdown.";
+      // We get this call when exiting for each buffer.  Let's not add it
+      // back, or we will crash :)
     }
   }
 
@@ -99,29 +107,26 @@ class MidiInWin : public MidiIn {
 
   static void CALLBACK MidiInCallback(HMIDIIN midi_in, UINT status, 
       DWORD_PTR instance, DWORD_PTR msg, DWORD time_stamp) {
-    if (status == MIM_LONGERROR) {
-      // We can get callbacks here at exitprocess time when everything has
-      // been closed and deleted :-/
-      return;
-    }
     MidiInWin* me = reinterpret_cast<MidiInWin*>(instance);
     ASSERT(midi_in == me->midi_in_ || me->midi_in_ == NULL);
     me->OnCallback(status, msg);
   }
 
-
   HMIDIIN midi_in_;
   static const int kHeaderCount = 64;
   MIDIHDR headers_[kHeaderCount];
   char buffers_[kHeaderCount][4096];
+  std::weak_ptr<MidiInWin> weak_this_;
 };
 
 // static
-unique_ptr<MidiIn> MidiIn::Create(const shared_ptr<MidiDeviceInfo>& device) {
-  unique_ptr<MidiInWin> ret(new MidiInWin(device));
-  if (!ret->Init())
+shared_ptr<MidiIn> MidiIn::Create(
+    const shared_ptr<MidiDeviceInfo>& device,
+    const shared_ptr<common::ThreadLoop>& worker_thread) {
+  shared_ptr<MidiInWin> ret(new MidiInWin(device, worker_thread));
+  if (!ret->Init(ret))
     ret.reset();
-  return std::move(ret);
+  return ret;
 }
 
 // static

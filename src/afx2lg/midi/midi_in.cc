@@ -5,6 +5,9 @@
 
 namespace midi {
 
-MidiIn::MidiIn(const shared_ptr<MidiDeviceInfo>& device) : device_(device) {}
+MidiIn::MidiIn(const shared_ptr<MidiDeviceInfo>& device,
+                const shared_ptr<common::ThreadLoop>& worker_thread)
+    : device_(device), worker_(worker_thread) {
+}
 
 }  // namespace midi

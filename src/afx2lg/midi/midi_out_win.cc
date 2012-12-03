@@ -8,28 +8,28 @@
 
 #include <iostream>
 
-class Lock {
- public:
-  Lock() { ::InitializeCriticalSection(&cs_); }
-  ~Lock() { ::DeleteCriticalSection(&cs_); }
-
-  void Acquire() { ::EnterCriticalSection(&cs_); }
-  void Release() { ::LeaveCriticalSection(&cs_); }
-
- private:
-  CRITICAL_SECTION cs_;
-};
-
-template <typename T>
-class AutoLock {
- public:
-  AutoLock(T& lock) : lock_(lock) { lock_.Acquire(); }
-  ~AutoLock() { lock_.Release(); }
- private:
-  T& lock_;
-};
-
 namespace midi {
+namespace {
+class MessageBufferOwner {
+  public:
+  MessageBufferOwner(unique_ptr<Message>& message,
+                      const std::function<void()>& on_complete)
+      : on_complete_(on_complete), message_(std::move(message)) {
+  }
+
+  ~MessageBufferOwner() {
+    if (on_complete_ != nullptr)
+      on_complete_();
+  }
+
+  void ClearCallback() { on_complete_ = nullptr; }
+
+  private:
+  std::function<void()> on_complete_;
+  unique_ptr<Message> message_;
+};
+}  // namespace
+
 class MidiOutWin : public MidiOut {
  public:
   MidiOutWin(const shared_ptr<MidiDeviceInfo>& device)
@@ -57,35 +57,39 @@ class MidiOutWin : public MidiOut {
 
   // MidiOut implementation.
 
-  virtual bool Send(unique_ptr<Message> message) {
+  virtual bool Send(unique_ptr<Message> message,
+                    const std::function<void()>& on_complete) {
     ASSERT(!message->empty());
 
     // |message| has already been pushed onto the queue.
     MIDIHDR* header = new MIDIHDR();
     header->dwBufferLength = message->size();
     header->lpData = reinterpret_cast<char*>(&message->at(0));
-    header->dwUser = reinterpret_cast<DWORD_PTR>(message.get());
+
+    auto owner = new MessageBufferOwner(message, on_complete);
+    header->dwUser = reinterpret_cast<DWORD_PTR>(owner);
 
     MMRESULT res = midiOutPrepareHeader(midi_out_, header,
                                         sizeof(*header));
-    if (res == MMSYSERR_NOERROR) {
+    if (res == MMSYSERR_NOERROR)
       res = midiOutLongMsg(midi_out_, header, sizeof(*header));
-      if (res == MMSYSERR_NOERROR)
-        message.release();
-    }
     
-    if (res != MMSYSERR_NOERROR)
+    if (res != MMSYSERR_NOERROR) {
+      owner->ClearCallback();
+        delete owner;
       delete header;
+    }
 
     return res == MMSYSERR_NOERROR;
   }
 
  protected:
   void OnDone(MIDIHDR* header) {
-    Message* buffer = reinterpret_cast<Message*>(header->dwUser);
-    delete buffer;
+    MessageBufferOwner* buffer =
+        reinterpret_cast<MessageBufferOwner*>(header->dwUser);
     MMRESULT res = midiOutUnprepareHeader(midi_out_, header, sizeof(*header));
     ASSERT(res == MMSYSERR_NOERROR);
+    delete buffer;
     delete header;
   }
 

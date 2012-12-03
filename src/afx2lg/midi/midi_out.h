@@ -7,6 +7,7 @@
 
 #include "common_types.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -44,7 +45,8 @@ class MidiOut {
   static bool EnumerateDevices(DeviceInfos* devices);
 
   // Send assumes ownership of the message.
-  virtual bool Send(unique_ptr<Message> message) = 0;
+  virtual bool Send(unique_ptr<Message> message,
+                    const std::function<void()>& on_complete) = 0;
 
   const shared_ptr<MidiDeviceInfo>& device() const { return device_; }
 

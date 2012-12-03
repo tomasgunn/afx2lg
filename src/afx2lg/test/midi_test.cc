@@ -8,9 +8,6 @@
 #include "midi/midi_out.h"
 #include "test_utils.h"
 
-#include <windows.h>
-#include <WinUser.h>
-
 namespace midi {
 
 TEST(MidiOut, EnumerateDevices) {
@@ -49,13 +46,16 @@ TEST(MidiIn, OpenInputDevice) {
   DeviceInfos devices;
   EXPECT_TRUE(MidiIn::EnumerateDevices(&devices));
   ASSERT_FALSE(devices.empty());
+  shared_ptr<common::ThreadLoop> loop(new common::ThreadLoop());
   for (auto it = devices.begin(); it != devices.end(); ++it) {
-    unique_ptr<MidiIn> m(MidiIn::Create(*it));
+    shared_ptr<MidiIn> m(MidiIn::Create(*it, loop));
     ASSERT_TRUE(m);
 #ifdef _DEBUG
     std::cout << "opened " << m->device()->name() << std::endl;
 #endif
   }
+
+  EXPECT_TRUE(loop->empty());
 }
 
 TEST(MidiOut, SendSysExToAxeFx) {
@@ -78,8 +78,13 @@ TEST(MidiOut, SendSysExToAxeFx) {
       new Message(&kGetPresetName[0],
                   &kGetPresetName[arraysize(kGetPresetName)]));
 
-  EXPECT_TRUE(axefx->Send(std::move(message)));
+  // TODO: Use a timeout thread or something to catch timeouts and end the loop.
+  shared_ptr<common::ThreadLoop> loop(new common::ThreadLoop());
+  auto fn = std::bind(&common::ThreadLoop::Quit, loop);
+  EXPECT_TRUE(axefx->Send(std::move(message), fn));
+  EXPECT_TRUE(loop->Run());
 }
+
 TEST(Midi, GetPresetName) {
   DeviceInfos out_devices, in_devices;
   EXPECT_TRUE(MidiOut::EnumerateDevices(&out_devices));
@@ -94,11 +99,12 @@ TEST(Midi, GetPresetName) {
       out_device = MidiOut::Create(*it);
   }
 
-  unique_ptr<MidiIn> in_device;
+  shared_ptr<common::ThreadLoop> loop(new common::ThreadLoop());
+  shared_ptr<MidiIn> in_device;
   for (auto it = in_devices.begin(); !in_device && it != in_devices.end();
        ++it) {
     if ((*it)->name().find("AXE") != std::string::npos)
-      in_device = MidiIn::Create(*it);
+      in_device = MidiIn::Create(*it, loop);
   }
 
   ASSERT_TRUE(out_device);
@@ -110,8 +116,12 @@ TEST(Midi, GetPresetName) {
       new Message(&kGetPresetName[0],
                   &kGetPresetName[arraysize(kGetPresetName)]));
 
-  EXPECT_TRUE(out_device->Send(std::move(message)));
-  Sleep(1000);
+  // TODO: Set up expectation for received data.
+  // Then quit the loop when the data is received or a timeout occurs.
+  auto fn = std::bind(&common::ThreadLoop::Quit, loop);
+  EXPECT_TRUE(out_device->Send(std::move(message), fn));
+
+  EXPECT_TRUE(loop->Run());
 }
 
 TEST(Midi, GetSystemBankDump) {
@@ -128,11 +138,12 @@ TEST(Midi, GetSystemBankDump) {
       out_device = MidiOut::Create(*it);
   }
 
-  unique_ptr<MidiIn> in_device;
+  shared_ptr<common::ThreadLoop> loop(new common::ThreadLoop());
+  shared_ptr<MidiIn> in_device;
   for (auto it = in_devices.begin(); !in_device && it != in_devices.end();
        ++it) {
     if ((*it)->name().find("AXE") != std::string::npos)
-      in_device = MidiIn::Create(*it);
+      in_device = MidiIn::Create(*it, loop);
   }
 
   ASSERT_TRUE(out_device);
@@ -144,9 +155,12 @@ TEST(Midi, GetSystemBankDump) {
       new Message(&kGetSystemBank[0],
                   &kGetSystemBank[arraysize(kGetSystemBank)]));
 
-  EXPECT_TRUE(out_device->Send(std::move(message)));
+  EXPECT_TRUE(out_device->Send(std::move(message), nullptr));
 
-  Sleep(60 * 1000);
+  // Set the timeout between buffer receives to be 1 second.
+  // We'll quit 1 second after receiving the last message.
+  loop->set_timeout(std::chrono::milliseconds(1000));
+  EXPECT_FALSE(loop->Run());
 }
 
 }  // namespace midi
