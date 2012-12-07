@@ -102,7 +102,7 @@ class IDRange {
 
 class SysExFileParam {
  public:
-  explicit SysExFileParam(const char* str) : path_(str) {}
+  explicit SysExFileParam(const std::string& str) : path_(str) {}
   const std::string& path() const { return path_; }
 
   void SetRange(const char* range) {
@@ -137,20 +137,59 @@ class SysExFileParam {
   std::vector<IDRange> ranges_;
 };
 
+bool FileExists(const std::string& path) {
+  std::ifstream file(path);
+  return file.good();
+}
+
+bool PromptUser(const std::string& prompt, std::string* ret) {
+  std::cout << prompt;
+  ret->clear();
+  char ch;
+  while (std::cin.get(ch)) {
+    if (ch == 27)  // Esc
+      return false;
+    if (ch == '\n')
+      break;
+    ret->push_back(ch);
+  }
+  return true;
+}
+
+bool GetFileNameFromStdIn(const std::string& prompt, std::string* path) {
+  do {
+    if (!PromptUser(prompt, path))
+      return false;
+    if (FileExists(*path)) {
+      break;
+    } else if (!path->empty() && path->at(0) != '\"') {
+      path->insert(0, "\"");
+      path->append("\"");
+      if (FileExists(*path))
+        break;
+    }
+    std::cout << "Unable to open " << *path << std::endl;
+  } while (true);
+
+  return true;
+}
+
 // TODO: Support a way to generate better and custom bank names.
 bool ParseArgs(int argc,
                char* argv[],
                std::vector<SysExFileParam>* syx_files,
-               std::string* input_template) {
-  if (argc < 3)
-    return false;
-
+               std::string* input_template,
+               bool* did_prompt) {
+  *did_prompt = false;
   SysExFileParam* prev_sysex = NULL;
 
   for (int i = 1; i < argc; ++i) {
     const char* arg = argv[i];
     if (arg[0] != '-' || strlen(arg) < 4 || arg[2] != '=') {
       std::cerr << "Unknown/malformed argument: '" << arg << "'\n\n";
+      return false;
+    } else if (arg[1] == '?') {
+      // bail straight away and print the usage instructions.
       return false;
     } else if (arg[1] == 's') {
       syx_files->push_back(SysExFileParam(&arg[3]));
@@ -170,15 +209,53 @@ bool ParseArgs(int argc,
     }
   }
 
+  if (input_template->empty()) {
+    *did_prompt = true;
+    GetFileNameFromStdIn("I need a path to a LittleGiant exported text file: ",
+        input_template);
+  }
+
+  if (syx_files->empty()) {
+    *did_prompt = true;
+    std::string path, range;
+    GetFileNameFromStdIn("I need a path to a preset file or bank (.syx): ",
+        &path);
+    if (!PromptUser("Enter a preset range or * for all: ", &range))
+      range.clear();
+    SysExFileParam entry(path);
+    if (!range.empty() && range != "*")
+      entry.SetRange(range.c_str());
+    syx_files->push_back(entry);
+  }
+
   return !syx_files->empty() && !input_template->empty();
 }
 
 int main(int argc, char* argv[]) {
   std::vector<SysExFileParam> syx_files;
   std::string input_template;
-  if (!ParseArgs(argc, argv, &syx_files, &input_template)) {
+  bool did_prompt = false;
+  if (!ParseArgs(argc, argv, &syx_files, &input_template, &did_prompt)) {
     PrintUsage();
     return -1;
+  }
+
+  std::filebuf output_stream;
+  std::streambuf* original_streambuf = nullptr;
+  if (did_prompt) {
+    while (!output_stream.is_open()) {
+      std::string out_file;
+      PromptUser("Enter an output file name:", &out_file);
+      bool overwrite = false;
+      if (FileExists(out_file)) {
+        std::string answer;
+        PromptUser("Overwrite the existing file (y/n)? ", &answer);
+        if (answer != "y" && answer != "Y")
+          continue;
+      }
+      output_stream.open(out_file, std::ios::out);
+    }
+    original_streambuf = std::cout.rdbuf(&output_stream);
   }
 
   axefx::PresetMap presets;
@@ -214,5 +291,8 @@ int main(int argc, char* argv[]) {
     std::cerr << "Failed to open " << input_template << std::endl;
   }
 
-	return 0;
+  if (original_streambuf)
+    std::cout.rdbuf(original_streambuf);
+
+  return 0;
 }
