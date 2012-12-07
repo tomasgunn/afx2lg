@@ -17,7 +17,7 @@
       'dependencies': [
         '../axefx/axefx.gyp:axefx',
         '../common/base.gyp:base',
-        '../gtest.gyp:gtest',
+        '../gtest/gtest.gyp:gtest',
         '../lg/lg.gyp:lg',
         '../midi/midi.gyp:midi',
       ],

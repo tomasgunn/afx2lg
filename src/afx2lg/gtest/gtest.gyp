@@ -11,11 +11,11 @@
         '_VARIADIC_MAX=10',
       ],
       'include_dirs': [
-        '../gtest',
-        '../gtest/include',
+        '../../gtest',
+        '../../gtest/include',
       ],
       'sources': [
-        '../gtest/src/gtest-all.cc',
+        '../../gtest/src/gtest-all.cc',
       ],
     },
   ],

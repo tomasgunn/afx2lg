@@ -10,7 +10,7 @@
       'dependencies': [
         'axefx/axefx.gyp:*',
         'common/base.gyp:*',
-        'gtest.gyp:*',
+        'gtest/gtest.gyp:*',
         'lg/lg.gyp:*',
         'main/afx2lg.gyp:*',
         'midi/midi.gyp:*',
