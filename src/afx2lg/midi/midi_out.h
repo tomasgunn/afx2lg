@@ -12,6 +12,10 @@
 #include <string>
 #include <vector>
 
+namespace axefx {
+struct FractalSysExHeader;
+}  // namespace axefx
+
 namespace midi {
 
 using std::tr1::shared_ptr;
@@ -31,7 +35,10 @@ class MidiDeviceInfo {
 };
 
 typedef std::vector<shared_ptr<MidiDeviceInfo> > DeviceInfos;
-typedef std::vector<uint8_t> Message;
+class Message : public std::vector<uint8_t> {
+ public:
+  Message(const axefx::FractalSysExHeader* header, size_t size);
+};
 
 // Interface class for a midi-out connection + device enumeration.
 class MidiOut {

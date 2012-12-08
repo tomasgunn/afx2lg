@@ -20,7 +20,7 @@ void LgEntry::AppendLine(const char* line, const char* eol) {
   // LG export files can have superfluous whitespace at the end of names.
   // Let's trim that now.
   std::string& s= lines_.back();
-  size_t chars = 0, i = s.length() - 2;
+  size_t chars = 0, i = s.length() > 2 ? s.length() - 2 : 0;
   while (i > 0 && isspace(s[i])) {
     --i;
     ++chars;

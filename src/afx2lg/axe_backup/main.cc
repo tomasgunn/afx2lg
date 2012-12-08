@@ -228,9 +228,8 @@ int main(int argc, char* argv[]) {
       std::cout << "\nWriting " << files[i].description << " to "
                 << files[i].name << ".\n";
       BankDumpRequest request(files[i].bank_id);
-      uint8_t* header = reinterpret_cast<uint8_t*>(&request);
       unique_ptr<midi::Message> message(
-          new midi::Message(header, header + sizeof(request)));
+          new midi::Message(&request, sizeof(request)));
       midi_in->set_ondataavailable(std::bind(&WriteToFile, &f, loop, _1, _2));
       if (midi_out->Send(std::move(message), nullptr)) {
         // Run until we get a timeout.  When we time out, we assume that the

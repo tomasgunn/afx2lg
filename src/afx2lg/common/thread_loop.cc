@@ -6,7 +6,7 @@
 namespace common {
 
 ThreadLoop::ThreadLoop()
-    : timeout_(std::chrono::milliseconds::max()),
+    : timeout_(std::chrono::milliseconds(1000 * 60 * 10)),
       is_running_(false) {
 }
 

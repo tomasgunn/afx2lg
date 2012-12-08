@@ -29,7 +29,10 @@ enum AxeFxModel {
 };
 
 enum FunctionId {
+  TUNER_DATA = 0x0D,  // Includes SeptetPair.
+  PRESET_NAME = 0x0F,
   TEMPO_HEARTBEAT = 0x10,
+  PRESET_CHANGE = 0x14,  // Includes SeptedPair == preset id.
   BANK_DUMP_REQUEST = 0x1C,
   PRESET_ID = 0x77,  // Use PresetIdHeader.
   PRESET_PARAMETERS = 0x78,  // Use ParameterBlockHeader.
@@ -113,6 +116,14 @@ struct BankDumpRequest : public FractalSysExHeader {
   }
 
   uint8_t bank_id;
+  FractalSysExEnd end;
+};
+
+struct GenericNoDataMessage : public FractalSysExHeader {
+  GenericNoDataMessage(FunctionId id)
+      : FractalSysExHeader(id) {
+    end.CalculateChecksum(this);
+  }
   FractalSysExEnd end;
 };
 
