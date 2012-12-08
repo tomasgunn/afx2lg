@@ -118,8 +118,8 @@ bool Preset::Finalize(const PresetChecksumHeader& header, int size) {
   ++p;  // NULL terminator.
 
   // Save the effect block matrix.
-  COMPILE_ASSERT(sizeof(matrix_[0][0]) == sizeof(*p) * 2,
-                 matrix_size_mismatch);
+  static_assert(sizeof(matrix_[0][0]) == sizeof(*p) * 2,
+                "matrix size mismatch");
   memcpy(&matrix_[0][0], &(*p), sizeof(matrix_));
   p += sizeof(matrix_) / sizeof(*p);
 

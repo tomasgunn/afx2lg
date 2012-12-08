@@ -15,6 +15,8 @@ namespace midi {
 
 using std::tr1::shared_ptr;
 
+typedef std::function<void(const uint8_t*, size_t)> DataAvailable;
+
 // Interface class for a midi-in connection + device enumeration.
 class MidiIn {
  public:
@@ -30,12 +32,18 @@ class MidiIn {
 
   const shared_ptr<MidiDeviceInfo>& device() const { return device_; }
 
+  void set_ondataavailable(const DataAvailable& data_available) {
+    // TODO: Assert that we're on the worker thread.
+    data_available_ = data_available;
+  }
+
  protected:
   MidiIn(const shared_ptr<MidiDeviceInfo>& device,
          const shared_ptr<common::ThreadLoop>& worker_thread);
 
   shared_ptr<MidiDeviceInfo> device_;
   std::weak_ptr<common::ThreadLoop> worker_;
+  DataAvailable data_available_;
 };
 
 }  // namespace midi

@@ -14,6 +14,13 @@ bool VerifySysExChecksum(const uint8_t* sys_ex, int size) {
 }
 
 bool IsFractalSysEx(const uint8_t* sys_ex, int size) {
+  if (!IsFractalSysExNoChecksum(sys_ex, size))
+    return false;
+
+  return VerifySysExChecksum(sys_ex, size);
+}
+
+bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, int size) {
   ASSERT(sys_ex[0] == kSysExStart);
   ASSERT(sys_ex[size - 1] == kSysExEnd);
 
@@ -22,7 +29,7 @@ bool IsFractalSysEx(const uint8_t* sys_ex, int size) {
     return false;
   }
 
-  return VerifySysExChecksum(sys_ex, size);
+  return true;
 }
 
 uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, int size) {
@@ -48,12 +55,27 @@ uint16_t Fractal16bit::As16bit() const {
   return ret;
 }
 
+FractalSysExHeader::FractalSysExHeader(FunctionId func)
+    : sys_ex_start(kSysExStart),
+      model_id(static_cast<uint8_t>(AXE_FX_II)),
+      function_id(static_cast<uint8_t>(func)) {
+  static_assert(sizeof(manufacturer_id) == sizeof(kFractalMidiId),
+                "Size mismatch");
+  memcpy(&manufacturer_id, &kFractalMidiId[0], sizeof(kFractalMidiId));
+}
+
 AxeFxModel FractalSysExHeader::model() const {
   return static_cast<AxeFxModel>(model_id);
 }
 
 FunctionId FractalSysExHeader::function() const {
   return static_cast<FunctionId>(function_id);
+}
+
+void FractalSysExEnd::CalculateChecksum(const FractalSysExHeader* start) {
+  const uint8_t* sys_ex = reinterpret_cast<const uint8_t*>(start);
+  int size = (&sys_ex_end - sys_ex) + 1;
+  checksum = CalculateSysExChecksum(sys_ex, size);
 }
 
 }  // namespace axefx

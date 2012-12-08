@@ -8,12 +8,8 @@
       'target_name': 'All',
       'type': 'none',
       'dependencies': [
-        'axefx/axefx.gyp:*',
-        'common/base.gyp:*',
-        'gtest/gtest.gyp:*',
-        'lg/lg.gyp:*',
+        'axe_backup/axe_backup.gyp:*',
         'main/afx2lg.gyp:*',
-        'midi/midi.gyp:*',
         'test/test.gyp:*',
       ],
     }

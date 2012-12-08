@@ -61,9 +61,14 @@ class MidiInWin : public MidiIn {
   }
 
  protected:
-  static void ReAddBuffer(const std::weak_ptr<MidiInWin>& me, MIDIHDR* header) {
+  static void OnProcessBuffer(const std::weak_ptr<MidiInWin>& me, MIDIHDR* header) {
     std::shared_ptr<MidiInWin> locked(me.lock());
     if (locked && locked->midi_in_) {
+      if (locked->data_available_ != nullptr) {
+        locked->data_available_(
+            reinterpret_cast<const uint8_t*>(&header->lpData[0]),
+            header->dwBytesRecorded);
+      }
       MMRESULT res = midiInAddBuffer(locked->midi_in_, header, sizeof(*header));
       ASSERT(res == MMSYSERR_NOERROR);
     }
@@ -75,7 +80,7 @@ class MidiInWin : public MidiIn {
       // we'll deadlock.
       shared_ptr<common::ThreadLoop> worker(worker_.lock());
       if (worker) {
-        worker->QueueTask(std::bind(&MidiInWin::ReAddBuffer, weak_this_,
+        worker->QueueTask(std::bind(&MidiInWin::OnProcessBuffer, weak_this_,
                           header));
       }
     } else {
