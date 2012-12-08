@@ -21,6 +21,9 @@ def main(args):
   if sys.platform == 'win32':
     # We need Visual Studio 2012 on Windows.
     os.environ['GYP_MSVS_VERSION'] = "2012"
+    # Ninja doesn't like it when we use exceptions for some reason.
+    # os.environ['GYP_GENERATORS'] ='ninja,msvs'
+    os.environ['GYP_GENERATORS'] ='msvs'
 
   gyp_file = os.path.normpath(os.path.join(script_dir, '../afx2lg/all.gyp'))
   args.append(gyp_file)
