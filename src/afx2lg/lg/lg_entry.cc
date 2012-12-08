@@ -20,7 +20,7 @@ void LgEntry::AppendLine(const char* line, const char* eol) {
   // LG export files can have superfluous whitespace at the end of names.
   // Let's trim that now.
   std::string& s= lines_.back();
-  int chars = 0, i = s.length() - 2;
+  size_t chars = 0, i = s.length() - 2;
   while (i > 0 && isspace(s[i])) {
     --i;
     ++chars;
@@ -186,10 +186,10 @@ void Patch::AppendLine(const char* line, const char* eol) {
     int cc, value;
     if (ParseCC(str, &channel_, &cc, &value) && cc == 0) {
       bank_id_ = value;
-      cc_index_ = lines_.size() - 1;
+      cc_index_ = static_cast<int>(lines_.size() - 1);
     } else if (ParseProgramChange(str, &channel_, &value)) {
       preset_ = value;
-      pc_index_ = lines_.size() - 1;
+      pc_index_ = static_cast<int>(lines_.size() - 1);
     }
   }
 }
@@ -241,7 +241,7 @@ void Patch::SetPreset(int preset_number) {
             channel_, bank_id_);
 
   if (cc_index_ == -1) {
-    cc_index_ = lines_.size();
+    cc_index_ = static_cast<int>(lines_.size());
     if (pc_index_ == -1) {
       lines_.push_back(std::string(buffer));
     } else {
@@ -255,7 +255,7 @@ void Patch::SetPreset(int preset_number) {
             channel_, preset_);
 
   if (pc_index_ == -1) {
-    pc_index_ = lines_.size();
+    pc_index_ = static_cast<int>(lines_.size());
     lines_.push_back(std::string(buffer));
   } else {
     lines_[pc_index_] = buffer;

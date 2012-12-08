@@ -75,13 +75,13 @@ class BlockParameters {
   // Populates the block parameters from a 16bit value array.
   // Returns the number of 16bit items eaten or 0 if the buffer
   // wasn't big enough.
-  int Initialize(const uint16_t* data, int count);
+  size_t Initialize(const uint16_t* data, size_t count);
 
   AxeFxBlockType type() const;
   AxeFxIIBlockID block() const;
 
   bool supports_xy() const;
-  int param_count() const;
+  size_t param_count() const;
   bool is_modifier() const;
   BlockConfig active_config() const { return config_; }
   int global_block_index() const { return global_block_index_; }

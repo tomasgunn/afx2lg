@@ -162,8 +162,8 @@ BlockParameters::~BlockParameters() {}
 
 // Populates the block parameters from a 16bit value array.
 // Returns the number of 16bit items eaten.
-int BlockParameters::Initialize(const uint16_t* data, int count) {
-  if (count < 2 || count < (data[1] + 2)) {
+size_t BlockParameters::Initialize(const uint16_t* data, size_t count) {
+  if (count < 2U || count < (data[1] + 2U)) {
     ASSERT(false);
     return 0;
   }
@@ -196,7 +196,7 @@ bool BlockParameters::supports_xy() const {
   return !is_modifier() && BlockSupportsXY(type());
 }
 
-int BlockParameters::param_count() const {
+size_t BlockParameters::param_count() const {
   return params_.size();
 }
 

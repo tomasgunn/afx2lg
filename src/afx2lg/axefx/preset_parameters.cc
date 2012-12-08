@@ -13,9 +13,9 @@ PresetParameters::PresetParameters() {}
 PresetParameters::~PresetParameters() {}
 
 bool PresetParameters::AppendFromSysEx(const ParameterBlockHeader& header,
-                                       int header_size) {
+                                       size_t header_size) {
   ASSERT(header.function() == PRESET_PARAMETERS);
-  int expected_size = sizeof(header) +
+  size_t expected_size = sizeof(header) +
       ((header.value_count - 1)* sizeof(header.values[0])) +
       kSysExTerminationByteCount;
   if (header_size != expected_size) {

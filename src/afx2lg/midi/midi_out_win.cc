@@ -63,7 +63,7 @@ class MidiOutWin : public MidiOut {
 
     // |message| has already been pushed onto the queue.
     MIDIHDR* header = new MIDIHDR();
-    header->dwBufferLength = message->size();
+    header->dwBufferLength = static_cast<DWORD>(message->size());
     header->lpData = reinterpret_cast<char*>(&message->at(0));
 
     auto owner = new MessageBufferOwner(message, on_complete);

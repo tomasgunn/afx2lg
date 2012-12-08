@@ -59,7 +59,7 @@ shared_ptr<BlockParameters> Preset::LookupBlock(AxeFxIIBlockID block) const {
   return shared_ptr<BlockParameters>();
 }
 
-bool Preset::SetPresetId(const PresetIdHeader& header, int size) {
+bool Preset::SetPresetId(const PresetIdHeader& header, size_t size) {
   ASSERT(header.function() == PRESET_ID);
   ASSERT(size == (sizeof(header) + kSysExTerminationByteCount));
   ASSERT(header.unknown.As16bit() == 0x10);  // <- not sure what this is.
@@ -75,7 +75,7 @@ bool Preset::SetPresetId(const PresetIdHeader& header, int size) {
   return valid();
 }
 
-bool Preset::AddParameterData(const ParameterBlockHeader& header, int size) {
+bool Preset::AddParameterData(const ParameterBlockHeader& header, size_t size) {
   ASSERT(valid());
   bool ret = params_.AppendFromSysEx(header, size);
   if (!ret) {
@@ -85,7 +85,7 @@ bool Preset::AddParameterData(const ParameterBlockHeader& header, int size) {
   return ret;
 }
 
-bool Preset::Finalize(const PresetChecksumHeader& header, int size) {
+bool Preset::Finalize(const PresetChecksumHeader& header, size_t size) {
   ASSERT(valid());
   if (header.checksum.As16bit() != params_.Checksum())
     return false;
@@ -126,7 +126,7 @@ bool Preset::Finalize(const PresetChecksumHeader& header, int size) {
   // Parse per block parameters (including modifiers).
   while (p < params_.end() && *p) {
     shared_ptr<BlockParameters> block_params(new BlockParameters());
-    int values_eaten = block_params->Initialize(&(*p), params_.end() - p);
+    size_t values_eaten = block_params->Initialize(&(*p), params_.end() - p);
     if (!values_eaten)
       return false;
     block_parameters_.push_back(block_params);

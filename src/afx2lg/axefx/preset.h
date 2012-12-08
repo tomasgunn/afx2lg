@@ -42,9 +42,9 @@ class Preset {
   shared_ptr<BlockParameters> LookupBlock(AxeFxIIBlockID block) const;
 
   // Parse methods.
-  bool SetPresetId(const PresetIdHeader& header, int size);
-  bool AddParameterData(const ParameterBlockHeader& header, int size);
-  bool Finalize(const PresetChecksumHeader& header, int size);
+  bool SetPresetId(const PresetIdHeader& header, size_t size);
+  bool AddParameterData(const ParameterBlockHeader& header, size_t size);
+  bool Finalize(const PresetChecksumHeader& header, size_t size);
 
  private:
   // Valid while parsing, then discarded.

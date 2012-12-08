@@ -214,7 +214,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
       left_over_params.insert(left_over_params.end(), &params[0],
                               &params[missing_values]);
       shared_ptr<BlockParameters> block_params(new BlockParameters());
-      int values_eaten = block_params->Initialize(&left_over_params[0],
+      size_t values_eaten = block_params->Initialize(&left_over_params[0],
           left_over_params.size());
       EXPECT_EQ(left_over_params.size(), values_eaten);
       global_blocks.push_back(block_params);
@@ -230,8 +230,8 @@ TEST_F(AxeFxII, ParseSystemBackup) {
           break;
         }
         shared_ptr<BlockParameters> block_params(new BlockParameters());
-        int values_eaten = block_params->Initialize(&(*p), params.end() - p);
-        ASSERT_NE(0, values_eaten);
+        size_t values_eaten = block_params->Initialize(&(*p), params.end() - p);
+        ASSERT_NE(0U, values_eaten);
         global_blocks.push_back(block_params);
         p += values_eaten;
       }

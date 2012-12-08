@@ -27,7 +27,7 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end) {
       sys_ex_begins = &pos[0];
     } else if (pos[0] == kSysExEnd) {
       ASSERT(sys_ex_begins);
-      int size = (pos - sys_ex_begins) + 1;
+      size_t size = (pos - sys_ex_begins) + 1;
       if (!IsFractalSysEx(sys_ex_begins, size)) {
         ASSERT(false);
         std::cerr << "This doesn't look like a sysex file for AxeFx\n";

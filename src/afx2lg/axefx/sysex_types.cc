@@ -6,21 +6,21 @@
 namespace axefx {
 
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx
-bool VerifySysExChecksum(const uint8_t* sys_ex, int size) {
+bool VerifySysExChecksum(const uint8_t* sys_ex, size_t size) {
   return size >= 3 &&
          sys_ex[0] == kSysExStart &&
          sys_ex[size - 1] == kSysExEnd &&
          sys_ex[size - 2] == CalculateSysExChecksum(sys_ex, size);
 }
 
-bool IsFractalSysEx(const uint8_t* sys_ex, int size) {
+bool IsFractalSysEx(const uint8_t* sys_ex, size_t size) {
   if (!IsFractalSysExNoChecksum(sys_ex, size))
     return false;
 
   return VerifySysExChecksum(sys_ex, size);
 }
 
-bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, int size) {
+bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, size_t size) {
   ASSERT(sys_ex[0] == kSysExStart);
   ASSERT(sys_ex[size - 1] == kSysExEnd);
 
@@ -32,9 +32,9 @@ bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, int size) {
   return true;
 }
 
-uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, int size) {
+uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, size_t size) {
   uint8_t checksum = 0;
-  int i = 0;
+  size_t i = 0;
   for (; i < size - 2; ++i)
     checksum ^= sys_ex[i];
   checksum &= 0x7F;
@@ -74,7 +74,7 @@ FunctionId FractalSysExHeader::function() const {
 
 void FractalSysExEnd::CalculateChecksum(const FractalSysExHeader* start) {
   const uint8_t* sys_ex = reinterpret_cast<const uint8_t*>(start);
-  int size = (&sys_ex_end - sys_ex) + 1;
+  size_t size = (&sys_ex_end - sys_ex) + 1;
   checksum = CalculateSysExChecksum(sys_ex, size);
 }
 

@@ -13,7 +13,7 @@ class MockCallback : public lg::LgParserCallback {
   virtual ~MockCallback() {}
 
   virtual const axefx::PresetMap& GetPresetMap() { return map_; }
-  virtual void WriteLine(const char* line, int length) {
+  virtual void WriteLine(const char* line, size_t length) {
     std::string str(line, length);
     // std::cout << str;
     lines_.push_back(str);

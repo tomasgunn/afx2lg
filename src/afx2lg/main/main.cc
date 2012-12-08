@@ -35,7 +35,7 @@ class LgSetupFileWriter : public lg::LgParserCallback {
       : presets_(presets) {}
   ~LgSetupFileWriter() {}
 
-  virtual void WriteLine(const char* line, int length) {
+  virtual void WriteLine(const char* line, size_t length) {
     std::cout << std::string(line, length);
   }
 

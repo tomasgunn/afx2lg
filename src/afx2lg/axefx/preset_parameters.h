@@ -18,7 +18,7 @@ class PresetParameters : public std::vector<uint16_t> {
   PresetParameters();
   ~PresetParameters();
 
-  bool AppendFromSysEx(const ParameterBlockHeader& header, int header_size);
+  bool AppendFromSysEx(const ParameterBlockHeader& header, size_t header_size);
 
   uint16_t Checksum() const;
 };

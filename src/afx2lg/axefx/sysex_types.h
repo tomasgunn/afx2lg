@@ -16,11 +16,11 @@ const uint8_t kSysExEnd = 0xF7;
 const int kSysExTerminationByteCount = 2;  // checksum + kSysExEnd == 2 bytes.
 const uint8_t kFractalMidiId[] = { 0x00, 0x01, 0x74 };
 
-bool IsFractalSysEx(const uint8_t* sys_ex, int size);
-bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, int size);
+bool IsFractalSysEx(const uint8_t* sys_ex, size_t size);
+bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, size_t size);
 
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx
-uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, int size);
+uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, size_t size);
 
 enum AxeFxModel {
   AXE_FX_STANDARD = 0x01,  // or 0?
