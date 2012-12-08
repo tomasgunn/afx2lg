@@ -14,6 +14,9 @@
       'include_dirs': [
         '..',
       ],
+      'dependencies': [
+        '../axefx/axefx.gyp:axefx_types',
+      ],
       'sources': [
         'lg_entry.cc',
         'lg_entry.h',
