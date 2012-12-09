@@ -5,12 +5,13 @@
 {
   'targets': [
     {
-      'target_name': 'axebackup',
+      'target_name': 'axehttp',
       'type': 'executable',
       'defines': [
       ],
       'include_dirs': [
         '..',
+        '../..'
       ],
       'dependencies': [
         '../axefx/axefx.gyp:*',

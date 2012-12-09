@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # Copyright (c) 2012 Tomas Gunnarsson. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -742,20 +741,6 @@
                 'cflags_cc': [
                 ],
               }],
-              ['android_build_type==1 and chromium_code==0', {
-                'cflags': [
-                  # There is a class of warning which:
-                  #  1) Android always enables and also treats as errors
-                  #  2) Chromium ignores in third party code
-                  # For now, I am leaving these warnings enabled but preventing
-                  # them from being treated as errors here.
-                  '-Wno-error=address',
-                  '-Wno-error=format-security',
-                  '-Wno-error=non-virtual-dtor',
-                  '-Wno-error=return-type',
-                  '-Wno-error=sequence-point',
-                ],
-              }],
               ['target_arch == "arm"', {
                 'ldflags': [
                   # Enable identical code folding to reduce size.
@@ -974,9 +959,6 @@
               ['asan==1', {
                 'variables': {
                  'asan_saves_file': 'asan.saves',
-                },
-                'xcode_settings': {
-                  'CHROMIUM_STRIP_SAVE_FILE': '<(asan_saves_file)',
                 },
               }],
             ],
