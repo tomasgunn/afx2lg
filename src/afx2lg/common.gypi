@@ -865,34 +865,33 @@
       'target_defaults': {
         'mac_bundle': 0,
         'xcode_settings': {
-#          'ALWAYS_SEARCH_USER_PATHS': 'NO',
 #          # Don't link in libarclite_macosx.a, see http://crbug.com/156530.
-#          'CLANG_LINK_OBJC_RUNTIME': 'NO',          # -fno-objc-link-runtime
+          'CLANG_LINK_OBJC_RUNTIME': 'NO',          # -fno-objc-link-runtime
 #          'GCC_C_LANGUAGE_STANDARD': 'c99',         # -std=c99
-#          'GCC_CW_ASM_SYNTAX': 'NO',                # No -fasm-blocks
-#          'GCC_ENABLE_CPP_RTTI': 'NO',              # -fno-rtti
-#          'GCC_ENABLE_PASCAL_STRINGS': 'NO',        # No -mpascal-strings
-#          # GCC_INLINES_ARE_PRIVATE_EXTERN maps to -fvisibility-inlines-hidden
-#          'GCC_INLINES_ARE_PRIVATE_EXTERN': 'YES',
-#          'GCC_OBJC_CALL_CXX_CDTORS': 'YES',        # -fobjc-call-cxx-cdtors
-#          'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',      # -fvisibility=hidden
-#          'GCC_THREADSAFE_STATICS': 'NO',           # -fno-threadsafe-statics
-#          'GCC_TREAT_WARNINGS_AS_ERRORS': 'YES',    # -Werror
+          'GCC_CW_ASM_SYNTAX': 'NO',                # No -fasm-blocks
+          'GCC_ENABLE_CPP_RTTI': 'NO',              # -fno-rtti
+          'GCC_ENABLE_PASCAL_STRINGS': 'NO',        # No -mpascal-strings
+          # GCC_INLINES_ARE_PRIVATE_EXTERN maps to -fvisibility-inlines-hidden
+          'GCC_INLINES_ARE_PRIVATE_EXTERN': 'YES',
+          'GCC_OBJC_CALL_CXX_CDTORS': 'YES',        # -fobjc-call-cxx-cdtors
+          'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',      # -fvisibility=hidden
+          'GCC_THREADSAFE_STATICS': 'NO',           # -fno-threadsafe-statics
+          'GCC_TREAT_WARNINGS_AS_ERRORS': 'YES',    # -Werror
 #          'GCC_VERSION': '4.2',
-#          'GCC_WARN_ABOUT_MISSING_NEWLINE': 'YES',  # -Wnewline-eof
-#          'USE_HEADERMAP': 'NO',
-#          'WARNING_CFLAGS': [
-#            '-Wall',
-#            '-Wendif-labels',
-#            '-Wextra',
-#            # Don't warn about unused function parameters.
-#            '-Wno-unused-parameter',
-#            # Don't warn about the "struct foo f = {0};" initialization
-#            # pattern.
-#            '-Wno-missing-field-initializers',
-#          ],
+          'GCC_WARN_ABOUT_MISSING_NEWLINE': 'YES',  # -Wnewline-eof
+          'USE_HEADERMAP': 'NO',
+          'WARNING_CFLAGS': [
+            '-Wall',
+            '-Wendif-labels',
+            '-Wextra',
+            # Don't warn about unused function parameters.
+            '-Wno-unused-parameter',
+            # Don't warn about the "struct foo f = {0};" initialization
+            # pattern.
+            '-Wno-missing-field-initializers',
+          ],
           'ALWAYS_SEARCH_USER_PATHS': 'NO',
-          'ARCHS': '$(ARCHS_STANDARD_64_BIT)',
+          #'ARCHS': '$(ARCHS_STANDARD_64_BIT)',
           'CLANG_CXX_LANGUAGE_STANDARD': 'gnu++0x',
           'CLANG_CXX_LIBRARY': 'libc++',
           'CLANG_ENABLE_OBJC_ARC': 'YES',
@@ -912,7 +911,7 @@
           'GCC_WARN_ABOUT_RETURN_TYPE': 'YES',
           'GCC_WARN_UNINITIALIZED_AUTOS': 'YES',
           'GCC_WARN_UNUSED_VARIABLE': 'YES',
-          'MACOSX_DEPLOYMENT_TARGET': '10.8',
+          'MACOSX_DEPLOYMENT_TARGET': '<(mac_deployment_target)',
           'ONLY_ACTIVE_ARCH': 'YES',
         },
         'target_conditions': [
@@ -951,9 +950,10 @@
         },
         'target_conditions': [
           ['_type=="executable"', {
-            # TODO(tommi): Do we need this?
-            #'postbuilds': [
-            #  {
+            'postbuilds': [
+              #{
+                 # TODO(tommi): Do we need this?
+
             #    # Arranges for data (heap) pages to be protected against
             #    # code execution when running on Mac OS X 10.7 ("Lion"), and
             #    # ensures that the position-independent executable (PIE) bit
@@ -972,8 +972,8 @@
             #      '<(change_mach_o_flags_path)',
             #      '>@(change_mach_o_flags_options)',
             #    ],
-            #  },
-            #],
+              #},
+            ],
             'conditions': [
               ['asan==1', {
                 'variables': {
@@ -1026,16 +1026,16 @@
                 # produce the .dSYM and strip the executable.  strip_from_xcode
                 # only operates in the Release configuration.
                 'postbuilds': [
-                  {
-                    'variables': {
-                      # Define strip_from_xcode in a variable ending in _path
-                      # so that gyp understands it's a path and performs proper
-                      # relativization during dict merging.
-                      'strip_from_xcode_path': 'mac/strip_from_xcode',
-                    },
-                    'postbuild_name': 'Strip If Needed',
-                    'action': ['<(strip_from_xcode_path)'],
-                  },
+                  #{
+                    #'variables': {
+                    #  # Define strip_from_xcode in a variable ending in _path
+                    #  # so that gyp understands it's a path and performs proper
+                    #  # relativization during dict merging.
+                    #  'strip_from_xcode_path': 'mac/strip_from_xcode',
+                    #},
+                    #'postbuild_name': 'Strip If Needed',
+                    #'action': ['<(strip_from_xcode_path)'],
+                  #},
                 ],  # postbuilds
               }],  # mac_real_dsym
             ],  # target_conditions

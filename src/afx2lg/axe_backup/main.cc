@@ -70,7 +70,7 @@ bool ParseArgs(int argc, char* argv[], Options* options) {
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
     bool option_known = false;
-    for (int j = 0; !option_known && j < arraysize(flags); ++j) {
+    for (size_t j = 0; !option_known && j < arraysize(flags); ++j) {
       if (arg.compare(flags[j].name) == 0) {
         *flags[j].flag = true;
         option_known = true;
@@ -226,7 +226,7 @@ int main(int argc, char* argv[]) {
   };
 
   // Set up a map from midi message that requests dump, to output file.
-  for (int i = 0; i < arraysize(files); ++i) {
+  for (size_t i = 0; i < arraysize(files); ++i) {
     std::ofstream& f = files[i].file;
     if (files[i].enabled && CreateOutputFile(&files[i].name, &f)) {
       std::cout << "\nWriting " << files[i].description << " to "

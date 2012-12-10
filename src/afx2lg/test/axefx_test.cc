@@ -55,13 +55,13 @@ TEST(FractalTypes, BlockSceneState) {
 
 TEST_F(AxeFxII, ParseBankFile) {
   ASSERT_TRUE(ParseFile("axefx2/V7_Bank_A.syx"));
-  EXPECT_EQ(128, parser_.presets().size());
+  EXPECT_EQ(128u, parser_.presets().size());
 }
 
 TEST_F(AxeFxII, ParseFw9bBankFile) {
   ASSERT_TRUE(ParseFile("axefx2/9b_A.syx"));
   const PresetMap& presets = parser_.presets();
-  EXPECT_EQ(128, presets.size());
+  EXPECT_EQ(128u, presets.size());
 
 #ifdef _DEBUG
   PresetMap::const_iterator i = presets.begin();
@@ -87,16 +87,16 @@ TEST_F(AxeFxII, ParseMultipleBankFiles) {
     "axefx2/V7_Bank_C.syx",
   };
 
-  for (int i = 0; i < arraysize(files); ++i)
+  for (size_t i = 0; i < arraysize(files); ++i)
     EXPECT_TRUE(ParseFile(files[i]));
 
-  EXPECT_EQ(arraysize(files) * 128, parser_.presets().size());
+  EXPECT_EQ(arraysize(files) * 128u, parser_.presets().size());
 }
 
 TEST_F(AxeFxII, ParsePresetFile) {
   ASSERT_TRUE(ParseFile("axefx2/p000318_DynamicJCM800.syx"));
   const PresetMap& presets = parser_.presets();
-  EXPECT_EQ(1, presets.size());
+  EXPECT_EQ(1u, presets.size());
   PresetMap::const_iterator front = presets.begin();
   // This particular test file was saved from the edit buffer, so even though
   // the name suggests 318, the id will be -1 because of what's in the sysex
@@ -108,14 +108,14 @@ TEST_F(AxeFxII, ParsePresetFile) {
 TEST_F(AxeFxII, ParseXyPresetFile) {
   ASSERT_TRUE(ParseFile("axefx2/xy_test2.syx"));
   const PresetMap& presets = parser_.presets();
-  EXPECT_EQ(1, presets.size());
+  EXPECT_EQ(1u, presets.size());
   EXPECT_EQ("Y Is Default", presets.begin()->second->name());
 }
 
 TEST_F(AxeFxII, ParseScenesXYBypassFile) {
   ASSERT_TRUE(ParseFile("axefx2/one_amp_8scenes_xy_1.syx"));
   const PresetMap& presets = parser_.presets();
-  ASSERT_EQ(1, presets.size());
+  ASSERT_EQ(1u, presets.size());
 
   const Preset& p = *(presets.begin()->second.get());
   EXPECT_EQ("BYPASS", p.name());
@@ -194,7 +194,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
   // As global blocks get used, these slots get overwritten with the block
   // state.  Then the |version| field will contain the block id instead,
   // followed by regular block data.
-  EXPECT_EQ(128, parser_.presets().size());
+  EXPECT_EQ(128u, parser_.presets().size());
 
   std::vector<shared_ptr<BlockParameters> > global_blocks;
   PresetParameters left_over_params;
@@ -244,7 +244,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
       EXPECT_EQ(data_block->global_bypass_or_scenes_cc, 34);
     }
   }
-  EXPECT_EQ(710, global_blocks.size());
+  EXPECT_EQ(710u, global_blocks.size());
   shared_ptr<BlockParameters> amp1 = global_blocks[0];
   EXPECT_EQ(BLOCK_AMP_1, amp1->block());
 #if defined(_DEBUG)
