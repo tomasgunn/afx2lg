@@ -41,18 +41,24 @@ namespace axefx {
 
 AxeFxBlockType GetBlockType(AxeFxIIBlockID id) {
   switch (id) {
+    default:
+      break;
 %s  }
   return BLOCK_TYPE_INVALID;
 }
 
 const char* GetBlockName(AxeFxIIBlockID id) {
   switch (id) {
+    default:
+      break;
 %s  }
   return "";
 }
 
 int GetBlockBypassParamID(AxeFxBlockType type) {
   switch (type) {
+    default:
+      break;
 %s  }
   return -1;
 }

@@ -9,6 +9,7 @@
 #include <iostream>
 
 namespace {
+#if 0
 // Returns true if the string is zero terminated and all characters before the
 // terminator are ascii characters.  |count| must include the size of the buffer
 // not the assumed length of the string.
@@ -26,6 +27,7 @@ bool IsAsciiString(const char* p, int count) {
 
   return i != 0 && p[i] == '\0';
 }
+#endif
 }
 
 namespace axefx {

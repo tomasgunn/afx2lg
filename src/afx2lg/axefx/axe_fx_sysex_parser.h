@@ -12,7 +12,7 @@
 
 namespace axefx {
 
-using std::tr1::shared_ptr;
+using std::shared_ptr;
 
 class Preset;
 typedef std::map<int, shared_ptr<Preset> > PresetMap;

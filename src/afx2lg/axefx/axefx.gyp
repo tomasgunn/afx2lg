@@ -27,7 +27,7 @@
             'axefx_ii_ids.h',
           ],
           'action': [
-            'python.exe', 'type_gen.py', 'AxeFxII_7.axeml', './'
+            'python', 'type_gen.py', 'AxeFxII_7.axeml', './'
           ],
         },
       ],

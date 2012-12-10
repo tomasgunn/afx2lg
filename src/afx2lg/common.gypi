@@ -5,18 +5,28 @@
 # Mostly borrowed from Chrome's common.gypi file.
 {
   'variables': {
-    # TODO(tommi): fix the below.
-    'os_posix%': 0,
-    # 'windows_sdk_path': 'C:/Program Files (x86)/Microsoft SDKs/Windows/v8.0A',
-    'msvs_use_common_linker_extras': 1,
+    'conditions': [
+      ['OS=="win"', {
+        'os_posix%': 0,
+      }, {
+        'os_posix%': 1,
+      }],
+    ],
+
+    'msvs_use_common_linker_extras%': 1,
     'build_dir_prefix%': '',
-    'msvs_use_common_release': 1,
+    'msvs_use_common_release%': 1,
     'mac_release_optimization%': '3', # Use -O3 unless overridden
     'mac_debug_optimization%': '0',   # Use -O0 unless overridden
     'release_extra_cflags%': '',
     'win_debug_extra_cflags%': '',
     'msvs_debug_link_incremental%': 1,
     'debug_extra_cflags%': '',
+    'mac_strip_release%': 0,
+    'asan%': 0,
+    'mac_deployment_target%': '10.7',
+    'mac_sdk%': '10.7',
+    'mac_sdk_path%': '',
   },
   'target_defaults': {
     'variables': {
@@ -50,10 +60,6 @@
       'win_release_RuntimeLibrary%': '0', # 0 = /MT (nondebug static)
       'win_debug_RuntimeLibrary%': '1',   # 1 = /MTd (debug static)
     },
-    'conditions': [
-    ],  # conditions for 'target_defaults'
-    'target_conditions': [
-    ],  # target_conditions for 'target_defaults'
 
     'default_configuration': 'Debug',
     'configurations': {
@@ -935,18 +941,6 @@
                       'mac/change_mach_o_flags_from_xcode.sh',
                   'change_mach_o_flags_options%': [
                   ],
-                  'target_conditions': [
-                    ['mac_pie==0 or release_valgrind_build==1', {
-                      # Don't enable PIE if it's unwanted. It's unwanted if
-                      # the target specifies mac_pie=0 or if building for
-                      # Valgrind, because Valgrind doesn't understand slide.
-                      # See the similar mac_pie/release_valgrind_build check
-                      # below.
-                      'change_mach_o_flags_options': [
-                        '--no-pie',
-                      ],
-                    }],
-                  ],
                 },
                 'postbuild_name': 'Change Mach-O Flags',
                 'action': [
@@ -963,7 +957,7 @@
               }],
             ],
             'target_conditions': [
-              ['mac_pie==1 and release_valgrind_build==0', {
+              ['mac_pie==1', {
                 # Turn on position-independence (ASLR) for executables. When
                 # PIE is on for the Chrome executables, the framework will
                 # also be subject to ASLR.

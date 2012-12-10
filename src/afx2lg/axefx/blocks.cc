@@ -126,6 +126,8 @@ bool BlockSupportsXY(AxeFxBlockType type) {
     case BLOCK_TYPE_REVERB:
     case BLOCK_TYPE_WAH:
       return true;
+    default:
+      break;
   }
   return false;
 }
