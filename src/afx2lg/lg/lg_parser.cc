@@ -65,6 +65,7 @@ void LgParser::ParseBuffer(LgParserCallback* callback,
   // Keep track of how many banks we have now, before we start creating banks,
   // so we'll know how many to add to the entry list.
   size_t bank_size = banks_.size();
+  size_t bank_id = bank_size;
 
   const axefx::PresetMap& presets = callback->GetPresetMap();
   axefx::PresetMap::const_iterator it = presets.begin();
@@ -81,11 +82,9 @@ void LgParser::ParseBuffer(LgParserCallback* callback,
       if (!new_bank.get()) {
         new_bank.reset(new Bank(*template_bank.get()));
         // Generate a new bank name.
-        char buffer[0xff] = {0};
-        // TODO: It might be nicer to name the bank after the default preset.
-        sprintf_s(buffer, arraysize(buffer), "Bank:%s",
-            p->name().c_str());
-        new_bank->SetName(buffer);
+        std::string bank("Bank:");
+        bank += std::to_string(bank_id++);
+        new_bank->SetName(bank);
         new_bank->bank_list()->AppendBank(new_bank->name());
         banks_.push_back(new_bank);
       }

@@ -246,7 +246,6 @@ int main(int argc, char* argv[]) {
     while (!output_stream.is_open()) {
       std::string out_file;
       PromptUser("Enter an output file name:", &out_file);
-      bool overwrite = false;
       if (FileExists(out_file)) {
         std::string answer;
         PromptUser("Overwrite the existing file (y/n)? ", &answer);

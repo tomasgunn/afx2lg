@@ -5,6 +5,20 @@
 
 namespace midi {
 
+#ifndef _WIN32
+// static
+shared_ptr<MidiIn> MidiIn::Create(
+    const shared_ptr<MidiDeviceInfo>& device,
+    const shared_ptr<common::ThreadLoop>& worker_thread) {
+  return nullptr;
+}
+
+// static
+bool MidiIn::EnumerateDevices(DeviceInfos* devices) {
+  return false;
+}
+#endif
+
 MidiIn::MidiIn(const shared_ptr<MidiDeviceInfo>& device,
                 const shared_ptr<common::ThreadLoop>& worker_thread)
     : device_(device), worker_(worker_thread) {

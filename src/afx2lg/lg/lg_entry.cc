@@ -7,13 +7,15 @@
 #include "lg/lg_parser.h"
 #include "lg/lg_utils.h"
 
+#include <iomanip>
 #include <regex>
+#include <sstream>
 
 namespace lg {
 
-using std::tr1::match_results;
-using std::tr1::regex;
-using std::tr1::regex_match;
+using std::match_results;
+using std::regex;
+using std::regex_match;
 
 void LgEntry::AppendLine(const char* line, const char* eol) {
   lines_.push_back(std::string(line, eol + 1));  // \n inclusive.
@@ -93,17 +95,19 @@ void Bank::WriteLines(LgParserCallback* callback) {
   callback->WriteLine(it->c_str(), it->length());
   ++it;
 
-  char buffer[0xff] = {0};
   if (!inherited_from_name_.empty()) {
-    sprintf_s(buffer, arraysize(buffer), "DERIVED FROM %hs\n",
-              inherited_from_name_.c_str());
-    callback->WriteLine(buffer, strlen(buffer));
+    std::string line("DERIVED FROM ");
+    line += inherited_from_name_;
+    line += '\n';
+    // TODO: Just change the callback to use std::string.
+    callback->WriteLine(line.c_str(), line.length());
   }
 
   if (!default_preset_.empty()) {
-    sprintf_s(buffer, arraysize(buffer), "DEFAULTPRESET %hs\n",
-              default_preset_.c_str());
-    callback->WriteLine(buffer, strlen(buffer));
+    std::string line("DEFAULTPRESET ");
+    line += default_preset_;
+    line += '\n';
+    callback->WriteLine(line.c_str(), line.length());
   }
 
   for (; it != lines_.end(); ++it)
@@ -236,29 +240,32 @@ void Patch::SetPreset(int preset_number) {
   preset_ = (preset_number & 0x7F);
   bank_id_ = preset_number >> 7;
 
-  char buffer[0xff] = {0};
-  sprintf_s(buffer, arraysize(buffer), "+ %02i CC    000 %03i\n",
-            channel_, bank_id_);
+  std::stringstream stream;
+  // Same as "+ %02i CC    000 %03i\n".
+  stream << "+ " << std::setfill('0') << std::setw(2) << channel_
+      << " CC    000 " << std::setw(3) << bank_id_ << std::endl;
 
   if (cc_index_ == -1) {
     cc_index_ = static_cast<int>(lines_.size());
     if (pc_index_ == -1) {
-      lines_.push_back(std::string(buffer));
+      lines_.push_back(stream.str());
     } else {
-      lines_.insert(lines_.begin() + pc_index_, buffer);
+      lines_.insert(lines_.begin() + pc_index_, stream.str());
     }
   } else {
-    lines_[cc_index_] = buffer;
+    lines_[cc_index_] = stream.str();
   }
 
-  sprintf_s(buffer, arraysize(buffer), "+ %02i PC    %03i\n",
-            channel_, preset_);
+  stream.clear();
+  // Same as "+ %02i PC    %03i\n".
+  stream << "+ " << std::setfill('0') << std::setw(2) << channel_
+         << " PC    " << std::setw(3) << preset_ << std::endl;
 
   if (pc_index_ == -1) {
     pc_index_ = static_cast<int>(lines_.size());
-    lines_.push_back(std::string(buffer));
+    lines_.push_back(stream.str());
   } else {
-    lines_[pc_index_] = buffer;
+    lines_[pc_index_] = stream.str();
   }
 }
 

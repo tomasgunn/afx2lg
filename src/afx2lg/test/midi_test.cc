@@ -87,7 +87,7 @@ TEST(MidiOut, OpenOutputDevice) {
 
   for (auto it = devices.begin(); it != devices.end(); ++it) {
     unique_ptr<MidiOut> m(MidiOut::Create(*it));
-    ASSERT_TRUE(m);
+    ASSERT_TRUE(m.get());
 #ifdef _DEBUG
     std::cout << "opened " << m->device()->name() << std::endl;
 #endif
@@ -101,7 +101,7 @@ TEST(MidiIn, OpenInputDevice) {
   shared_ptr<common::ThreadLoop> loop(new common::ThreadLoop());
   for (auto it = devices.begin(); it != devices.end(); ++it) {
     shared_ptr<MidiIn> m(MidiIn::Create(*it, loop));
-    ASSERT_TRUE(m);
+    ASSERT_TRUE(m.get());
 #ifdef _DEBUG
     std::cout << "opened " << m->device()->name() << std::endl;
 #endif
@@ -120,7 +120,7 @@ TEST(MidiOut, SendSysExToAxeFx) {
     if ((*it)->name().find("AXE") != std::string::npos)
       axefx = MidiOut::Create(*it);
   }
-  ASSERT_TRUE(axefx);
+  ASSERT_TRUE(axefx.get());
 
   // const uint8_t kGetPreset[] = {0xf0, 0x00, 0x01, 0x74, 0x03, 0x13, 0x15, 0xf7};
   // const uint8_t kGetPreset[] = {0xf0, 0x00, 0x01, 0x74, 0x03, 0x1e, 0x01, 0x19, 0xf7};
@@ -165,8 +165,8 @@ TEST(Midi, GetPresetName) {
       in_device = MidiIn::Create(*it, loop);
   }
 
-  ASSERT_TRUE(out_device);
-  ASSERT_TRUE(in_device);
+  ASSERT_TRUE(out_device.get());
+  ASSERT_TRUE(in_device.get());
 
   axefx::GenericNoDataMessage request(axefx::PRESET_NAME);
   unique_ptr<Message> message(new Message(&request, sizeof(request)));
@@ -200,9 +200,9 @@ TEST(Midi, GetPresetName) {
 TEST(Midi, DISABLED_PresetNameMonitor) {
   SharedThreadLoop loop(new common::ThreadLoop());
   shared_ptr<MidiIn> midi_in(OpenAxeInput(loop));
-  ASSERT_TRUE(midi_in);
+  ASSERT_TRUE(midi_in.get());
   unique_ptr<MidiOut> midi_out(OpenAxeOutput());
-  ASSERT_TRUE(midi_out);
+  ASSERT_TRUE(midi_out.get());
 
   std::vector<uint8_t> data;
   midi_in->set_ondataavailable(
@@ -250,11 +250,9 @@ TEST(Midi, GetSystemBankDump) {
       in_device = MidiIn::Create(*it, loop);
   }
 
-  ASSERT_TRUE(out_device);
-  ASSERT_TRUE(in_device);
+  ASSERT_TRUE(out_device.get());
+  ASSERT_TRUE(in_device.get());
 
-  const uint8_t kGetSystemBank[] =
-      {0xF0, 0x00, 0x01, 0x74, 0x03, 0x1c, 0x03, 0x19, 0xF7};
   axefx::BankDumpRequest request(axefx::BankDumpRequest::SYSTEM_BANK);
   unique_ptr<Message> message(new Message(&request, sizeof(request)));
 

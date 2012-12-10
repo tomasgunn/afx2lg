@@ -122,7 +122,7 @@ TEST_F(AxeFxII, ParseScenesXYBypassFile) {
 
   // Check the scenes, bypass and x/y state of Amp1.
   shared_ptr<BlockParameters> amp1 = p.LookupBlock(BLOCK_AMP_1);
-  ASSERT_TRUE(amp1);
+  ASSERT_TRUE(amp1.get());
   BlockSceneState state = amp1->GetBypassState();
   bool bypassed = false;
   bool y_enabled = false;
@@ -247,9 +247,9 @@ TEST_F(AxeFxII, ParseSystemBackup) {
   EXPECT_EQ(710, global_blocks.size());
   shared_ptr<BlockParameters> amp1 = global_blocks[0];
   EXPECT_EQ(BLOCK_AMP_1, amp1->block());
+#if defined(_DEBUG)
   uint16_t amp_id_x = amp1->GetParamValue(DISTORT_TYPE, true);
   uint16_t amp_id_y = amp1->GetParamValue(DISTORT_TYPE, false);
-#if defined(_DEBUG)
   if (amp1->global_block_index())
     std::cout << " - global=" << amp1->global_block_index() << std::endl;
   std::cout << " - amp=" << amp_id_x << "," << amp_id_y

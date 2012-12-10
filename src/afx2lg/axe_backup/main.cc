@@ -9,8 +9,9 @@
 
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
-#include <string>
+#include <sstream>
 
 using axefx::BankDumpRequest;
 using std::placeholders::_1;
@@ -88,12 +89,17 @@ std::string GetDate() {
   time_t raw_time;
   tm timeinfo = {0};
   time(&raw_time);
+#ifdef _WIN32
   localtime_s(&timeinfo, &raw_time);
-  char buffer[32] = {0};
-  sprintf_s(&buffer[0], arraysize(buffer), "%d%02d%02d_%02d%02d",
-      timeinfo.tm_year, timeinfo.tm_mon, timeinfo.tm_mday, timeinfo.tm_hour,
-      timeinfo.tm_min);
-  return &buffer[0];
+#else
+  timeinfo = *localtime(&raw_time);
+#endif
+  std::stringstream stream;
+  // Same as "%d%02d%02d_%02d%02d".
+  stream << std::setfill('0') << std::setw(2) << timeinfo.tm_year
+         << timeinfo.tm_mon << timeinfo.tm_mday << '_' << timeinfo.tm_hour
+         << timeinfo.tm_min;
+  return stream.str();
 }
 
 shared_ptr<midi::MidiIn> OpenAxeInput(const SharedThreadLoop& loop) {
@@ -149,12 +155,10 @@ bool CreateOutputFile(std::string* name, std::ofstream* file) {
   if (FileExists(*name)) {
     size_t i = name->find_last_of('.');
     int count = 0;
-    char buffer[32] = {0};
     std::string temp;
     do {
       temp = name->substr(0, i);
-      sprintf_s(&buffer[0], arraysize(buffer), "(%d)", ++count);
-      temp += &buffer[0];
+      temp += "(" + std::to_string(++count) + ")";
       temp += name->substr(i);
     } while (FileExists(temp));
     *name = temp;

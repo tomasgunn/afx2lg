@@ -13,7 +13,7 @@
 
 namespace lg {
 
-using std::tr1::shared_ptr;
+using std::shared_ptr;
 
 class LgParserCallback;
 

@@ -13,21 +13,22 @@
       }],
     ],
 
-    'msvs_use_common_linker_extras%': 1,
-    'build_dir_prefix%': '',
-    'msvs_use_common_release%': 1,
-    'mac_release_optimization%': '3', # Use -O3 unless overridden
-    'mac_debug_optimization%': '0',   # Use -O0 unless overridden
-    'release_extra_cflags%': '',
-    'win_debug_extra_cflags%': '',
-    'msvs_debug_link_incremental%': 1,
-    'debug_extra_cflags%': '',
-    'mac_strip_release%': 0,
     'asan%': 0,
+    'build_dir_prefix%': '',
+    'debug_extra_cflags%': '',
+    'mac_debug_optimization%': '0',   # Use -O0 unless overridden
     'mac_deployment_target%': '10.7',
+    'mac_release_optimization%': '3', # Use -O3 unless overridden
     'mac_sdk%': '10.7',
     'mac_sdk_path%': '',
+    'mac_strip_release%': 0,
+    'msvs_debug_link_incremental%': 1,
+    'msvs_use_common_linker_extras%': 1,
+    'msvs_use_common_release%': 1,
+    'release_extra_cflags%': '',
+    'win_debug_extra_cflags%': '',
   },
+
   'target_defaults': {
     'variables': {
 
@@ -864,32 +865,55 @@
       'target_defaults': {
         'mac_bundle': 0,
         'xcode_settings': {
+#          'ALWAYS_SEARCH_USER_PATHS': 'NO',
+#          # Don't link in libarclite_macosx.a, see http://crbug.com/156530.
+#          'CLANG_LINK_OBJC_RUNTIME': 'NO',          # -fno-objc-link-runtime
+#          'GCC_C_LANGUAGE_STANDARD': 'c99',         # -std=c99
+#          'GCC_CW_ASM_SYNTAX': 'NO',                # No -fasm-blocks
+#          'GCC_ENABLE_CPP_RTTI': 'NO',              # -fno-rtti
+#          'GCC_ENABLE_PASCAL_STRINGS': 'NO',        # No -mpascal-strings
+#          # GCC_INLINES_ARE_PRIVATE_EXTERN maps to -fvisibility-inlines-hidden
+#          'GCC_INLINES_ARE_PRIVATE_EXTERN': 'YES',
+#          'GCC_OBJC_CALL_CXX_CDTORS': 'YES',        # -fobjc-call-cxx-cdtors
+#          'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',      # -fvisibility=hidden
+#          'GCC_THREADSAFE_STATICS': 'NO',           # -fno-threadsafe-statics
+#          'GCC_TREAT_WARNINGS_AS_ERRORS': 'YES',    # -Werror
+#          'GCC_VERSION': '4.2',
+#          'GCC_WARN_ABOUT_MISSING_NEWLINE': 'YES',  # -Wnewline-eof
+#          'USE_HEADERMAP': 'NO',
+#          'WARNING_CFLAGS': [
+#            '-Wall',
+#            '-Wendif-labels',
+#            '-Wextra',
+#            # Don't warn about unused function parameters.
+#            '-Wno-unused-parameter',
+#            # Don't warn about the "struct foo f = {0};" initialization
+#            # pattern.
+#            '-Wno-missing-field-initializers',
+#          ],
           'ALWAYS_SEARCH_USER_PATHS': 'NO',
-          # Don't link in libarclite_macosx.a, see http://crbug.com/156530.
-          'CLANG_LINK_OBJC_RUNTIME': 'NO',          # -fno-objc-link-runtime
-          'GCC_C_LANGUAGE_STANDARD': 'c99',         # -std=c99
-          'GCC_CW_ASM_SYNTAX': 'NO',                # No -fasm-blocks
-          'GCC_ENABLE_CPP_RTTI': 'NO',              # -fno-rtti
-          'GCC_ENABLE_PASCAL_STRINGS': 'NO',        # No -mpascal-strings
-          # GCC_INLINES_ARE_PRIVATE_EXTERN maps to -fvisibility-inlines-hidden
-          'GCC_INLINES_ARE_PRIVATE_EXTERN': 'YES',
-          'GCC_OBJC_CALL_CXX_CDTORS': 'YES',        # -fobjc-call-cxx-cdtors
-          'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',      # -fvisibility=hidden
-          'GCC_THREADSAFE_STATICS': 'NO',           # -fno-threadsafe-statics
-          'GCC_TREAT_WARNINGS_AS_ERRORS': 'YES',    # -Werror
-          'GCC_VERSION': '4.2',
-          'GCC_WARN_ABOUT_MISSING_NEWLINE': 'YES',  # -Wnewline-eof
-          'USE_HEADERMAP': 'NO',
-          'WARNING_CFLAGS': [
-            '-Wall',
-            '-Wendif-labels',
-            '-Wextra',
-            # Don't warn about unused function parameters.
-            '-Wno-unused-parameter',
-            # Don't warn about the "struct foo f = {0};" initialization
-            # pattern.
-            '-Wno-missing-field-initializers',
-          ],
+          'ARCHS': '$(ARCHS_STANDARD_64_BIT)',
+          'CLANG_CXX_LANGUAGE_STANDARD': 'gnu++0x',
+          'CLANG_CXX_LIBRARY': 'libc++',
+          'CLANG_ENABLE_OBJC_ARC': 'YES',
+          'CLANG_WARN_EMPTY_BODY': 'YES',
+          'CLANG_WARN__DUPLICATE_METHOD_MATCH': 'YES',
+          'COPY_PHASE_STRIP': 'NO',
+          'GCC_C_LANGUAGE_STANDARD': 'gnu99',
+          'GCC_DYNAMIC_NO_PIC': 'NO',
+          'GCC_ENABLE_OBJC_EXCEPTIONS': 'YES',
+          'GCC_OPTIMIZATION_LEVEL': '0',
+          #GCC_PREPROCESSOR_DEFINITIONS: (
+          #  'DEBUG=1',
+          #  '$(inherited)',
+          #);
+          'GCC_SYMBOLS_PRIVATE_EXTERN': 'NO',
+          'GCC_WARN_64_TO_32_BIT_CONVERSION': 'YES',
+          'GCC_WARN_ABOUT_RETURN_TYPE': 'YES',
+          'GCC_WARN_UNINITIALIZED_AUTOS': 'YES',
+          'GCC_WARN_UNUSED_VARIABLE': 'YES',
+          'MACOSX_DEPLOYMENT_TARGET': '10.8',
+          'ONLY_ACTIVE_ARCH': 'YES',
         },
         'target_conditions': [
           ['_type!="static_library"', {
@@ -927,28 +951,29 @@
         },
         'target_conditions': [
           ['_type=="executable"', {
-            'postbuilds': [
-              {
-                # Arranges for data (heap) pages to be protected against
-                # code execution when running on Mac OS X 10.7 ("Lion"), and
-                # ensures that the position-independent executable (PIE) bit
-                # is set for ASLR when running on Mac OS X 10.5 ("Leopard").
-                'variables': {
-                  # Define change_mach_o_flags in a variable ending in _path
-                  # so that GYP understands it's a path and performs proper
-                  # relativization during dict merging.
-                  'change_mach_o_flags_path':
-                      'mac/change_mach_o_flags_from_xcode.sh',
-                  'change_mach_o_flags_options%': [
-                  ],
-                },
-                'postbuild_name': 'Change Mach-O Flags',
-                'action': [
-                  '<(change_mach_o_flags_path)',
-                  '>@(change_mach_o_flags_options)',
-                ],
-              },
-            ],
+            # TODO(tommi): Do we need this?
+            #'postbuilds': [
+            #  {
+            #    # Arranges for data (heap) pages to be protected against
+            #    # code execution when running on Mac OS X 10.7 ("Lion"), and
+            #    # ensures that the position-independent executable (PIE) bit
+            #    # is set for ASLR when running on Mac OS X 10.5 ("Leopard").
+            #    'variables': {
+            #      # Define change_mach_o_flags in a variable ending in _path
+            #      # so that GYP understands it's a path and performs proper
+            #      # relativization during dict merging.
+            #      'change_mach_o_flags_path':
+            #          'mac/change_mach_o_flags_from_xcode.sh',
+            #      'change_mach_o_flags_options%': [
+            #      ],
+            #    },
+            #    'postbuild_name': 'Change Mach-O Flags',
+            #    'action': [
+            #      '<(change_mach_o_flags_path)',
+            #      '>@(change_mach_o_flags_options)',
+            #    ],
+            #  },
+            #],
             'conditions': [
               ['asan==1', {
                 'variables': {
@@ -1033,6 +1058,7 @@
           # override keyword is used via the OVERRIDE macro from
           # base/compiler_specific.h.
           'CLANG_WARN_CXX0X_EXTENSIONS': 'NO',
+
           # Warn if automatic synthesis is triggered with
           # the -Wobjc-missing-property-synthesis flag.
           'CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS': 'YES',

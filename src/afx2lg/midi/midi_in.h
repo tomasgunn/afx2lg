@@ -13,7 +13,7 @@
 
 namespace midi {
 
-using std::tr1::shared_ptr;
+using std::shared_ptr;
 
 typedef std::function<void(const uint8_t*, size_t)> DataAvailable;
 

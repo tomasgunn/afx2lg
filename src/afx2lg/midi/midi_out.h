@@ -18,7 +18,7 @@ struct FractalSysExHeader;
 
 namespace midi {
 
-using std::tr1::shared_ptr;
+using std::shared_ptr;
 using std::unique_ptr;
 
 class MidiDeviceInfo {

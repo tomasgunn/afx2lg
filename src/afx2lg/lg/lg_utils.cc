@@ -7,9 +7,9 @@
 #include <locale>
 #include <regex>
 
-using std::tr1::match_results;
-using std::tr1::regex;
-using std::tr1::regex_match;
+using std::match_results;
+using std::regex;
+using std::regex_match;
 
 namespace lg {
 
