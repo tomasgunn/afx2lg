@@ -64,7 +64,8 @@ void ThreadLoop::SetQuit() {
 bool ThreadLoop::PopTask(ThreadLoop::Task* task) {
   std::unique_lock<std::mutex> lock(lock_);
   while (queue_.empty()) {
-    if (!signal_.wait_for(lock, timeout_))
+    std::cv_status status = signal_.wait_for(lock, timeout_);
+    if (status == std::cv_status::timeout)
       return false;
   }
 
