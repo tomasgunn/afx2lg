@@ -122,7 +122,7 @@ TEST_F(AxeFxII, ParseScenesXYBypassFile) {
 
   // Check the scenes, bypass and x/y state of Amp1.
   shared_ptr<BlockParameters> amp1 = p.LookupBlock(BLOCK_AMP_1);
-  ASSERT_TRUE(amp1.get());
+  ASSERT_TRUE(amp1.get() != NULL);
   BlockSceneState state = amp1->GetBypassState();
   bool bypassed = false;
   bool y_enabled = false;

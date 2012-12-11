@@ -5,6 +5,12 @@
 
 namespace common {
 
+#ifdef _WIN32
+using std::cv_status::cv_status;
+#else
+using std::cv_status;
+#endif
+
 ThreadLoop::ThreadLoop()
     : timeout_(std::chrono::milliseconds(1000 * 60 * 10)),
       is_running_(false) {
@@ -64,8 +70,8 @@ void ThreadLoop::SetQuit() {
 bool ThreadLoop::PopTask(ThreadLoop::Task* task) {
   std::unique_lock<std::mutex> lock(lock_);
   while (queue_.empty()) {
-    std::cv_status status = signal_.wait_for(lock, timeout_);
-    if (status == std::cv_status::timeout)
+    cv_status status = signal_.wait_for(lock, timeout_);
+    if (status == cv_status::timeout)
       return false;
   }
 
