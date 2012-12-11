@@ -5,7 +5,7 @@
 
 namespace midi {
 
-#ifndef _WIN32
+#if !defined(OS_WIN) && !defined(OS_MACOSX)
 // static
 unique_ptr<MidiOut> MidiOut::Create(const shared_ptr<MidiDeviceInfo>& device) {
   return nullptr;
@@ -24,5 +24,19 @@ Message::Message(const axefx::FractalSysExHeader* header, size_t size)
 }
 
 MidiOut::MidiOut(const shared_ptr<MidiDeviceInfo>& device) : device_(device) {}
+
+MessageBufferOwner::MessageBufferOwner(
+    unique_ptr<Message>& message, const std::function<void()>& on_complete)
+    : on_complete_(on_complete), message_(std::move(message)) {
+}
+
+MessageBufferOwner::~MessageBufferOwner() {
+  if (on_complete_ != nullptr)
+    on_complete_();
+}
+
+void MessageBufferOwner::CancelCallback() {
+  on_complete_ = nullptr;
+}
 
 }  // namespace midi

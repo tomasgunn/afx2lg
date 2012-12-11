@@ -8,13 +8,25 @@
 
 #include <assert.h>
 
-#ifdef WIN32
+#if defined(__APPLE__)
+#define OS_MACOSX 1
+#elif defined(ANDROID)
+#define OS_ANDROID 1
+#elif defined(__linux__)
+#define OS_LINUX 1
+#elif defined(_WIN32)
+#define OS_WIN 1
+#else
+#error Platform not supported.
+#endif
+
+#ifdef OS_WIN
 #ifdef _DEBUG
 #define ASSERT(expr)  ((expr) ? ((void)0) : __debugbreak())
 #else
 #define ASSERT(expr)  ((void)0)
 #endif
-#else  // !WIN32
+#else  // !OS_WIN
 #ifdef _DEBUG
 #define ASSERT(expr)  assert(expr)
 #else
@@ -25,13 +37,12 @@
 // #define _HAS_EXCEPTIONS 0  <- can't due to regex.
 #define _STATIC_CPPLIB
 
-#ifndef _WIN32_WINNT
+#if defined(OS_WIN) && !defined(_WIN32_WINNT)
 #define _WIN32_WINNT 0x0600
 #endif
 
 template <typename T, size_t N>
 char (&ArraySizeHelper(T (&array)[N]))[N];
-
 #define arraysize(array) (sizeof(ArraySizeHelper(array)))
 
 // A macro to disallow the copy constructor and operator= functions

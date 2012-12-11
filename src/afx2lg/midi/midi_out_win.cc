@@ -9,26 +9,6 @@
 #include <iostream>
 
 namespace midi {
-namespace {
-class MessageBufferOwner {
-  public:
-  MessageBufferOwner(unique_ptr<Message>& message,
-                      const std::function<void()>& on_complete)
-      : on_complete_(on_complete), message_(std::move(message)) {
-  }
-
-  ~MessageBufferOwner() {
-    if (on_complete_ != nullptr)
-      on_complete_();
-  }
-
-  void ClearCallback() { on_complete_ = nullptr; }
-
-  private:
-  std::function<void()> on_complete_;
-  unique_ptr<Message> message_;
-};
-}  // namespace
 
 class MidiOutWin : public MidiOut {
  public:
@@ -61,7 +41,6 @@ class MidiOutWin : public MidiOut {
                     const std::function<void()>& on_complete) {
     ASSERT(!message->empty());
 
-    // |message| has already been pushed onto the queue.
     MIDIHDR* header = new MIDIHDR();
     header->dwBufferLength = static_cast<DWORD>(message->size());
     header->lpData = reinterpret_cast<char*>(&message->at(0));
@@ -75,8 +54,8 @@ class MidiOutWin : public MidiOut {
       res = midiOutLongMsg(midi_out_, header, sizeof(*header));
     
     if (res != MMSYSERR_NOERROR) {
-      owner->ClearCallback();
-        delete owner;
+      owner->CancelCallback();
+      delete owner;
       delete header;
     }
 

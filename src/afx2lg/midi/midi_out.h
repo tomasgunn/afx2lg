@@ -62,6 +62,21 @@ class MidiOut {
   shared_ptr<MidiDeviceInfo> device_;
 };
 
+// Used for owning a message buffer and deliver a callback when
+// a message has been sent.
+class MessageBufferOwner {
+ public:
+  MessageBufferOwner(unique_ptr<Message>& message,
+                     const std::function<void()>& on_complete);
+  ~MessageBufferOwner();
+
+  void CancelCallback();
+
+ private:
+  std::function<void()> on_complete_;
+  unique_ptr<Message> message_;
+};
+
 }  // namespace midi
 
 #endif  // MIDI_MIDI_OUT_H_

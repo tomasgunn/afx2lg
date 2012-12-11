@@ -30,6 +30,20 @@
             ],
           },
         }],
+        ['OS=="mac"', {
+          'sources': [
+            'midi_in_mac.cc',
+            'midi_mac.cc',
+            'midi_mac.h',
+            'midi_out_mac.cc',
+          ],
+          'link_settings': {
+            'libraries': [
+              '$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
+              '$(SDKROOT)/System/Library/Frameworks/CoreMIDI.framework',
+            ],
+          },
+        }],
       ],
     },
   ],

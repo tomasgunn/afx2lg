@@ -5,7 +5,7 @@
 
 namespace midi {
 
-#ifndef _WIN32
+#if !defined(OS_WIN) && !defined(OS_MACOSX)
 // static
 shared_ptr<MidiIn> MidiIn::Create(
     const shared_ptr<MidiDeviceInfo>& device,
