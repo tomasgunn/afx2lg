@@ -89,12 +89,12 @@ std::string GetDate() {
   time_t raw_time;
   tm timeinfo = {0};
   time(&raw_time);
-#ifdef _WIN32
+#if defined(OS_WIN)
   localtime_s(&timeinfo, &raw_time);
 #else
   timeinfo = *localtime(&raw_time);
 #endif
-  std::stringstream stream;
+  std::ostringstream stream;
   // Same as "%d%02d%02d_%02d%02d".
   stream << std::setfill('0') << std::setw(2) << timeinfo.tm_year
          << timeinfo.tm_mon << timeinfo.tm_mday << '_' << timeinfo.tm_hour

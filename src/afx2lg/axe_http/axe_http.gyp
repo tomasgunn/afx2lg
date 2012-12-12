@@ -21,6 +21,8 @@
       'sources': [
         '../common/common_types.h',
         'main.cc',
+        'socket.cc',
+        'socket.h',
       ],
     },
   ],

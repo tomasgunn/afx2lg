@@ -5,7 +5,7 @@
 
 namespace common {
 
-#ifdef _WIN32
+#if defined(OS_WIN)
 using std::cv_status::cv_status;
 #else
 using std::cv_status;

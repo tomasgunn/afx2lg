@@ -69,12 +69,13 @@ TEST_F(AxeFxII, ParseFw9bBankFile) {
     const Preset& p = *(i->second.get());
     shared_ptr<BlockParameters> amp1 = p.LookupBlock(BLOCK_AMP_1);
     if (amp1) {
-      printf("Preset: %i %s\n", (*i).first, p.name().c_str());
+      std::cout << "Preset: " << (*i).first << " " << p.name() << "\n";
       uint16_t amp_id = amp1->GetParamValue(DISTORT_TYPE,
           amp1->active_config() == CONFIG_X);
       if (amp1->global_block_index())
-        printf(" - global=%i\n", amp1->global_block_index());
-      printf(" - amp=%i (guessing='%s')\n", amp_id, GetAmpName(amp_id));
+        std::cout << " - global=" << amp1->global_block_index() << "\n";
+      std::cout << " - amp=" << amp_id << " (guessing='"
+                << GetAmpName(amp_id) << "')\n";
     }
   }
 #endif

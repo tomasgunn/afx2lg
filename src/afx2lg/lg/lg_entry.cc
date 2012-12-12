@@ -240,7 +240,7 @@ void Patch::SetPreset(int preset_number) {
   preset_ = (preset_number & 0x7F);
   bank_id_ = preset_number >> 7;
 
-  std::stringstream stream;
+  std::ostringstream stream;
   // Same as "+ %02i CC    000 %03i\n".
   stream << "+ " << std::setfill('0') << std::setw(2) << channel_
       << " CC    000 " << std::setw(3) << bank_id_ << std::endl;
