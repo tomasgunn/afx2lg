@@ -3,6 +3,12 @@
 
 #include "midi/midi_in.h"
 
+using std::placeholders::_1;
+using std::placeholders::_2;
+
+static const uint8_t kSysExEnd = 0xF7;
+static const uint8_t kSysExStart = 0xF0;
+
 namespace midi {
 
 #if !defined(OS_WIN) && !defined(OS_MACOSX)
@@ -22,6 +28,37 @@ bool MidiIn::EnumerateDevices(DeviceInfos* devices) {
 MidiIn::MidiIn(const shared_ptr<MidiDeviceInfo>& device,
                 const shared_ptr<common::ThreadLoop>& worker_thread)
     : device_(device), worker_(worker_thread) {
+}
+
+SysExDataBuffer::SysExDataBuffer(const SysExDataBuffer::OnSysEx& on_sysex)
+    : on_sysex_(on_sysex) {
+}
+
+SysExDataBuffer::~SysExDataBuffer() {
+}
+
+void SysExDataBuffer::Attach(const shared_ptr<MidiIn>& midi_in) {
+  midi_in->set_ondataavailable(
+      std::bind(&SysExDataBuffer::OnData, this, _1, _2));
+}
+
+void SysExDataBuffer::OnData(const uint8_t* data, size_t size) {
+  size_t i = 0u;
+  size_t pos_begin = 0u;
+  for (; i < size; ++i) {
+    if (data[i] == kSysExEnd) {
+      buffer_.insert(buffer_.end(), &data[pos_begin], &data[i + 1u]);
+      ASSERT(buffer_[0] == kSysExStart);
+      ASSERT(buffer_[buffer_.size() - 1u] == kSysExEnd);
+      on_sysex_(&buffer_);
+      buffer_.clear();
+      pos_begin = i + 1u;
+      ASSERT(pos_begin >= size || data[pos_begin] == kSysExStart);
+    }
+  }
+
+  if (pos_begin < size)
+    buffer_.insert(buffer_.end(), &data[pos_begin], &data[size]);
 }
 
 }  // namespace midi

@@ -7,7 +7,6 @@
 
 #include "common/common_types.h"
 
-#include <memory>
 #include <string>
 
 bool ReadTestFileIntoBuffer(const std::string& file,

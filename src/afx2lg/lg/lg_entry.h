@@ -6,14 +6,12 @@
 #ifndef LG_ENTRY_H_
 #define LG_ENTRY_H_
 
+#include "common/common_types.h"
 #include "axefx/preset.h"
 
-#include <memory>
 #include <vector>
 
 namespace lg {
-
-using std::shared_ptr;
 
 class LgParserCallback;
 

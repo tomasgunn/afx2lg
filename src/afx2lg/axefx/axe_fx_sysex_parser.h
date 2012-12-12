@@ -8,11 +8,8 @@
 #include "common/common_types.h"
 
 #include <map>
-#include <memory>
 
 namespace axefx {
-
-using std::shared_ptr;
 
 class Preset;
 typedef std::map<int, shared_ptr<Preset> > PresetMap;

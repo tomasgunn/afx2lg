@@ -13,8 +13,6 @@
 
 namespace lg {
 
-using std::shared_ptr;
-
 class LgParserCallback {
  public:
   virtual const axefx::PresetMap& GetPresetMap() = 0;

@@ -18,6 +18,8 @@ bool MidiOut::EnumerateDevices(DeviceInfos* devices) {
 
 #endif
 
+Message::Message() {}
+
 Message::Message(const axefx::FractalSysExHeader* header, size_t size)
     : std::vector<uint8_t>(reinterpret_cast<const uint8_t*>(header),
                            reinterpret_cast<const uint8_t*>(header) + size) {

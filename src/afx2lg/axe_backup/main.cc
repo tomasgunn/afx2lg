@@ -16,8 +16,6 @@
 using axefx::BankDumpRequest;
 using std::placeholders::_1;
 using std::placeholders::_2;
-using std::shared_ptr;
-using std::unique_ptr;
 
 typedef std::shared_ptr<common::ThreadLoop> SharedThreadLoop;
 

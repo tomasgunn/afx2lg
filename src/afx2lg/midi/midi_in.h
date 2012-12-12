@@ -9,11 +9,7 @@
 #include "common/thread_loop.h"
 #include "midi/midi_out.h"  // for MidiDeviceInfo.
 
-#include <memory>
-
 namespace midi {
-
-using std::shared_ptr;
 
 typedef std::function<void(const uint8_t*, size_t)> DataAvailable;
 
@@ -44,6 +40,28 @@ class MidiIn {
   shared_ptr<MidiDeviceInfo> device_;
   std::weak_ptr<common::ThreadLoop> worker_;
   DataAvailable data_available_;
+};
+
+// This is an in-between class that receives callbacks from a MidiIn
+// implementation and watches for an end-of-sysex byte and forwards whole
+// sysex buffers over to a supplied callback.
+// The callback of this class is slightly different from the |DataAvailable|
+// callback so that the caller can swap the Message buffer over to another
+// container without having to allocate more memory.
+class SysExDataBuffer {
+ public:
+  typedef std::function<void(Message*)> OnSysEx;
+
+  SysExDataBuffer(const OnSysEx& on_sysex);
+  ~SysExDataBuffer();
+
+  void Attach(const shared_ptr<MidiIn>& midi_in);
+
+ private:
+  void OnData(const uint8_t* data, size_t size);
+
+  OnSysEx on_sysex_;
+  Message buffer_;
 };
 
 }  // namespace midi

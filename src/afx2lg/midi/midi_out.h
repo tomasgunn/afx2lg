@@ -8,7 +8,6 @@
 #include "common/common_types.h"
 
 #include <functional>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,9 +16,6 @@ struct FractalSysExHeader;
 }  // namespace axefx
 
 namespace midi {
-
-using std::shared_ptr;
-using std::unique_ptr;
 
 class MidiDeviceInfo {
  public:
@@ -37,6 +33,7 @@ class MidiDeviceInfo {
 typedef std::vector<shared_ptr<MidiDeviceInfo> > DeviceInfos;
 class Message : public std::vector<uint8_t> {
  public:
+  Message();
   Message(const axefx::FractalSysExHeader* header, size_t size);
 };
 

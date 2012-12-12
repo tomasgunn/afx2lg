@@ -11,12 +11,10 @@
 #include "axefx/preset_parameters.h"
 
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 
 namespace axefx {
-using std::shared_ptr;
 
 struct ParameterBlockHeader;
 struct PresetIdHeader;

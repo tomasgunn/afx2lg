@@ -53,4 +53,10 @@ char (&ArraySizeHelper(T (&array)[N]))[N];
 
 #include <stdint.h>
 
+// Pull shared_ptr and unique_ptr into the global namespace.
+// We use these pretty heavily, so let's do it once and for all.
+#include <memory>
+using std::shared_ptr;
+using std::unique_ptr;
+
 #endif  // COMMON_TYPES_H_

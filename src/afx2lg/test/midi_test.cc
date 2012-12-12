@@ -132,17 +132,11 @@ TEST(MidiOut, SendSysExToAxeFx) {
   EXPECT_TRUE(loop->Run());
 }
 
-void AssignToBufferAndQuit(std::vector<uint8_t>* array,
+void AssignToBufferAndQuit(midi::Message* message,
                            const shared_ptr<common::ThreadLoop>& loop,
-                           const uint8_t* data,
-                           size_t size) {
-  //TODO(tommi): Restore this when we've gotten things working on Mac.
-  // Currently we're not handling receiving partial sysex messages that
-  // are not broken on sysex boundaries.
-
-  //array->assign(data, data + size);
-  array->insert(array->end(), data, data + size);
-  //loop->Quit();
+                           midi::Message* new_message) {
+  std::swap(message, new_message);
+  loop->Quit();
 }
 
 TEST(Midi, GetPresetName) {
@@ -174,12 +168,13 @@ TEST(Midi, GetPresetName) {
   axefx::GenericNoDataMessage request(axefx::PRESET_NAME);
   unique_ptr<Message> message(new Message(&request, sizeof(request)));
 
-  std::vector<uint8_t> data;
-  in_device->set_ondataavailable(
-      std::bind(&AssignToBufferAndQuit, &data, loop, _1, _2));
+  midi::Message data;
+  midi::SysExDataBuffer buffer(
+      std::bind(&AssignToBufferAndQuit, &data, loop, _1));
+  buffer.Attach(in_device);
   EXPECT_TRUE(out_device->Send(std::move(message), nullptr));
   loop->set_timeout(std::chrono::milliseconds(1000));
-  /*EXPECT_TRUE(*/loop->Run()/*)*/;
+  EXPECT_TRUE(loop->Run());
   ASSERT_FALSE(data.empty());
   ASSERT_TRUE(axefx::IsFractalSysEx(&data[0], data.size()));
   auto p = reinterpret_cast<const axefx::FractalSysExHeader*>(&data[0]);
@@ -208,9 +203,10 @@ TEST(Midi, DISABLED_PresetNameMonitor) {
   unique_ptr<MidiOut> midi_out(OpenAxeOutput());
   ASSERT_TRUE(midi_out.get() != NULL);
 
-  std::vector<uint8_t> data;
-  midi_in->set_ondataavailable(
-      std::bind(&AssignToBufferAndQuit, &data, loop, _1, _2));
+  midi::Message data;
+  midi::SysExDataBuffer buffer(
+      std::bind(&AssignToBufferAndQuit, &data, loop, _1));
+  buffer.Attach(midi_in);
 
   while (true) {
     ASSERT_TRUE(loop->Run());
