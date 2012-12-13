@@ -100,49 +100,6 @@ std::string GetDate() {
   return stream.str();
 }
 
-shared_ptr<midi::MidiIn> OpenAxeInput(const SharedThreadLoop& loop) {
-  midi::DeviceInfos in_devices;
-  midi::MidiIn::EnumerateDevices(&in_devices);
-  if (in_devices.empty()) {
-    std::cerr << "Didn't find any MIDI input devices\n";
-    return nullptr;
-  }
-
-  shared_ptr<midi::MidiIn> in_device;
-  for (auto it = in_devices.begin(); !in_device && it != in_devices.end();
-       ++it) {
-    if ((*it)->name().find("AXE") != std::string::npos)
-      in_device = midi::MidiIn::Create(*it, loop);
-  }
-
-  if (!in_device)
-    std::cerr << "Failed to find or open AxeFx's MIDI input device.\n";
-
-  return in_device;
-}
-
-unique_ptr<midi::MidiOut> OpenAxeOutput() {
-  midi::DeviceInfos out_devices;
-  midi::MidiOut::EnumerateDevices(&out_devices);
-
-  if (out_devices.empty()) {
-    std::cerr << "Didn't find any MIDI output devices\n";
-    return nullptr;
-  }
-
-  unique_ptr<midi::MidiOut> out_device;
-  for (auto it = out_devices.begin(); !out_device && it != out_devices.end();
-       ++it) {
-    if ((*it)->name().find("AXE") != std::string::npos)
-      out_device = midi::MidiOut::Create(*it);
-  }
-
-  if (!out_device)
-    std::cerr << "Failed to find or open AxeFx's MIDI output device.\n";
-
-  return std::move(out_device);
-}
-
 // TODO: Move to common and remove duplicates.
 bool FileExists(const std::string& path) {
   std::ifstream file(path);
@@ -200,10 +157,12 @@ int main(int argc, char* argv[]) {
   std::cout << "Opening MIDI devices...\n";
 
   SharedThreadLoop loop(new common::ThreadLoop());
-  shared_ptr<midi::MidiIn> midi_in(OpenAxeInput(loop));
-  unique_ptr<midi::MidiOut> midi_out(OpenAxeOutput());
-  if (!midi_in || !midi_out)
+  shared_ptr<midi::MidiIn> midi_in(midi::MidiIn::OpenAxeFx(loop));
+  unique_ptr<midi::MidiOut> midi_out(midi::MidiOut::OpenAxeFx());
+  if (!midi_in || !midi_out) {
+    std::cerr << "Failed to open AxeFx midi devices\n";
     return -1;
+  }
 
   std::string date(GetDate());
   struct {

@@ -16,52 +16,6 @@ namespace midi {
 
 typedef std::shared_ptr<common::ThreadLoop> SharedThreadLoop;
 
-namespace {
-// TODO: Make these common utility functions.  Right now a copy/paste.
-shared_ptr<MidiIn> OpenAxeInput(const SharedThreadLoop& loop) {
-  DeviceInfos in_devices;
-  MidiIn::EnumerateDevices(&in_devices);
-  if (in_devices.empty()) {
-    std::cerr << "Didn't find any MIDI input devices\n";
-    return nullptr;
-  }
-
-  shared_ptr<MidiIn> in_device;
-  for (auto it = in_devices.begin(); !in_device && it != in_devices.end();
-       ++it) {
-    if ((*it)->name().find("AXE") != std::string::npos)
-      in_device = MidiIn::Create(*it, loop);
-  }
-
-  if (!in_device)
-    std::cerr << "Failed to find or open AxeFx's MIDI input device.\n";
-
-  return in_device;
-}
-
-unique_ptr<MidiOut> OpenAxeOutput() {
-  DeviceInfos out_devices;
-  MidiOut::EnumerateDevices(&out_devices);
-
-  if (out_devices.empty()) {
-    std::cerr << "Didn't find any MIDI output devices\n";
-    return nullptr;
-  }
-
-  unique_ptr<MidiOut> out_device;
-  for (auto it = out_devices.begin(); !out_device && it != out_devices.end();
-       ++it) {
-    if ((*it)->name().find("AXE") != std::string::npos)
-      out_device = MidiOut::Create(*it);
-  }
-
-  if (!out_device)
-    std::cerr << "Failed to find or open AxeFx's MIDI output device.\n";
-
-  return std::move(out_device);
-}
-}  // namespace
-
 TEST(MidiOut, EnumerateDevices) {
   DeviceInfos devices;
   EXPECT_TRUE(MidiOut::EnumerateDevices(&devices));
@@ -111,15 +65,7 @@ TEST(MidiIn, OpenInputDevice) {
 }
 
 TEST(MidiOut, SendSysExToAxeFx) {
-  DeviceInfos devices;
-  EXPECT_TRUE(MidiOut::EnumerateDevices(&devices));
-  ASSERT_FALSE(devices.empty());
-
-  unique_ptr<MidiOut> axefx;
-  for (auto it = devices.begin(); !axefx && it != devices.end(); ++it) {
-    if ((*it)->name().find("AXE") != std::string::npos)
-      axefx = MidiOut::Create(*it);
-  }
+  unique_ptr<MidiOut> axefx(MidiOut::OpenAxeFx());
   ASSERT_TRUE(axefx.get() != NULL);
 
   axefx::GenericNoDataMessage request(axefx::PRESET_NAME);
@@ -140,30 +86,13 @@ void AssignToBufferAndQuit(midi::Message* message,
 }
 
 TEST(Midi, GetPresetName) {
-  DeviceInfos out_devices, in_devices;
-  EXPECT_TRUE(MidiOut::EnumerateDevices(&out_devices));
-  EXPECT_TRUE(MidiIn::EnumerateDevices(&in_devices));
-  ASSERT_FALSE(out_devices.empty());
-  ASSERT_FALSE(in_devices.empty());
-
-  unique_ptr<MidiOut> out_device;
-  for (auto it = out_devices.begin(); !out_device && it != out_devices.end();
-       ++it) {
-    if ((*it)->name().find("AXE") != std::string::npos)
-      out_device = MidiOut::Create(*it);
-  }
-
-  shared_ptr<common::ThreadLoop> loop(new common::ThreadLoop());
-  loop->set_timeout(std::chrono::milliseconds(1000));
-  shared_ptr<MidiIn> in_device;
-  for (auto it = in_devices.begin(); !in_device && it != in_devices.end();
-       ++it) {
-    if ((*it)->name().find("AXE") != std::string::npos)
-      in_device = MidiIn::Create(*it, loop);
-  }
-
-  ASSERT_TRUE(out_device.get() != NULL);
+  SharedThreadLoop loop(new common::ThreadLoop());
+  shared_ptr<MidiIn> in_device(MidiIn::OpenAxeFx(loop));
   ASSERT_TRUE(in_device.get() != NULL);
+  unique_ptr<MidiOut> out_device(MidiOut::OpenAxeFx());
+  ASSERT_TRUE(out_device.get() != NULL);
+
+  loop->set_timeout(std::chrono::milliseconds(1000));
 
   axefx::GenericNoDataMessage request(axefx::PRESET_NAME);
   unique_ptr<Message> message(new Message(&request, sizeof(request)));
@@ -173,7 +102,6 @@ TEST(Midi, GetPresetName) {
       std::bind(&AssignToBufferAndQuit, &data, loop, _1));
   buffer.Attach(in_device);
   EXPECT_TRUE(out_device->Send(std::move(message), nullptr));
-  loop->set_timeout(std::chrono::milliseconds(1000));
   EXPECT_TRUE(loop->Run());
   ASSERT_FALSE(data.empty());
   ASSERT_TRUE(axefx::IsFractalSysEx(&data[0], data.size()));
@@ -198,9 +126,9 @@ TEST(Midi, GetPresetName) {
 //  be sure that the id matches the name.
 TEST(Midi, DISABLED_PresetNameMonitor) {
   SharedThreadLoop loop(new common::ThreadLoop());
-  shared_ptr<MidiIn> midi_in(OpenAxeInput(loop));
+  shared_ptr<MidiIn> midi_in(MidiIn::OpenAxeFx(loop));
   ASSERT_TRUE(midi_in.get() != NULL);
-  unique_ptr<MidiOut> midi_out(OpenAxeOutput());
+  unique_ptr<MidiOut> midi_out(MidiOut::OpenAxeFx());
   ASSERT_TRUE(midi_out.get() != NULL);
 
   midi::Message data;
@@ -229,38 +157,24 @@ TEST(Midi, DISABLED_PresetNameMonitor) {
 }
 
 TEST(Midi, GetSystemBankDump) {
-  DeviceInfos out_devices, in_devices;
-  EXPECT_TRUE(MidiOut::EnumerateDevices(&out_devices));
-  EXPECT_TRUE(MidiIn::EnumerateDevices(&in_devices));
-  ASSERT_FALSE(out_devices.empty());
-  ASSERT_FALSE(in_devices.empty());
-
-  unique_ptr<MidiOut> out_device;
-  for (auto it = out_devices.begin(); !out_device && it != out_devices.end();
-       ++it) {
-    if ((*it)->name().find("AXE") != std::string::npos)
-      out_device = MidiOut::Create(*it);
-  }
-
-  shared_ptr<common::ThreadLoop> loop(new common::ThreadLoop());
-  shared_ptr<MidiIn> in_device;
-  for (auto it = in_devices.begin(); !in_device && it != in_devices.end();
-       ++it) {
-    if ((*it)->name().find("AXE") != std::string::npos)
-      in_device = MidiIn::Create(*it, loop);
-  }
-
-  ASSERT_TRUE(out_device.get() != NULL);
-  ASSERT_TRUE(in_device.get() != NULL);
+  SharedThreadLoop loop(new common::ThreadLoop());
+  shared_ptr<MidiIn> midi_in(MidiIn::OpenAxeFx(loop));
+  ASSERT_TRUE(midi_in.get() != NULL);
+  unique_ptr<MidiOut> midi_out(MidiOut::OpenAxeFx());
+  ASSERT_TRUE(midi_out.get() != NULL);
 
   axefx::BankDumpRequest request(axefx::BankDumpRequest::SYSTEM_BANK);
   unique_ptr<Message> message(new Message(&request, sizeof(request)));
 
-  EXPECT_TRUE(out_device->Send(std::move(message), nullptr));
+  EXPECT_TRUE(midi_out->Send(std::move(message), nullptr));
 
   // Set the timeout between buffer receives to be 1 second.
   // We'll quit 1 second after receiving the last message.
   loop->set_timeout(std::chrono::milliseconds(1000));
+  midi::Message data;
+  midi::SysExDataBuffer buffer(
+      std::bind(&AssignToBufferAndQuit, &data, loop, _1));
+  buffer.Attach(midi_in);
   EXPECT_FALSE(loop->Run());
 }
 

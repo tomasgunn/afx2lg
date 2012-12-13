@@ -30,7 +30,14 @@ class MidiDeviceInfo {
   std::string name_;
 };
 
-typedef std::vector<shared_ptr<MidiDeviceInfo> > DeviceInfos;
+class DeviceInfos : public std::vector<shared_ptr<MidiDeviceInfo> > {
+ public:
+  DeviceInfos();
+  ~DeviceInfos();
+
+  const_iterator FindAxeFx() const;
+};
+
 class Message : public std::vector<uint8_t> {
  public:
   Message();
@@ -41,6 +48,8 @@ class Message : public std::vector<uint8_t> {
 class MidiOut {
  public:
   virtual ~MidiOut() {}
+
+  static unique_ptr<MidiOut> OpenAxeFx();
 
   // Create an instance of MidiOut.
   static unique_ptr<MidiOut> Create(const shared_ptr<MidiDeviceInfo>& device);

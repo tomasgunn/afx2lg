@@ -30,6 +30,17 @@ MidiIn::MidiIn(const shared_ptr<MidiDeviceInfo>& device,
     : device_(device), worker_(worker_thread) {
 }
 
+// static
+shared_ptr<MidiIn> MidiIn::OpenAxeFx(
+    const shared_ptr<common::ThreadLoop>& worker_thread) {
+  DeviceInfos devices;
+  EnumerateDevices(&devices);
+  DeviceInfos::const_iterator found = devices.FindAxeFx();
+  if (found == devices.end())
+    return nullptr;
+  return MidiIn::Create(*found, worker_thread);
+}
+
 SysExDataBuffer::SysExDataBuffer(const SysExDataBuffer::OnSysEx& on_sysex)
     : on_sysex_(on_sysex) {
 }

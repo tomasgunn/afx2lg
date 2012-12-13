@@ -23,6 +23,9 @@ class MidiIn {
       const shared_ptr<MidiDeviceInfo>& device,
       const shared_ptr<common::ThreadLoop>& worker_thread);
 
+  static shared_ptr<MidiIn> OpenAxeFx(
+      const shared_ptr<common::ThreadLoop>& worker_thread);
+
   // Enumerate all midi output devices.
   static bool EnumerateDevices(DeviceInfos* devices);
 
