@@ -211,7 +211,7 @@ TEST(SysExDataBuffer, Basic) {
   sysex_buffer.Attach(midi_in);
   const int chunk_sizes[] = {1, 10, 16, 65, 100, 1000};
   uint8_t* end = buffer.get() + file_size;
-  for (int i = 0; i < arraysize(chunk_sizes); ++i) {
+  for (size_t i = 0; i < arraysize(chunk_sizes); ++i) {
     uint8_t* pos = buffer.get();
     while (pos < (end - chunk_sizes[i])) {
       midi_in->ReportBytes(pos, chunk_sizes[i]);
