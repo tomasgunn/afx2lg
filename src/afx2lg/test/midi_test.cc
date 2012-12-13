@@ -178,4 +178,52 @@ TEST(Midi, GetSystemBankDump) {
   EXPECT_FALSE(loop->Run());
 }
 
+namespace {
+class MockMidiIn : public MidiIn {
+ public:
+  MockMidiIn() : MidiIn(nullptr, nullptr), message_count_(0) {}
+  ~MockMidiIn() {}
+
+  void ReportBytes(const uint8_t* data, size_t size) {
+    if (size)
+      data_available_(data, size);
+  }
+
+  int message_count_;
+};
+
+void VerifyIsSysEx(Message* msg) {
+  EXPECT_FALSE(msg->empty());
+  EXPECT_EQ(msg->at(0), axefx::kSysExStart);
+  EXPECT_EQ(msg->at(msg->size() - 1), axefx::kSysExEnd);
+  EXPECT_TRUE(axefx::IsFractalSysEx(&msg->at(0), msg->size()));
+}
+}  // namespace
+
+TEST(SysExDataBuffer, Basic) {
+  std::unique_ptr<uint8_t> buffer;
+  int file_size;
+  ASSERT_TRUE(ReadTestFileIntoBuffer("axefx2/9b_A.syx", &buffer, &file_size));
+
+  int original_message_count = 0;
+  shared_ptr<MockMidiIn> midi_in(new MockMidiIn());
+  SysExDataBuffer sysex_buffer(&VerifyIsSysEx);
+  sysex_buffer.Attach(midi_in);
+  const int chunk_sizes[] = {1, 10, 16, 65, 100, 1000};
+  uint8_t* end = buffer.get() + file_size;
+  for (int i = 0; i < arraysize(chunk_sizes); ++i) {
+    uint8_t* pos = buffer.get();
+    while (pos < (end - chunk_sizes[i])) {
+      midi_in->ReportBytes(pos, chunk_sizes[i]);
+      pos += chunk_sizes[i];
+    }
+    midi_in->ReportBytes(pos, end - pos);
+
+    if (!original_message_count)
+      original_message_count = midi_in->message_count_;
+
+    EXPECT_EQ(midi_in->message_count_, original_message_count);
+  }
+}
+
 }  // namespace midi
