@@ -6,7 +6,6 @@
 #ifndef LG_PARSER_H_
 #define LG_PARSER_H_
 
-// TODO: it's not that clean to have LG depend on AxeFx.
 #include "axefx/axe_fx_sysex_parser.h"
 #include "axefx/preset.h"
 #include "lg/lg_entry.h"

@@ -7,8 +7,8 @@
 #include "lg/lg_utils.h"
 
 #include <algorithm>
+#include <iostream>
 #include <string>
-#include <unordered_set>
 
 // TODO: Use MIDICHANNEL variables to get a hint for what channel to assume?
 // TODO: Use DEFAULT_BANKLIST to choose a banklist to add banks to.
@@ -40,6 +40,8 @@ void LgParser::ParseBuffer(LgParserCallback* callback,
   ASSERT(!patches_.empty());
   if (patches_.empty()) {
     // TODO: Create a default patch, default bank and banklist.
+    std::cerr << "No patches found in setup file.  Cannot continue.\n";
+    return;
   }
 
   // Begin quick-n-dirty O(n^2) algos. :-|

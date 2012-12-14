@@ -214,9 +214,7 @@ void Patch::SetName(const std::string& name) {
 
 void Patch::Update(const axefx::Preset& p) {
   std::string name(p.name());
-  // TODO: We need to also make sure each name is unique with in the list
-  // of names for the LG since it relies on names and not IDs to map between
-  // patches,banks and banklists.
+
   CheckNameSizeLimit(&name);
 
   if (bank_)
