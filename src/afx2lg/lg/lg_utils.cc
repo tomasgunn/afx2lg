@@ -13,13 +13,35 @@ using std::regex_match;
 
 namespace lg {
 
-static const int kMaxNameLength = 16;
+const size_t kMaxNameLength = 16u;
 static const char kSectionStart[] = ";=";
 static const char kEntryStart[] = "* ";
 static const char kComentStart[] = ";";
 const char kPatchStart[] = "* PATCH :";
 static const char kBankStart[] = "* BANK :";
 static const char kBankListStart[] = "* BANKLIST :";
+
+std::string GenerateUniqueName(const ReservedNames& taken_names,
+                               const std::string& original_name) {
+  ASSERT(taken_names.find(original_name) != taken_names.end());
+  std::string new_name;
+  size_t counter = 0u;
+  do {
+    new_name = original_name + std::to_string(++counter);
+    if (new_name.length() > kMaxNameLength) {
+      size_t chars = 0, temp_count = counter;
+      while (temp_count) {
+        ++chars;
+        temp_count /= 10;
+      }
+      new_name.erase(new_name.length() - (chars * 2), chars);
+    }
+  } while (taken_names.find(new_name) != taken_names.end());
+
+  ASSERT(new_name.length() <= kMaxNameLength);
+
+  return new_name;
+}
 
 void CheckNameSizeLimit(std::string* name) {
   if (name->size() <= kMaxNameLength)
@@ -39,6 +61,8 @@ void CheckNameSizeLimit(std::string* name) {
   
   if (name->size() <= kMaxNameLength)
     return;
+
+  // TODO: Further shorten the name.
 }
 
 bool IsSectionSeparator(const char* line) {

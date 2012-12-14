@@ -5,9 +5,12 @@
 
 #include "common/common_types.h"
 #include "lg/lg_parser.h"
+#include "lg/lg_utils.h"
 #include "test_utils.h"
 
-class MockCallback : public lg::LgParserCallback {
+namespace lg {
+
+class MockCallback : public LgParserCallback {
  public:
   MockCallback() {}
   virtual ~MockCallback() {}
@@ -29,10 +32,28 @@ TEST(LittleGiant, BasicReadInputFile) {
   ASSERT_TRUE(ReadTestFileIntoBuffer("lg2/input.txt", &buffer,
                                      &file_size));
   MockCallback callback;
-  lg::LgParser parser;
+  LgParser parser;
   parser.ParseBuffer(&callback, reinterpret_cast<const char*>(buffer.get()),
                      reinterpret_cast<const char*>(buffer.get()) + file_size);
   // The output will basically be the same as input.txt, but
   // contains no presets.
   EXPECT_FALSE(callback.lines_.empty());
 }
+
+TEST(LittleGiant, UniqueName) {
+  ReservedNames reserved;
+  std::string name("MyName");
+  reserved.insert(name);
+  EXPECT_EQ(GenerateUniqueName(reserved, name), "MyName1");
+
+  name = "myreallylongname";  // exactly 16 chars, which is the maximum.
+  reserved.insert(name);
+  EXPECT_EQ(GenerateUniqueName(reserved, name), "myreallylongnam1");
+
+  for (size_t i = 0u; i < 128u; ++i)
+    reserved.insert(GenerateUniqueName(reserved, name));
+
+  EXPECT_NE(reserved.find("myreallylongn128"), reserved.end());
+}
+
+}  // namespace lg

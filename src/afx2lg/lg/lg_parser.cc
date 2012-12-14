@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <string>
+#include <unordered_set>
 
 // TODO: Use MIDICHANNEL variables to get a hint for what channel to assume?
 // TODO: Use DEFAULT_BANKLIST to choose a banklist to add banks to.
@@ -67,6 +68,7 @@ void LgParser::ParseBuffer(LgParserCallback* callback,
   size_t bank_size = banks_.size();
   size_t bank_id = bank_size;
 
+  ReservedNames taken_names;
   const axefx::PresetMap& presets = callback->GetPresetMap();
   axefx::PresetMap::const_iterator it = presets.begin();
   for (; it != presets.end(); ++it) {
@@ -96,6 +98,10 @@ void LgParser::ParseBuffer(LgParserCallback* callback,
         current_patch = template_patch_names.begin();
         new_bank.reset();
       }
+
+      if (taken_names.find(p->name()) != taken_names.end())
+        p->SetName(GenerateUniqueName(taken_names, p->name()));
+      taken_names.insert(p->name());
 
       patches_.push_back(p);
       patch_insert_point = entries_.insert(patch_insert_point, p) + 1;

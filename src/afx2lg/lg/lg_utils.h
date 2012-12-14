@@ -7,11 +7,17 @@
 #define LG_UTILS_H_
 
 #include <string>
+#include <unordered_set>
 
 namespace lg {
 
-extern const char kPatchStart[];
+typedef std::unordered_set<std::string> ReservedNames;
 
+extern const char kPatchStart[];
+extern const size_t kMaxNameLength;
+
+std::string GenerateUniqueName(const ReservedNames& taken_names,
+                               const std::string& original_name);
 void CheckNameSizeLimit(std::string* name);
 bool IsSectionSeparator(const char* line);
 bool IsComment(const char* line);
