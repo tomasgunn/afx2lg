@@ -94,8 +94,8 @@ std::string GetDate() {
 #endif
   std::ostringstream stream;
   // Same as "%d%02d%02d_%02d%02d".
-  stream << std::setfill('0') << std::setw(2) << timeinfo.tm_year
-         << timeinfo.tm_mon << timeinfo.tm_mday << '_' << timeinfo.tm_hour
+  stream << std::setfill('0') << std::setw(2) << (1900 + timeinfo.tm_year)
+         << (timeinfo.tm_mon + 1) << timeinfo.tm_mday << '_' << timeinfo.tm_hour
          << timeinfo.tm_min;
   return stream.str();
 }
@@ -123,19 +123,21 @@ bool CreateOutputFile(std::string* name, std::ofstream* file) {
 }
 
 void WriteToFile(std::ofstream* file, const SharedThreadLoop& loop,
-                 const uint8_t* data, size_t size) {
+                 midi::Message* msg) {
   // Ignore tempo messages.  If we receive one, we interpret it as being an
   // indication that we've stopped receiving data.
-  if (axefx::IsFractalSysExNoChecksum(data, size)) {
+  if (axefx::IsFractalSysExNoChecksum(&msg->at(0), msg->size())) {
     const auto header =
-        reinterpret_cast<const axefx::FractalSysExHeader*>(data);
+        reinterpret_cast<const axefx::FractalSysExHeader*>(&msg->at(0));
     if (header->function() == axefx::TEMPO_HEARTBEAT) {
       if (file->tellp() > std::ofstream::pos_type(0)) {
         file->close();
         loop->Quit();
       } else {
+#ifndef NDEBUG
         std::cerr
             << "Received tempo message before starting to receive dump.\n";
+#endif
       }
       return;
     } else if (header->function() == axefx::PRESET_ID) {
@@ -143,7 +145,7 @@ void WriteToFile(std::ofstream* file, const SharedThreadLoop& loop,
       std::cout << "\nPreset " << preset_hdr->preset_number.As16bit() << ": ";
     }
   }
-  file->write(reinterpret_cast<const char*>(data), size);
+  file->write(reinterpret_cast<const char*>(&msg->at(0)), msg->size());
   std::cout << "#";
 }
 
@@ -188,15 +190,19 @@ int main(int argc, char* argv[]) {
     if (files[i].enabled && CreateOutputFile(&files[i].name, &f)) {
       std::cout << "\nWriting " << files[i].description << " to "
                 << files[i].name << ".\n";
+      midi::SysExDataBuffer sysex_buffer(std::bind(&WriteToFile, &f, loop, _1));
+      sysex_buffer.Attach(midi_in);
       BankDumpRequest request(files[i].bank_id);
       unique_ptr<midi::Message> message(
           new midi::Message(&request, sizeof(request)));
-      midi_in->set_ondataavailable(std::bind(&WriteToFile, &f, loop, _1, _2));
       if (midi_out->Send(std::move(message), nullptr)) {
         // Run until we get a timeout.  When we time out, we assume that the
         // transmission is done.
         loop->set_timeout(std::chrono::milliseconds(1000));
         loop->Run();
+        // TODO: We're missing a verification stage here.
+        // I've seen on Mac that not all presets are uniform in size, which is
+        // sucpicious.
         std::cout << "\n" << files[i].name << " ready.\n";
       } else {
         std::cerr << "Failed to send bank request.\n";

@@ -185,7 +185,7 @@ bool DataSocket::ParseMethodAndPath(const char* begin, size_t len) {
   };
 
   const char* path = NULL;
-  for (size_t i = 0; i < ARRAYSIZE(supported_methods); ++i) {
+  for (size_t i = 0; i < arraysize(supported_methods); ++i) {
     const std::string& name = supported_methods[i].method_name;
     if (len > name.length() && isspace(begin[name.length()]) &&
         strncmp(begin, name.c_str(), name.length()) == 0) {
@@ -218,17 +218,17 @@ bool DataSocket::ParseContentLengthAndType(const char* headers, size_t length) {
     if (!isspace(headers[0])) {
       static const char kContentLength[] = "Content-Length:";
       static const char kContentType[] = "Content-Type:";
-      if ((headers + ARRAYSIZE(kContentLength)) < end &&
+      if ((headers + arraysize(kContentLength)) < end &&
           strncmp(headers, kContentLength,
-                  ARRAYSIZE(kContentLength) - 1) == 0) {
-        headers += ARRAYSIZE(kContentLength) - 1;
+                  arraysize(kContentLength) - 1) == 0) {
+        headers += arraysize(kContentLength) - 1;
         while (headers[0] == ' ')
           ++headers;
         content_length_ = atoi(headers);
-      } else if ((headers + ARRAYSIZE(kContentType)) < end &&
+      } else if ((headers + arraysize(kContentType)) < end &&
                  strncmp(headers, kContentType,
-                         ARRAYSIZE(kContentType) - 1) == 0) {
-        headers += ARRAYSIZE(kContentType) - 1;
+                         arraysize(kContentType) - 1) == 0) {
+        headers += arraysize(kContentType) - 1;
         while (headers[0] == ' ')
           ++headers;
         const char* type_end = strstr(headers, "\r\n");

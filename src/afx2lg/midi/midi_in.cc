@@ -42,7 +42,7 @@ shared_ptr<MidiIn> MidiIn::OpenAxeFx(
 }
 
 SysExDataBuffer::SysExDataBuffer(const SysExDataBuffer::OnSysEx& on_sysex)
-    : on_sysex_(on_sysex) {
+    : on_sysex_(std::move(on_sysex)) {
 }
 
 SysExDataBuffer::~SysExDataBuffer() {

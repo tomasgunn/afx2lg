@@ -3,6 +3,8 @@
 
 #include "midi/midi_out.h"
 
+#include "axefx/sysex_types.h"
+
 namespace midi {
 
 #if !defined(OS_WIN) && !defined(OS_MACOSX)
@@ -34,6 +36,14 @@ Message::Message() {}
 Message::Message(const axefx::FractalSysExHeader* header, size_t size)
     : std::vector<uint8_t>(reinterpret_cast<const uint8_t*>(header),
                            reinterpret_cast<const uint8_t*>(header) + size) {
+}
+
+bool Message::IsSysEx() const {
+  return !empty() && at(0) == axefx::kSysExStart;
+}
+
+bool Message::IsFractalMessage() const {
+  return !empty() && axefx::IsFractalSysExNoChecksum(&at(0), size());
 }
 
 MidiOut::MidiOut(const shared_ptr<MidiDeviceInfo>& device) : device_(device) {}

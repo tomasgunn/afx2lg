@@ -11,6 +11,7 @@
 
 using std::placeholders::_1;
 using std::placeholders::_2;
+using std::placeholders::_3;
 
 namespace midi {
 
@@ -78,10 +79,30 @@ TEST(MidiOut, SendSysExToAxeFx) {
   EXPECT_TRUE(loop->Run());
 }
 
-void AssignToBufferAndQuit(midi::Message* message,
+bool IsTempoMessage(Message* msg) {
+  if (!msg->IsFractalMessage()) {
+    std::cerr << "Not a valid Fractal message\n";
+    return false;
+  }
+
+  auto header = reinterpret_cast<const axefx::FractalSysExHeader*>(&msg->at(0));
+  return header->function() == axefx::TEMPO_HEARTBEAT;
+}
+
+void AssignToBufferAndQuit(Message* new_message,
                            const shared_ptr<common::ThreadLoop>& loop,
-                           midi::Message* new_message) {
-  std::swap(message, new_message);
+                           Message* message) {
+  if (!new_message->IsSysEx()) {
+    std::cerr << "Ignoring non-sysex (partial?) message\n";
+    return;
+  }
+  if (IsTempoMessage(new_message)) {
+    std::cerr << "Ignoring tempo message\n";
+    return;
+  }
+  std::cout << "Received message of size : " << new_message->size() << "\n";
+  new_message->swap(*message);
+  std::cout << "Quitting loop.  message size: " << message->size() << "\n";
   loop->Quit();
 }
 
@@ -92,23 +113,23 @@ TEST(Midi, GetPresetName) {
   unique_ptr<MidiOut> out_device(MidiOut::OpenAxeFx());
   ASSERT_TRUE(out_device.get() != NULL);
 
-  loop->set_timeout(std::chrono::milliseconds(1000));
+  loop->set_timeout(std::chrono::milliseconds(5000));
 
   axefx::GenericNoDataMessage request(axefx::PRESET_NAME);
   unique_ptr<Message> message(new Message(&request, sizeof(request)));
 
-  midi::Message data;
-  midi::SysExDataBuffer buffer(
-      std::bind(&AssignToBufferAndQuit, &data, loop, _1));
+  Message data;
+  SysExDataBuffer buffer(
+      std::bind(&AssignToBufferAndQuit, _1, loop, &data));
   buffer.Attach(in_device);
   EXPECT_TRUE(out_device->Send(std::move(message), nullptr));
   EXPECT_TRUE(loop->Run());
-  ASSERT_FALSE(data.empty());
+  ASSERT_FALSE(data.empty()) << "size: " << data.size();
   ASSERT_TRUE(axefx::IsFractalSysEx(&data[0], data.size()));
   auto p = reinterpret_cast<const axefx::FractalSysExHeader*>(&data[0]);
   ASSERT_EQ(axefx::PRESET_NAME, p->function());
   std::string name(reinterpret_cast<const char*>(p + 1),
-                    reinterpret_cast<const char*>(&data[data.size() - 2]));
+                   reinterpret_cast<const char*>(&data[data.size() - 2]));
   EXPECT_FALSE(name.empty());
 #ifndef NDEBUG
   std::cout << "preset name: " << name << std::endl;
@@ -133,7 +154,7 @@ TEST(Midi, DISABLED_PresetNameMonitor) {
 
   midi::Message data;
   midi::SysExDataBuffer buffer(
-      std::bind(&AssignToBufferAndQuit, &data, loop, _1));
+      std::bind(&AssignToBufferAndQuit, _1, loop, &data));
   buffer.Attach(midi_in);
 
   while (true) {
@@ -166,16 +187,24 @@ TEST(Midi, GetSystemBankDump) {
   axefx::BankDumpRequest request(axefx::BankDumpRequest::SYSTEM_BANK);
   unique_ptr<Message> message(new Message(&request, sizeof(request)));
 
-  EXPECT_TRUE(midi_out->Send(std::move(message), nullptr));
-
   // Set the timeout between buffer receives to be 1 second.
   // We'll quit 1 second after receiving the last message.
   loop->set_timeout(std::chrono::milliseconds(1000));
   midi::Message data;
   midi::SysExDataBuffer buffer(
-      std::bind(&AssignToBufferAndQuit, &data, loop, _1));
+      std::bind(&AssignToBufferAndQuit, _1, loop, &data));
   buffer.Attach(midi_in);
-  EXPECT_FALSE(loop->Run());
+
+  EXPECT_TRUE(midi_out->Send(std::move(message), nullptr));
+
+  // TODO: Tempo messages can keep the loop running indefinetly.
+  // For now we have to run the test with sysex set to none.
+  // Need to fix that.
+  size_t msg_count = 0;
+  while (loop->Run())
+    ++msg_count;
+
+  std::cout << "Received sysex count: " << msg_count << std::endl;
 }
 
 namespace {

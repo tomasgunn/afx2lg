@@ -54,7 +54,6 @@ class MidiInMac : public MidiIn {
       const std::weak_ptr<MidiInMac>& me,
       uint8_t* buffer,
       size_t size) {
-    std::cout << "OnProcessBuffer size: " << size << std::endl;
     std::shared_ptr<MidiInMac> locked(me.lock());
     if (locked) {
       if (locked->data_available_ != nullptr) {
@@ -64,7 +63,6 @@ class MidiInMac : public MidiIn {
   }
 
   void OnCallback(const MIDIPacketList* packets) {
-    std::cout << "OnCallback" << std::endl;
     shared_ptr<common::ThreadLoop> worker(worker_.lock());
     if (!worker)
       return;

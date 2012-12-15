@@ -42,6 +42,13 @@ class Message : public std::vector<uint8_t> {
  public:
   Message();
   Message(const axefx::FractalSysExHeader* header, size_t size);
+
+  bool IsSysEx() const;
+  bool IsFractalMessage() const;
+
+ private:
+  Message(const Message&);
+  Message& operator=(const Message&);
 };
 
 // Interface class for a midi-out connection + device enumeration.
