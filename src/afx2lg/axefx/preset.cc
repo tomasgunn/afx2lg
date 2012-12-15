@@ -97,6 +97,7 @@ bool Preset::Finalize(const PresetChecksumHeader& header, size_t size) {
   if (is_global_setting()) {
     // For system backups, we treat each preset block as an opaque block of
     // data by default.
+    name_ = "(global system data)";
     return true;
   }
 

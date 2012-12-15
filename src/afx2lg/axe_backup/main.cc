@@ -3,6 +3,7 @@
 
 #include "common/common_types.h"
 
+#include "axefx/preset.h"
 #include "axefx/sysex_types.h"
 #include "midi/midi_in.h"
 #include "midi/midi_out.h"
@@ -122,17 +123,41 @@ bool CreateOutputFile(std::string* name, std::ofstream* file) {
   return file->good();
 }
 
-void WriteToFile(std::ofstream* file, const SharedThreadLoop& loop,
-                 midi::Message* msg) {
-  // Ignore tempo messages.  If we receive one, we interpret it as being an
-  // indication that we've stopped receiving data.
-  if (axefx::IsFractalSysExNoChecksum(&msg->at(0), msg->size())) {
-    const auto header =
+class BackupWriter {
+ public:
+  BackupWriter(std::ofstream* file, const SharedThreadLoop& loop)
+      : file_(file), loop_(loop), bytes_written_(0u), failed_(false),
+        preset_count_(0) {
+  }
+
+  ~BackupWriter() {
+  }
+
+  bool failed() const { return !bytes_written_ || failed_; }
+  size_t preset_count() const { return preset_count_; }
+
+  void OnSysEx(midi::Message* msg) {
+    if (failed_)
+      return;
+
+    if (!msg->IsFractalMessage()) {
+      if (bytes_written_) {
+        OnError("Received an unrecognized message.\n"
+                "Are there any other MIDI devices connected to the AxeFx?");
+      } else {
+#ifndef NDEBUG
+        std::cout << "Ignoring unrecognized/partial message.\n";
+#endif
+      }
+      return;
+    }
+
+    auto header =
         reinterpret_cast<const axefx::FractalSysExHeader*>(&msg->at(0));
     if (header->function() == axefx::TEMPO_HEARTBEAT) {
-      if (file->tellp() > std::ofstream::pos_type(0)) {
-        file->close();
-        loop->Quit();
+      if (bytes_written_) {
+        file_->close();
+        loop_->Quit();
       } else {
 #ifndef NDEBUG
         std::cerr
@@ -140,14 +165,80 @@ void WriteToFile(std::ofstream* file, const SharedThreadLoop& loop,
 #endif
       }
       return;
-    } else if (header->function() == axefx::PRESET_ID) {
-      const auto preset_hdr = static_cast<const axefx::PresetIdHeader*>(header);
-      std::cout << "\nPreset " << preset_hdr->preset_number.As16bit() << ": ";
     }
+
+    switch (header->function()) {
+      case axefx::PRESET_ID: {
+        auto preset_hdr = static_cast<const axefx::PresetIdHeader*>(header);
+        std::cout << preset_hdr->preset_number.As16bit() << ": ";
+
+        current_preset_.reset(new axefx::Preset());
+        if (!current_preset_->SetPresetId(*preset_hdr, msg->size())) {
+          OnError("Failed to parse preset ID header");
+          return;
+        }
+        break;
+      }
+
+      case axefx::PRESET_PARAMETERS: {
+        if (!current_preset_.get()) {
+          OnError("Received out of band preset parameters.");
+          return;
+        }
+        auto param_header =
+            static_cast<const axefx::ParameterBlockHeader*>(header);
+        if (!current_preset_->AddParameterData(*param_header, msg->size())) {
+          OnError("Failed to parse preset parameters");
+          return;
+        }
+        break;
+      }
+
+      case axefx::PRESET_CHECKSUM: {
+        if (!current_preset_.get()) {
+          OnError("Received out of band preset checksum.");
+          return;
+        }
+
+        auto checksum = static_cast<const axefx::PresetChecksumHeader*>(header);
+        if (!current_preset_->Finalize(*checksum, msg->size())) {
+          ASSERT(current_preset_->valid());
+          OnError("Preset checksum verification failed.\n");
+          return;
+        }
+        std::cout << current_preset_->name() << " <verified>\n";
+        current_preset_.reset();
+        ++preset_count_;
+        break;
+      }
+
+      default:
+        OnError("Unrecognized function: " + std::to_string(header->function()));
+        return;
+    }
+
+    file_->write(reinterpret_cast<const char*>(&msg->at(0)), msg->size());
+    bytes_written_ += msg->size();
+
+    // std::cout << "#";
+    // std::cout.flush();
   }
-  file->write(reinterpret_cast<const char*>(&msg->at(0)), msg->size());
-  std::cout << "#";
-}
+
+ private:
+  void OnError(const std::string& err) {
+    failed_ = true;
+    std::cerr << "Error: " << err << std::endl;
+    file_->close();
+    loop_->Quit();
+  }
+
+  std::ofstream* file_;
+  SharedThreadLoop loop_;
+  size_t bytes_written_;
+  bool failed_;
+  size_t preset_count_;
+  shared_ptr<axefx::Preset> current_preset_;
+};
 
 int main(int argc, char* argv[]) {
   Options options;
@@ -190,7 +281,9 @@ int main(int argc, char* argv[]) {
     if (files[i].enabled && CreateOutputFile(&files[i].name, &f)) {
       std::cout << "\nWriting " << files[i].description << " to "
                 << files[i].name << ".\n";
-      midi::SysExDataBuffer sysex_buffer(std::bind(&WriteToFile, &f, loop, _1));
+      BackupWriter writer(&f, loop);
+      midi::SysExDataBuffer sysex_buffer(
+          std::bind(&BackupWriter::OnSysEx, &writer, _1));
       sysex_buffer.Attach(midi_in);
       BankDumpRequest request(files[i].bank_id);
       unique_ptr<midi::Message> message(
@@ -198,12 +291,19 @@ int main(int argc, char* argv[]) {
       if (midi_out->Send(std::move(message), nullptr)) {
         // Run until we get a timeout.  When we time out, we assume that the
         // transmission is done.
-        loop->set_timeout(std::chrono::milliseconds(1000));
+        loop->set_timeout(std::chrono::milliseconds(3 * 1000));
         loop->Run();
-        // TODO: We're missing a verification stage here.
-        // I've seen on Mac that not all presets are uniform in size, which is
-        // sucpicious.
-        std::cout << "\n" << files[i].name << " ready.\n";
+
+        if (writer.failed()) {
+          std::cerr << "Sorry, can't continue due to errors.\n";
+          return -1;
+        } else if (writer.preset_count() != 128) {
+          std::cerr << "Error: Received an unexpected number of presets: "
+                    << writer.preset_count() << ".\n";
+          return -1;
+        }
+
+        std::cout << "\n" << "Backup " << files[i].name << " ready.\n";
       } else {
         std::cerr << "Failed to send bank request.\n";
         return -1;
