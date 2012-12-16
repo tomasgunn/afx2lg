@@ -60,6 +60,7 @@ class MidiInMac : public MidiIn {
         locked->data_available_(buffer, size);
       }
     }
+    delete [] buffer;
   }
 
   void OnCallback(const MIDIPacketList* packets) {

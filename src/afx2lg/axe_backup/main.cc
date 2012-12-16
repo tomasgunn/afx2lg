@@ -140,10 +140,14 @@ class BackupWriter {
     if (failed_)
       return;
 
-    if (!msg->IsFractalMessage()) {
+    // Check if the message is recognized as a Fractal message.
+    // We'll start by ignoring the message checksum.
+    if (!msg->IsFractalMessageNoChecksum()) {
       if (bytes_written_) {
-        OnError("Received an unrecognized message.\n"
-                "Are there any other MIDI devices connected to the AxeFx?");
+        std::ostringstream stream;
+        stream << "Received an unrecognized message (size=" << msg->size() <<
+            ").\nAre there any other MIDI devices connected to the AxeFx?";
+        OnError(stream.str());
       } else {
 #ifndef NDEBUG
         std::cout << "Ignoring unrecognized/partial message.\n";
@@ -164,6 +168,16 @@ class BackupWriter {
             << "Received tempo message before starting to receive dump.\n";
 #endif
       }
+      return;
+    }
+
+    // From this point on all messages that we expect, should have a
+    // valid checksum.
+    if (!msg->IsFractalMessageWithChecksum()) {
+      std::ostringstream stream;
+      stream << "Checksum error on message with function="
+             << header->function();
+      OnError(stream.str());
       return;
     }
 
@@ -219,13 +233,17 @@ class BackupWriter {
 
     file_->write(reinterpret_cast<const char*>(&msg->at(0)), msg->size());
     bytes_written_ += msg->size();
-
-    // std::cout << "#";
-    // std::cout.flush();
   }
 
  private:
   void OnError(const std::string& err) {
+    if (bytes_written_ == 0u) {
+      // Treat errors as just warnings before we actually start to
+      // receive data that we expect.  On Mac there can be 'leftovers' in
+      // the midi driver that it will give us when we connect.
+      std::cerr << "Warning: " << err << std::endl;
+      return;
+    }
     failed_ = true;
     std::cerr << "Error: " << err << std::endl;
     file_->close();
@@ -295,7 +313,13 @@ int main(int argc, char* argv[]) {
         loop->Run();
 
         if (writer.failed()) {
-          std::cerr << "Sorry, can't continue due to errors.\n";
+          std::cerr <<
+            "\nErrors were detected in the backup data.\n\n"
+            "It is possible that using other apps, typing or using"
+            " the mouse (especially on Mac) can cause MIDI data from"
+            " the AxeFx to be dropped and therefore damaging the backup.\n\n"
+            "Please try again and make sure the AxeFx isn't busy before you do."
+            "\n\n";
           return -1;
         } else if (writer.preset_count() != 128) {
           std::cerr << "Error: Received an unexpected number of presets: "

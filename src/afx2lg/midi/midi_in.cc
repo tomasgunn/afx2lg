@@ -3,6 +3,11 @@
 
 #include "midi/midi_in.h"
 
+// todo: remove
+#include "axefx/sysex_types.h"
+
+#include <iostream>
+
 using std::placeholders::_1;
 using std::placeholders::_2;
 
@@ -59,9 +64,45 @@ void SysExDataBuffer::OnData(const uint8_t* data, size_t size) {
   for (; i < size; ++i) {
     if (data[i] == kSysExEnd) {
       buffer_.insert(buffer_.end(), &data[pos_begin], &data[i + 1u]);
-      ASSERT(buffer_[0] == kSysExStart);
       ASSERT(buffer_[buffer_.size() - 1u] == kSysExEnd);
-      on_sysex_(&buffer_);
+      if (buffer_[0] != kSysExStart) {
+#ifndef NDEBUG
+        std::cerr << "WRN: Received partial midi message.  Dropping.\n";
+#endif
+        Message::iterator found = buffer_.find(kSysExStart);
+        if (found != buffer_.end()) {
+#ifndef NDEBUG
+          std::cerr << "\tFound another sysex start.\n";
+#endif
+          buffer_.erase(buffer_.begin(), found);
+        } else {
+          buffer_.clear();
+        }
+      }
+
+#ifndef NDEBUG
+      if (buffer_.size() > 202) {
+        std::cout << "buffer size: " << buffer_.size() << "\n";
+        ASSERT(buffer_[0] == kSysExStart);
+        for (size_t x = 1; x < (buffer_.size() - 1); ++x) {
+          ASSERT(buffer_[x] < 0xF0);
+          if (x < (buffer_.size() - sizeof(axefx::kFractalMidiId))) {
+            // This can actually happen on Mac.
+            if (memcmp(&axefx::kFractalMidiId[0], &buffer_[x],
+                       sizeof(axefx::kFractalMidiId)) != 0) {
+              std::cerr << "WRN: Found a Fractal header in an unusually large "
+                           "message. Preceding byte: " << (int) buffer_[x - 1]
+                        << "function: "
+                        << buffer_[x +sizeof(axefx::kFractalMidiId)] << "\n";
+            }
+          }
+        }
+      }
+#endif
+      if (!buffer_.empty()) {
+        ASSERT(buffer_[0] == kSysExStart);
+        on_sysex_(&buffer_);
+      }
       buffer_.clear();
       pos_begin = i + 1u;
       ASSERT(pos_begin >= size || data[pos_begin] == kSysExStart);

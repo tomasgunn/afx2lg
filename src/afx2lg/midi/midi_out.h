@@ -44,7 +44,11 @@ class Message : public std::vector<uint8_t> {
   Message(const axefx::FractalSysExHeader* header, size_t size);
 
   bool IsSysEx() const;
-  bool IsFractalMessage() const;
+  bool IsFractalMessageNoChecksum() const;
+  bool IsFractalMessageWithChecksum() const;
+
+  // Returns npos on failure, index of the found item on success.
+  iterator find(uint8_t i);
 
  private:
   Message(const Message&);

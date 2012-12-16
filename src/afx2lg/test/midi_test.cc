@@ -80,7 +80,7 @@ TEST(MidiOut, SendSysExToAxeFx) {
 }
 
 bool IsTempoMessage(Message* msg) {
-  if (!msg->IsFractalMessage()) {
+  if (!msg->IsFractalMessageNoChecksum()) {
     std::cerr << "Not a valid Fractal message\n";
     return false;
   }

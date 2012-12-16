@@ -47,6 +47,8 @@ bool ThreadLoop::Run() {
       return true;
   }
 
+  SetQuit();
+
   return false;
 }
 

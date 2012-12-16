@@ -21,13 +21,13 @@
 #endif
 
 #ifdef OS_WIN
-#ifdef _DEBUG
+#ifndef NDEBUG
 #define ASSERT(expr)  ((expr) ? ((void)0) : __debugbreak())
 #else
 #define ASSERT(expr)  ((void)0)
 #endif
 #else  // !OS_WIN
-#ifdef _DEBUG
+#ifndef NDEBUG
 #define ASSERT(expr)  assert(expr)
 #else
 #define ASSERT(expr)  ((void)0)

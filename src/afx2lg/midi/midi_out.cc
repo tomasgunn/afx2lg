@@ -5,6 +5,8 @@
 
 #include "axefx/sysex_types.h"
 
+#include <algorithm>
+
 namespace midi {
 
 #if !defined(OS_WIN) && !defined(OS_MACOSX)
@@ -42,9 +44,18 @@ bool Message::IsSysEx() const {
   return !empty() && at(0) == axefx::kSysExStart;
 }
 
-bool Message::IsFractalMessage() const {
+bool Message::IsFractalMessageNoChecksum() const {
   return !empty() && axefx::IsFractalSysExNoChecksum(&at(0), size());
 }
+
+bool Message::IsFractalMessageWithChecksum() const {
+  return !empty() && axefx::IsFractalSysEx(&at(0), size());
+}
+
+Message::iterator Message::find(uint8_t i) {
+  return std::find(begin(), end(), i);
+}
+
 
 MidiOut::MidiOut(const shared_ptr<MidiDeviceInfo>& device) : device_(device) {}
 

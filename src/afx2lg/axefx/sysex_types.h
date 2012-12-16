@@ -93,7 +93,7 @@ struct ParameterBlockHeader : public FractalSysExHeader {
   ParameterBlockHeader() : FractalSysExHeader(PRESET_PARAMETERS) {}
   uint8_t value_count;  // I've only ever seen this be 0x40.
   uint8_t reserved;  // Always 0.
-  Fractal16bit values[1];  // Actual size is |parameter_count|.
+  Fractal16bit values[1];  // Actual size is |value_count|.
 };
 
 struct PresetChecksumHeader : public FractalSysExHeader {
