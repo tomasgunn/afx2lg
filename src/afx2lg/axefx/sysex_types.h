@@ -34,6 +34,7 @@ enum FunctionId {
   TEMPO_HEARTBEAT = 0x10,
   PRESET_CHANGE = 0x14,  // Includes SeptedPair == preset id.
   BANK_DUMP_REQUEST = 0x1C,
+  PARAMETER_CHANGED = 0x21,  // Just a notification. Use GenericNoDataMessage.
   PRESET_ID = 0x77,  // Use PresetIdHeader.
   PRESET_PARAMETERS = 0x78,  // Use ParameterBlockHeader.
   PRESET_CHECKSUM = 0x79,  // Use PresetChecksumHeader.

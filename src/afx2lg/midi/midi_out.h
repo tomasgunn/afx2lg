@@ -13,6 +13,7 @@
 
 namespace axefx {
 struct FractalSysExHeader;
+enum FunctionId;
 }  // namespace axefx
 
 namespace midi {
@@ -38,6 +39,8 @@ class DeviceInfos : public std::vector<shared_ptr<MidiDeviceInfo> > {
   const_iterator FindAxeFx() const;
 };
 
+// TODO: This needs to be moved out to its own header... not sure if it belongs
+// here with the midi code or in the axefx folder...
 class Message : public std::vector<uint8_t> {
  public:
   Message();
@@ -46,6 +49,7 @@ class Message : public std::vector<uint8_t> {
   bool IsSysEx() const;
   bool IsFractalMessageNoChecksum() const;
   bool IsFractalMessageWithChecksum() const;
+  bool IsFractalMessageType(axefx::FunctionId fn) const;
 
   // Returns npos on failure, index of the found item on success.
   iterator find(uint8_t i);

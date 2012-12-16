@@ -52,6 +52,15 @@ bool Message::IsFractalMessageWithChecksum() const {
   return !empty() && axefx::IsFractalSysEx(&at(0), size());
 }
 
+bool Message::IsFractalMessageType(axefx::FunctionId fn) const {
+  // Not all message types have a checksum.
+  if (!IsFractalMessageNoChecksum())
+    return false;
+
+  auto header = reinterpret_cast<const axefx::FractalSysExHeader*>(&at(0));
+  return header->function() == fn;
+}
+
 Message::iterator Message::find(uint8_t i) {
   return std::find(begin(), end(), i);
 }

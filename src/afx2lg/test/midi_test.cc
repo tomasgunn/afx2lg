@@ -79,16 +79,6 @@ TEST(MidiOut, SendSysExToAxeFx) {
   EXPECT_TRUE(loop->Run());
 }
 
-bool IsTempoMessage(Message* msg) {
-  if (!msg->IsFractalMessageNoChecksum()) {
-    std::cerr << "Not a valid Fractal message\n";
-    return false;
-  }
-
-  auto header = reinterpret_cast<const axefx::FractalSysExHeader*>(&msg->at(0));
-  return header->function() == axefx::TEMPO_HEARTBEAT;
-}
-
 void AssignToBufferAndQuit(Message* new_message,
                            const shared_ptr<common::ThreadLoop>& loop,
                            Message* message) {
@@ -96,13 +86,14 @@ void AssignToBufferAndQuit(Message* new_message,
     std::cerr << "Ignoring non-sysex (partial?) message\n";
     return;
   }
-  if (IsTempoMessage(new_message)) {
-    std::cerr << "Ignoring tempo message\n";
+
+  if (new_message->IsFractalMessageType(axefx::TEMPO_HEARTBEAT) ||
+      new_message->IsFractalMessageType(axefx::TUNER_DATA)) {
+    // std::cerr << "Ignoring tempo/tuner message\n";
     return;
   }
-  std::cout << "Received message of size : " << new_message->size() << "\n";
+
   new_message->swap(*message);
-  std::cout << "Quitting loop.  message size: " << message->size() << "\n";
   loop->Quit();
 }
 
@@ -162,17 +153,32 @@ TEST(Midi, DISABLED_PresetNameMonitor) {
     ASSERT_FALSE(data.empty());
     ASSERT_TRUE(axefx::IsFractalSysEx(&data[0], data.size()));
     auto p = reinterpret_cast<const axefx::FractalSysExHeader*>(&data[0]);
-    if (p->function() == axefx::PRESET_CHANGE) {
-      axefx::GenericNoDataMessage request(axefx::PRESET_NAME);
-      unique_ptr<Message> message(new Message(&request, sizeof(request)));
-      ASSERT_TRUE(midi_out->Send(std::move(message), nullptr));
-      auto pair = reinterpret_cast<const axefx::SeptetPair*>(p + 1);
-      std::cout << pair->As16bit() << " ";
-    } else if (p->function() == axefx::PRESET_NAME) {
-      std::string name(reinterpret_cast<const char*>(p + 1),
-                       reinterpret_cast<const char*>(&data[data.size() - 2]));
-      EXPECT_FALSE(name.empty());
-      std::cout << name << std::endl;
+    switch (p->function()) {
+      case axefx::PRESET_CHANGE: {
+        axefx::GenericNoDataMessage request(axefx::PRESET_NAME);
+        unique_ptr<Message> message(new Message(&request, sizeof(request)));
+        ASSERT_TRUE(midi_out->Send(std::move(message), nullptr));
+        auto pair = reinterpret_cast<const axefx::SeptetPair*>(p + 1);
+        std::cout << pair->As16bit() << " ";
+        break;
+      }
+
+      case axefx::PRESET_NAME: {
+        std::string name(reinterpret_cast<const char*>(p + 1),
+                         reinterpret_cast<const char*>(&data[data.size() - 2]));
+        EXPECT_FALSE(name.empty());
+        std::cout << name << std::endl;
+        break;
+      }
+
+      case axefx::PARAMETER_CHANGED:
+        std::cout << "Parameters change notification\n";
+        break;
+
+      default:
+        std::cout << "Unknown message. fn=" << p->function() << ". size="
+                  << data.size() << "\n";
+        break;
     }
   }
 }
