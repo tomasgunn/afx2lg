@@ -73,16 +73,14 @@ bool DataSocket::PathEquals(const char* path) const {
   return request_path_.compare(path) == 0;
 }
 
-bool DataSocket::OnDataAvailable(bool* close_socket) {
+bool DataSocket::OnDataAvailable() {
   ASSERT(valid());
   char buffer[0xfff] = {0};
   int bytes = recv(socket_, buffer, sizeof(buffer), 0);
   if (bytes == SOCKET_ERROR || bytes == 0) {
-    *close_socket = true;
+    Close();
     return false;
   }
-
-  *close_socket = false;
 
   bool ret = true;
   if (headers_received()) {
@@ -104,16 +102,20 @@ bool DataSocket::OnDataAvailable(bool* close_socket) {
   return ret;
 }
 
-bool DataSocket::Send(const std::string& data) const {
-  return send(socket_, data.data(), static_cast<int>(data.length()), 0) !=
-      SOCKET_ERROR;
+bool DataSocket::Send(const std::string& data) {
+  bool ok =
+      (send(socket_, data.data(), static_cast<int>(data.length()), 0) !=
+       SOCKET_ERROR);
+  if (!ok)
+    Close();
+  return ok;
 }
 
 bool DataSocket::Send(const std::string& status,
                       bool connection_close,
                       const std::string& content_type,
                       const std::string& extra_headers,
-                      const std::string& data) const {
+                      const std::string& data)  {
   ASSERT(valid());
   ASSERT(!status.empty());
   std::string buffer("HTTP/1.1 " + status + "\r\n");
@@ -268,7 +270,7 @@ bool ListeningSocket::Listen(unsigned short port) {
   return listen(socket_, 5) != SOCKET_ERROR;
 }
 
-DataSocket* ListeningSocket::Accept() const {
+unique_ptr<DataSocket> ListeningSocket::Accept() const {
   ASSERT(valid());
   struct sockaddr_in addr = {0};
   socklen_t size = sizeof(addr);
@@ -276,5 +278,5 @@ DataSocket* ListeningSocket::Accept() const {
   if (client == INVALID_SOCKET)
     return NULL;
 
-  return new DataSocket(client);
+  return unique_ptr<DataSocket>(new DataSocket(client));
 }

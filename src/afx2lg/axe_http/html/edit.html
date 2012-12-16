@@ -1,0 +1,161 @@
+<html>
+<head>
+  <title>Editor</title>
+  <style type="text/css">
+body {
+  background-color: DarkSlateGray;
+  color: white;
+}
+#matrix {
+  border: 1px solid black;
+  border-spacing: 10px;
+}
+#matrix td {
+  background-color: black;
+  border: 1px solid black;
+  color: white;
+  padding: 10px;
+  text-align:center;
+}
+#ptable {
+  border: 1px solid white;
+  border-spacing: 1px;
+}
+#pbody td {
+ white-space: nowrap;
+ font-size: 13;
+ cursor: hand;
+}
+</style>
+
+  <script language="javascript">
+var last_selected_preset = null;
+function $(id) {
+  return document.getElementById(id);
+}
+
+function pickColor(e) {
+  if (e.hovering) {
+    e.style.background = "orange";
+  } else if (e.selected) {
+    e.style.background = "orangered";
+  } else {
+    e.style.background = "inherit";
+  }
+}
+
+function mymouseover() {
+  var e = event.srcElement;
+  e.hovering = true;
+  pickColor(e);
+}
+
+function mymouseout() {
+  var e = event.srcElement;
+  e.hovering = false;
+  pickColor(e);
+}
+
+function myonclick() {
+  var e = event.srcElement;
+  e.selected = !e.selected;
+  pickColor(e);
+  if (e.selected) {
+    last_selected_preset = e;
+  } else if (e == last_selected_preset) {
+    last_selected_preset = null;
+  }
+}
+
+function myselectstart() {
+  event.preventDefault();
+/*  var e = event.srcElement;
+  if (e.tagName == 'TD') {
+    console.log(e.tagName);
+    e.selected = true;
+    pickColor(e);
+    last_selected_preset = e;
+  }*/
+}
+
+function myselectend() {
+  var e = event.srcElement;
+/*  console.log(e.tagName);
+  if (e.tagName == 'TD' && last_selected_preset) {
+    var range = window.getSelection().getRangeAt(0);
+    var node = range.startContainer;
+    while (node != range.endContainer) {
+      if (node.tagName == 'TD') {
+        node.selected = true;
+        pickColor(node);
+      }
+      node = node.nextSibling;
+    }
+    last_selected_preset = null;
+  }*/
+}
+
+function buildPresets() {
+  const count = 128;
+  const max_rows = 20;
+  var tr = null, td = null;
+  var rows = new Array(count % max_rows);
+  ptable.onselectstart = myselectstart;
+  for (var i = 0; i < count; ++i) {
+    var this_row = i % max_rows;
+    if (!rows[this_row]) {
+      tr = document.createElement('TR');
+      rows[this_row] = pbody.appendChild(tr);
+    } else {
+      tr = rows[this_row];
+    }
+
+    if (!td) {
+      td = document.createElement('TD');
+      td.width='100px';
+      td.id = new String("p" + i)
+      td.onmouseover = mymouseover;
+      td.onmouseout = mymouseout;
+      td.onclick = myonclick;
+      td.selected = false;
+      td.hovering = false;
+      td.onselectstart = myselectstart;
+      td.onselectend = myselectend;
+      var t = document.createTextNode(String(i+1) + " preset name");
+      td.appendChild(t);
+      tr.appendChild(td);
+      td = null;
+    }
+  }
+}
+
+function buildMatrix() {
+  // TODO: input and output sections.
+  for (var y = 0; y < 4; ++y) {
+    var tr = document.createElement('TR');
+    matrix_body.appendChild(tr);
+    for (var x=0; x < 12; ++x) {
+      var td = document.createElement('TD');
+      td.width='100px';
+      td.appendChild(document.createTextNode(String(x+1) + "," + String(y+1)));
+      tr.appendChild(td);
+    }
+  }
+}
+
+function onLoad() {
+  buildPresets();
+  buildMatrix();
+}
+  </script>
+
+</head>
+<body onload="onLoad();">
+<table id="ptable">
+  <tbody id="pbody"></tbody>
+</div>
+<table id="matrix" border="1">
+  <tbody id="matrix_body"></tbody>
+</table>
+</body>
+</html>

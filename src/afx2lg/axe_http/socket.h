@@ -94,10 +94,10 @@ class DataSocket : public SocketBase {
 
   // Called when we have received some data from clients.
   // Returns false if an error occurred.
-  bool OnDataAvailable(bool* close_socket);
+  bool OnDataAvailable();
 
   // Send a raw buffer of bytes.
-  bool Send(const std::string& data) const;
+  bool Send(const std::string& data);
 
   // Send an HTTP response.  The |status| should start with a valid HTTP
   // response code, followed by a string.  E.g. "200 OK".
@@ -110,7 +110,7 @@ class DataSocket : public SocketBase {
   // a "Content-Length" header.
   bool Send(const std::string& status, bool connection_close,
             const std::string& content_type,
-            const std::string& extra_headers, const std::string& data) const;
+            const std::string& extra_headers, const std::string& data);
 
   // Clears all held state and prepares the socket for receiving a new request.
   void Clear();
@@ -144,7 +144,7 @@ class ListeningSocket : public SocketBase {
   ListeningSocket() {}
 
   bool Listen(unsigned short port);
-  DataSocket* Accept() const;
+  unique_ptr<DataSocket> Accept() const;
 };
 
 #endif  // AXE_HTTP_SOCKET_H_
