@@ -111,13 +111,14 @@ bool DataSocket::Send(const std::string& data) {
   return ok;
 }
 
-bool DataSocket::Send(const std::string& status,
-                      bool connection_close,
-                      const std::string& content_type,
-                      const std::string& extra_headers,
-                      const std::string& data)  {
+bool DataSocket::SendHeaders(const std::string& status,
+                             bool connection_close,
+                             size_t content_length,
+                             const std::string& content_type,
+                             const std::string& extra_headers) {
   ASSERT(valid());
   ASSERT(!status.empty());
+  ASSERT(!headers_sent_);
   std::string buffer("HTTP/1.1 " + status + "\r\n");
 
   buffer += "Server: PeerConnectionTestServer/0.1\r\n"
@@ -129,7 +130,7 @@ bool DataSocket::Send(const std::string& status,
   if (!content_type.empty())
     buffer += "Content-Type: " + content_type + "\r\n";
 
-  buffer += "Content-Length: " + std::to_string(data.size()) + "\r\n";
+  buffer += "Content-Length: " + std::to_string(content_length) + "\r\n";
 
   if (!extra_headers.empty()) {
     buffer += extra_headers;
@@ -139,18 +140,68 @@ bool DataSocket::Send(const std::string& status,
   buffer += kCrossOriginAllowHeaders;
   */
   buffer += "\r\n";
-  buffer += data;
 
-  return Send(buffer);
+  headers_sent_ = Send(buffer);
+
+  return headers_sent_;
+}
+
+bool DataSocket::Send(const std::string& status,
+                      bool connection_close,
+                      const std::string& content_type,
+                      const std::string& extra_headers,
+                      const std::string& data)  {
+  bool ret = SendHeaders(status, connection_close, data.size(), content_type,
+                         extra_headers);
+  if (ret)
+    ret = Send(data);
+  return ret;
 }
 
 void DataSocket::Clear() {
   method_ = INVALID;
   content_length_ = 0;
+  headers_sent_ = false;
   content_type_.clear();
   request_path_.clear();
   request_headers_.clear();
   data_.clear();
+}
+
+void DataSocket::QueueData(unique_ptr<AsyncDataReader> reader) {
+  pending_data_.push_back(std::move(reader));
+}
+
+bool DataSocket::HasPendingData() const {
+  return valid() && !pending_data_.empty();
+}
+
+void DataSocket::SendPendingData() {
+  ASSERT(headers_sent_);
+
+  int size = 0;
+  int buf_len = sizeof(size);
+  if (getsockopt(socket_, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char*>(&size),
+                 &buf_len) == SOCKET_ERROR) {
+    size = 64 * 1024;
+  }
+
+  ASSERT(size > 0);
+  std::string buffer;  // TODO: alloc once member?
+  buffer.reserve(size + 1);
+  buffer.resize(size);
+
+  AsyncDataReader* reader = pending_data_[0].get();
+  size_t read = 0;
+  bool ok = reader->GetChunk(reinterpret_cast<uint8_t*>(&buffer[0]),
+                             static_cast<size_t>(size), &read);
+  if (ok ) {
+    buffer.resize(read);
+    Send(buffer);
+  }
+
+  if (!ok || !reader->BytesRemaining())
+    pending_data_.erase(pending_data_.begin());
 }
 
 bool DataSocket::ParseHeaders() {

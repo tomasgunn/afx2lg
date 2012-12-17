@@ -23,6 +23,8 @@ class Server {
   void Run();
 
  private:
+  std::string RequestPathToLocalPath(const std::string& path);
+
   void OnAccept();
   void OnRead(const unique_ptr<DataSocket>& s);
 
@@ -30,6 +32,8 @@ class Server {
   void OnRequest(const unique_ptr<DataSocket>& s);
 
   void OnQuit(const unique_ptr<DataSocket>& s);
+
+  void OnServeFile(const std::string& path, const unique_ptr<DataSocket>& s);
 
   // Goes through all sockets and deletes the closed ones.
   void GarbageCollect();

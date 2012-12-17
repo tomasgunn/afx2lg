@@ -22,6 +22,7 @@ typedef int socklen_t;
 #endif
 
 #include <string>
+#include <vector>
 
 #ifndef SOCKET_ERROR
 #define SOCKET_ERROR static_cast<SOCKET>(-1)
@@ -30,6 +31,15 @@ typedef int socklen_t;
 #ifndef INVALID_SOCKET
 #define INVALID_SOCKET  static_cast<SOCKET>(~0)
 #endif
+
+class AsyncDataReader {
+ public:
+  AsyncDataReader() {}
+  virtual ~AsyncDataReader() {}
+
+  virtual bool GetChunk(uint8_t* buffer, size_t buf_size, size_t* read) = 0;
+  virtual size_t BytesRemaining() = 0;
+};
 
 class SocketBase {
  public:
@@ -60,7 +70,8 @@ class DataSocket : public SocketBase {
   explicit DataSocket(SOCKET socket)
       : SocketBase(socket),
         method_(INVALID),
-        content_length_(0) {
+        content_length_(0),
+        headers_sent_(false) {
   }
 
   ~DataSocket() {
@@ -99,6 +110,12 @@ class DataSocket : public SocketBase {
   // Send a raw buffer of bytes.
   bool Send(const std::string& data);
 
+  bool SendHeaders(const std::string& status,
+                   bool connection_close,
+                   size_t content_length,
+                   const std::string& content_type,
+                   const std::string& extra_headers);
+
   // Send an HTTP response.  The |status| should start with a valid HTTP
   // response code, followed by a string.  E.g. "200 OK".
   // If |connection_close| is set to true, an extra "Connection: close" HTTP
@@ -108,12 +125,20 @@ class DataSocket : public SocketBase {
   // header terminates with "\r\n".
   // |data| is the body of the message.  It's length will be specified via
   // a "Content-Length" header.
-  bool Send(const std::string& status, bool connection_close,
+  bool Send(const std::string& status,
+            bool connection_close,
             const std::string& content_type,
-            const std::string& extra_headers, const std::string& data);
+            const std::string& extra_headers,
+            const std::string& data);
 
   // Clears all held state and prepares the socket for receiving a new request.
   void Clear();
+
+  void QueueData(unique_ptr<AsyncDataReader> reader);
+
+  bool HasPendingData() const;
+
+  void SendPendingData();
 
  protected:
   // A fairly relaxed HTTP header parser.  Parses the method, path and
@@ -131,10 +156,12 @@ class DataSocket : public SocketBase {
  protected:
   RequestMethod method_;
   size_t content_length_;
+  bool headers_sent_;
   std::string content_type_;
   std::string request_path_;
   std::string request_headers_;
   std::string data_;
+  std::vector<unique_ptr<AsyncDataReader> > pending_data_;
 };
 
 // The server socket.  Accepts connections and generates DataSocket instances

@@ -4,11 +4,63 @@
 #include "axe_http/server.h"
 
 #include <algorithm>
+#include <climits>
+#include <fstream>
 #include <iostream>
 
 using std::placeholders::_1;
 
 static const size_t kMaxConnections = (FD_SETSIZE - 2);
+
+class FileReader : public AsyncDataReader {
+ public:
+  FileReader() : bytes_remaining_(0u) {}
+  virtual ~FileReader() {}
+
+  bool Initialize(const std::string& path) {
+    file_.open(path, std::ios::binary | std::ios::in);
+    if (!file_.good())
+      return false;
+
+    file_.seekg(0, std::ios::end);
+    std::streampos size = file_.tellg();
+    file_.seekg(0, std::ios::beg);
+
+    if (size >= INT_MAX)
+      return false;
+
+    bytes_remaining_ = static_cast<size_t>(size);
+
+    return file_.good();
+  }
+
+  virtual bool GetChunk(uint8_t* buffer, size_t buf_size, size_t* read) {
+    if (file_.eof())
+      return false;
+
+    file_.read(reinterpret_cast<char*>(buffer), buf_size);
+
+    if (file_.eof()) {
+      ASSERT(bytes_remaining_ <= buf_size);
+      *read = bytes_remaining_;
+      bytes_remaining_ = 0;
+    } else {
+      *read = buf_size;
+      bytes_remaining_ -= buf_size;
+    }
+
+    return *read > 0;
+  }
+
+  virtual size_t BytesRemaining() {
+    return bytes_remaining_;
+  }
+
+ private:
+  std::ifstream file_;
+  size_t bytes_remaining_;
+};
+
 
 Server::Server() : quit_(false) {}
 
@@ -20,6 +72,10 @@ bool Server::Initialize(uint16_t port) {
   // TODO: also support favicon.ico!
   request_map_.insert(
       std::make_pair("/quit", std::bind(&Server::OnQuit, this, _1)));
+
+  request_map_.insert(
+      std::make_pair(
+          "/", std::bind(&Server::OnServeFile, this, "edit.html", _1)));
 
   // Should we bind to only the local IP (127.0.0.1) to avoid connections
   // from other machines?
@@ -33,17 +89,22 @@ void Server::Run() {
   quit_ = false;
   while (!quit_) {
     // TODO: Also check for bad sockets.
-    fd_set readable;
+    fd_set readable, writable;
     FD_ZERO(&readable);
+    FD_ZERO(&writable);
     if (listener_.valid())
       FD_SET(listener_.socket(), &readable);
 
     for (auto& s: sockets_) {
-      FD_SET(s->socket(), &readable);
+      SOCKET sock = s->socket();
+      FD_SET(sock, &readable);
+      if (s->HasPendingData())
+        FD_SET(sock, &writable);
     }
 
     timeval timeout = { 10, 0 };
-    if (select(FD_SETSIZE, &readable, NULL, NULL, &timeout) == SOCKET_ERROR) {
+    if (select(FD_SETSIZE, &readable, &writable, NULL, &timeout) ==
+            SOCKET_ERROR) {
       std::cerr << "select failed\n";
       break;
     }
@@ -57,17 +118,24 @@ void Server::Run() {
           FD_CLR(sock, &readable);
         }
       }
+
+      if (FD_ISSET(sock, &writable))
+        s->SendPendingData();
     }
 
-    if (quit_ && listener_.valid()) {
-      FD_CLR(listener_.socket(), &readable);
-      listener_.Close();
-    } else if (FD_ISSET(listener_.socket(), &readable)) {
+    if (!quit_ && FD_ISSET(listener_.socket(), &readable))
       OnAccept();
-    }
 
     GarbageCollect();
   }
+}
+
+std::string Server::RequestPathToLocalPath(const std::string& path) {
+  // TODO: Support a way to specify the server's working directory?
+  std::string ret("C:\\src\\tommi\\src\\afx2lg\\axe_http\\html\\");
+  ret += path;
+  std::replace(ret.begin(), ret.end(), '/', '\\');
+  return ret;
 }
 
 void Server::OnAccept() {
@@ -112,5 +180,17 @@ void Server::GarbageCollect() {
       if (it == sockets_.end())
         break;
     }
+  }
+}
+
+void Server::OnServeFile(const std::string& path,
+                         const unique_ptr<DataSocket>& s) {
+  unique_ptr<FileReader> reader(new FileReader());
+  if (!reader->Initialize(RequestPathToLocalPath(path))) {
+    s->Send("500 Server Error", true, "text/html", "",
+            "<html><body>Failed to open local file.</body></html>");
+  } else {
+    s->SendHeaders("200 OK", true, reader->BytesRemaining(), "text/html", "");
+    s->QueueData(std::move(reader));
   }
 }
