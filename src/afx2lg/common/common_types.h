@@ -7,6 +7,7 @@
 #define COMMON_TYPES_H_
 
 #include <assert.h>
+#include <cstring>  // size_t
 
 #if defined(__APPLE__)
 #define OS_MACOSX 1

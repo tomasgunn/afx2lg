@@ -7,14 +7,11 @@
 
 #include "common/common_types.h"
 
+#include "axefx/sysex_types.h"
+
 #include <functional>
 #include <string>
 #include <vector>
-
-namespace axefx {
-struct FractalSysExHeader;
-enum FunctionId;
-}  // namespace axefx
 
 namespace midi {
 

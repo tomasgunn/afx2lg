@@ -3,8 +3,6 @@
 
 #include "midi/midi_out.h"
 
-#include "axefx/sysex_types.h"
-
 #include <algorithm>
 
 namespace midi {

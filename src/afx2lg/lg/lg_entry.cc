@@ -163,7 +163,7 @@ void Bank::RemoveNonPatchEntries() {
   if (lines_.empty())
     return;
 
-  Lines::const_iterator it = lines_.begin() + 1;
+  Lines::iterator it = lines_.begin() + 1;
   regex rx("switch \\d+\\s+\\:\\s+PA\\s+([\\w ]+)\n");
   for (; it != lines_.end(); ++it) {
     match_results<std::string::const_iterator> match;

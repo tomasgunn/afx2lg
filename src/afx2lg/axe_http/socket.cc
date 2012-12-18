@@ -180,7 +180,7 @@ void DataSocket::SendPendingData() {
   ASSERT(headers_sent_);
 
   int size = 0;
-  int buf_len = sizeof(size);
+  socklen_t buf_len = sizeof(size);
   if (getsockopt(socket_, SOL_SOCKET, SO_SNDBUF, reinterpret_cast<char*>(&size),
                  &buf_len) == SOCKET_ERROR) {
     size = 64 * 1024;

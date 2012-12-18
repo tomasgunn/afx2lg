@@ -280,17 +280,17 @@ int main(int argc, char* argv[]) {
     std::string description;
     BankDumpRequest::BankId bank_id;
     std::string name;
-    std::ofstream file;
     bool enabled;
+    std::ofstream file;
   } files[] = {
     { "Bank A", BankDumpRequest::BANK_A, "BankA_" + date + ".syx",
-      std::ofstream(), options.bank_a },
+      options.bank_a },
     { "Bank B", BankDumpRequest::BANK_B, "BankB_" + date + ".syx",
-      std::ofstream(), options.bank_b },
+      options.bank_b },
     { "Bank C", BankDumpRequest::BANK_C, "BankC_" + date + ".syx",
-      std::ofstream(), options.bank_c },
+      options.bank_c },
     { "System Bank", BankDumpRequest::SYSTEM_BANK, "System_" + date + ".syx",
-      std::ofstream(), options.system },
+      options.system },
   };
 
   // Set up a map from midi message that requests dump, to output file.
