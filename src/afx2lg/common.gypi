@@ -11,11 +11,23 @@
       }, {
         'os_posix%': 1,
       }],
+      # Compute the architecture that we're building on.
+      ['OS=="win" or OS=="mac" or OS=="ios"', {
+        'target_arch%': 'ia32',
+      }, {
+        # This handles the Unix platforms for which there is some support.
+        # Anything else gets passed through, which probably won't work
+        # very well; such hosts should pass an explicit target_arch to
+        # gyp.
+        'target_arch%':
+          '<!(uname -m | sed -e "s/i.86/ia32/;s/x86_64/x64/;s/amd64/x64/;s/arm.*/arm/;s/i86pc/ia32/")',
+      }],
     ],
 
     'asan%': 0,
     'build_dir_prefix%': '',
     'debug_extra_cflags%': '',
+    'linux_fpic%': 1,
     'mac_debug_optimization%': '0',   # Use -O0 unless overridden
     'mac_deployment_target%': '10.7',
     'mac_release_optimization%': '3', # Use -O3 unless overridden
@@ -25,7 +37,10 @@
     'msvs_debug_link_incremental%': 1,
     'msvs_use_common_linker_extras%': 1,
     'msvs_use_common_release%': 1,
+    'no_gc_sections%': 0,
+    'profiling%': '0',
     'release_extra_cflags%': '',
+    'sysroot%': '',
     'win_debug_extra_cflags%': '',
   },
 
