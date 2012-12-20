@@ -13,6 +13,7 @@
       'include_dirs': [
         '..',
         '../../gtest/include',
+        '../../jsoncpp/include',
       ],
       'dependencies': [
         '../axefx/axefx.gyp:axefx',

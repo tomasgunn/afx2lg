@@ -4,31 +4,10 @@
 #include "axefx/preset.h"
 
 #include "axefx/sysex_types.h"
+#include "json/value.h"
 
 #include <algorithm>
 #include <iostream>
-
-namespace {
-#if 0
-// Returns true if the string is zero terminated and all characters before the
-// terminator are ascii characters.  |count| must include the size of the buffer
-// not the assumed length of the string.
-// A string of zero length, is not considered ascii by this function.
-// Any characters below ' ' are not considered ascii!!! :)
-bool IsAsciiString(const char* p, int count) {
-  int i = 0;
-  for (; i < count; ++i) {
-    if (!p[i])
-      break;
-
-    if ((p[i] & 0x80) != 0 || p[i] < ' ')
-      return false;
-  }
-
-  return i != 0 && p[i] == '\0';
-}
-#endif
-}
 
 namespace axefx {
 
@@ -50,15 +29,13 @@ bool Preset::from_edit_buffer() const {
   return id_ == kPresetIdBuffer;
 }
 
-shared_ptr<BlockParameters> Preset::LookupBlock(AxeFxIIBlockID block) const {
+const BlockParameters* Preset::LookupBlock(AxeFxIIBlockID block) const {
   // TODO: Use a map for lookups?
-  std::vector<shared_ptr<BlockParameters> >::const_iterator i =
-      block_parameters_.begin();
-  for (; i != block_parameters_.end(); ++i) {
-    if ((*i)->block() == block)
-      return (*i);
+  for (const auto& p: block_parameters_) {
+    if (p->block() == block)
+      return p.get();
   }
-  return shared_ptr<BlockParameters>();
+  return nullptr;
 }
 
 bool Preset::SetPresetId(const PresetIdHeader& header, size_t size) {
@@ -128,11 +105,11 @@ bool Preset::Finalize(const PresetChecksumHeader& header, size_t size) {
 
   // Parse per block parameters (including modifiers).
   while (p < params_.end() && *p) {
-    shared_ptr<BlockParameters> block_params(new BlockParameters());
+    unique_ptr<BlockParameters> block_params(new BlockParameters());
     size_t values_eaten = block_params->Initialize(&(*p), params_.end() - p);
     if (!values_eaten)
       return false;
-    block_parameters_.push_back(block_params);
+    block_parameters_.push_back(std::move(block_params));
     p += values_eaten;
   }
 
@@ -140,6 +117,44 @@ bool Preset::Finalize(const PresetChecksumHeader& header, size_t size) {
   params_.clear();
 
   return true;
+}
+
+void Preset::ToJson(Json::Value* out) const {
+  Json::Value& j = *out;
+  if (from_edit_buffer()) {
+    j["id"] = Json::Value();
+  } else {
+    j["id"] = id_;
+  }
+  j["name"] = name_;
+
+  if (is_global_setting()) {
+    // TODO: Support at least user cabs and the 0x1234 "preset".
+    return;
+  }
+
+  Json::Value matrix;
+  for (size_t y = 0; y < kMatrixRows; ++y) {
+    Json::Value row;
+    for (size_t x = 0; x < kMatrixColumns; ++x) {
+      const BlockInMatrix& b = matrix_[x][y];
+      Json::Value block;
+      b.ToJson(&block);
+      row.append(block);
+    }
+    matrix["row" + std::to_string(y)] = row;
+  }
+
+  j["matrix"] = matrix;
+
+  Json::Value block_params;
+  for (const auto& p: block_parameters_) {
+    Json::Value params;
+    p->ToJson(&params);
+    block_params.append(params);
+  }
+
+  j["block_params"] = block_params;
 }
 
 }  // namespace axefx

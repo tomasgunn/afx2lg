@@ -12,6 +12,33 @@ using std::placeholders::_1;
 
 static const size_t kMaxConnections = (FD_SETSIZE - 2);
 
+extern std::string g_process_path;
+
+#ifdef OS_WIN
+static const char kPathSeparator = '\\';
+#else
+static const char kPathSeparator = '/';
+#endif
+
+void EnsureTrailingSlash(std::string* path) {
+  if (!path->empty() && path->at(path->size() - 1) != kPathSeparator)
+    *path += kPathSeparator;
+}
+
+void AppendPath(std::string* path, const std::string& sub_path) {
+  EnsureTrailingSlash(path);
+  path->append(sub_path);
+#ifdef OS_WIN
+  std::replace(path->begin(), path->end(), '/', kPathSeparator);
+#endif
+}
+
+void RemoveFilePart(std::string* path) {
+  size_t i = path->find_last_of(kPathSeparator);
+  if (i != std::string::npos)
+    path->erase(i);
+}
+
 class FileReader : public AsyncDataReader {
  public:
   FileReader() : bytes_remaining_(0u) {}

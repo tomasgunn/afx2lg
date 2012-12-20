@@ -2,6 +2,7 @@
 // All rights reserved.
 
 #include "axefx/blocks.h"
+#include "json/value.h"
 
 namespace axefx {
 
@@ -147,11 +148,41 @@ bool BlockSceneState::IsConfigYEnabledInScene(int scene) const {
   return IsBitSet(xy_, scene);
 }
 
+void BlockSceneState::ToJson(bool supports_xy, Json::Value* out) const {
+  Json::Value& j = *out;
+  Json::Value enabled;
+  // A value of true means the block is active in that scene.
+  for (size_t i = 0; i < 8; ++i)
+    enabled.append(!IsBypassedInScene(i));
+  j["enabled"] = enabled;
+
+  if (supports_xy) {
+    Json::Value xy;
+    for (size_t i = 0; i < 8; ++i)
+      xy.append(Json::Value(IsConfigYEnabledInScene(i) ? "y" : "x"));
+    j["xy"] = xy;
+  }
+}
+
 BlockInMatrix::BlockInMatrix() : block_(0), input_mask_(0) {}
 
 bool BlockInMatrix::is_shunt() const {
   // NOTE: The maximum value is just a guess.
   return block_ >= 200 && block_ < (200 + (12 * 4));
+}
+
+void BlockInMatrix::ToJson(Json::Value* out) const {
+  Json::Value& j = *out;
+  j["id"] = block_;
+  j["is_shunt"] = is_shunt();
+  Json::Value inputs;
+  // If the other bits are used, we don't know about it (yet).
+  ASSERT((input_mask_ >> 4) == 0);
+  for (size_t i = 1; i <= 4; ++i) {
+    if ((input_mask_ & (1 << i)) != 0)
+      inputs.append(i);
+  }
+  j["input_rows"] = inputs;
 }
 
 BlockParameters::BlockParameters()
@@ -217,6 +248,38 @@ BlockSceneState BlockParameters::GetBypassState() const {
   int bypass_id = GetBlockBypassParamID(type());
   return bypass_id == -1 ? BlockSceneState(0) :
                            BlockSceneState(GetParamValue(bypass_id, true));
+}
+
+void BlockParameters::ToJson(Json::Value* out) const {
+  Json::Value& j = *out;
+  j["id"] = block_;
+  j["name"] = GetBlockName(block_);
+  j["type"] = GetBlockTypeName(GetBlockType(block_));
+  j["supports_xy"] = supports_xy();
+  j["global_block_id"] = global_block_index_;
+
+  Json::Value scenes;
+  GetBypassState().ToJson(supports_xy(), &scenes);
+  j["scenes"] = scenes;
+
+  Json::Value values;
+  if (supports_xy()) {
+    Json::Value values_x, values_y;
+    Json::Value* x_and_y[] = { &values_x, &values_y };
+    int v = 0;
+    size_t half = params_.size() / 2u;
+    for (size_t i = 0; i < params_.size(); ++i) {
+      if (i == half)
+        ++v;
+      x_and_y[v]->append(params_[i]);
+    }
+    values["x"] = values_x;
+    values["y"] = values_y;
+  } else {
+    for (const auto& p: params_)
+      values.append(p);
+  }
+  j["values"] = values;
 }
 
 }  // namespace axefx

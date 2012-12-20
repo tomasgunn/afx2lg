@@ -5,6 +5,7 @@
 
 #include "axefx/preset.h"
 #include "axefx/sysex_types.h"
+#include "json/writer.h"
 #include "midi/midi_in.h"
 #include "midi/midi_out.h"
 
@@ -126,15 +127,14 @@ bool CreateOutputFile(std::string* name, std::ofstream* file) {
 class BackupWriter {
  public:
   BackupWriter(std::ofstream* file, const SharedThreadLoop& loop)
-      : file_(file), loop_(loop), bytes_written_(0u), failed_(false),
-        preset_count_(0) {
+      : file_(file), loop_(loop), bytes_written_(0u), failed_(false) {
   }
 
   ~BackupWriter() {
   }
 
   bool failed() const { return !bytes_written_ || failed_; }
-  size_t preset_count() const { return preset_count_; }
+  size_t preset_count() const { return presets_.size(); }
 
   void OnSysEx(midi::Message* msg) {
     if (failed_)
@@ -221,8 +221,7 @@ class BackupWriter {
           return;
         }
         std::cout << current_preset_->name() << " <verified>\n";
-        current_preset_.reset();
-        ++preset_count_;
+        presets_.push_back(std::move(current_preset_));
         break;
       }
 
@@ -233,6 +232,19 @@ class BackupWriter {
 
     file_->write(reinterpret_cast<const char*>(&msg->at(0)), msg->size());
     bytes_written_ += msg->size();
+  }
+
+  std::string ToJson() {
+    Json::Value presets;
+    for (auto& p : presets_) {
+      Json::Value preset;
+      p->ToJson(&preset);
+      presets.append(preset);
+    }
+    Json::Value root;
+    root["bank"] = presets;
+    Json::StyledWriter writer;
+    return writer.write(root);
   }
 
  private:
@@ -254,8 +266,8 @@ class BackupWriter {
   SharedThreadLoop loop_;
   size_t bytes_written_;
   bool failed_;
-  size_t preset_count_;
-  shared_ptr<axefx::Preset> current_preset_;
+  unique_ptr<axefx::Preset> current_preset_;
+  std::vector<unique_ptr<axefx::Preset> > presets_;
 };
 
 int main(int argc, char* argv[]) {
@@ -280,23 +292,36 @@ int main(int argc, char* argv[]) {
     std::string description;
     BankDumpRequest::BankId bank_id;
     std::string name;
+    std::string json_name;
     bool enabled;
     std::ofstream file;
+    std::ofstream json;
   } files[] = {
-    { "Bank A", BankDumpRequest::BANK_A, "BankA_" + date + ".syx",
+    { "Bank A", BankDumpRequest::BANK_A,
+      "BankA_" + date + ".syx",
+      "BankA_" + date + ".json",
       options.bank_a },
-    { "Bank B", BankDumpRequest::BANK_B, "BankB_" + date + ".syx",
+    { "Bank B", BankDumpRequest::BANK_B,
+      "BankB_" + date + ".syx",
+      "BankB_" + date + ".json",
       options.bank_b },
-    { "Bank C", BankDumpRequest::BANK_C, "BankC_" + date + ".syx",
+    { "Bank C", BankDumpRequest::BANK_C,
+      "BankC_" + date + ".syx",
+      "BankC_" + date + ".json",
       options.bank_c },
-    { "System Bank", BankDumpRequest::SYSTEM_BANK, "System_" + date + ".syx",
+    { "System Bank", BankDumpRequest::SYSTEM_BANK,
+      "System_" + date + ".syx",
+      "System_" + date + ".json",
       options.system },
   };
 
   // Set up a map from midi message that requests dump, to output file.
   for (size_t i = 0; i < arraysize(files); ++i) {
     std::ofstream& f = files[i].file;
-    if (files[i].enabled && CreateOutputFile(&files[i].name, &f)) {
+    std::ofstream& j = files[i].json;
+    if (files[i].enabled &&
+        CreateOutputFile(&files[i].name, &f) &&
+        CreateOutputFile(&files[i].json_name, &j)) {
       std::cout << "\nWriting " << files[i].description << " to "
                 << files[i].name << ".\n";
       BackupWriter writer(&f, loop);
@@ -327,6 +352,8 @@ int main(int argc, char* argv[]) {
           return -1;
         }
 
+        j << writer.ToJson();
+        j.flush();
         std::cout << "\n" << "Backup " << files[i].name << " ready.\n";
       } else {
         std::cerr << "Failed to send bank request.\n";

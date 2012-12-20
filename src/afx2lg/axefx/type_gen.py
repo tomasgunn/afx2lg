@@ -22,6 +22,7 @@ namespace axefx {
 %s
 
 AxeFxBlockType GetBlockType(AxeFxIIBlockID id);
+const char* GetBlockTypeName(AxeFxBlockType type);
 const char* GetBlockName(AxeFxIIBlockID id);
 int GetBlockBypassParamID(AxeFxBlockType type);
 
@@ -45,6 +46,14 @@ AxeFxBlockType GetBlockType(AxeFxIIBlockID id) {
       break;
 %s  }
   return BLOCK_TYPE_INVALID;
+}
+
+const char* GetBlockTypeName(AxeFxBlockType type) {
+  switch (type) {
+    default:
+      break;
+%s  }
+  return "";
 }
 
 const char* GetBlockName(AxeFxIIBlockID id) {
@@ -93,6 +102,7 @@ class AxeMlParser:
   current_bypass_id = None
   block_to_type_id = {}
   type_id_to_name = {}
+  type_id_name = {}
 
   def __init__(self):
     self.parser = xml.parsers.expat.ParserCreate()
@@ -120,6 +130,7 @@ class AxeMlParser:
             (self.current_type_name, attrs["typeID"])]
         self.current_block = attrs["name"]
         self.type_id_to_name[attrs["typeID"]] = self.current_type_name
+        self.type_id_name[self.current_type_name] = self.current_block
         self.current_bypass_id = attrs["bypassParam"]
     elif name == "EffectParameter":
       self.current_entries += ["%s = %s" % (attrs["name"], attrs["id"])]
@@ -141,6 +152,12 @@ class AxeMlParser:
     ret = ""
     for b, t in self.block_to_type_id.items():
       ret += "    case %s:\n      return %s;\n" % (b, self.type_id_to_name[t[0]])
+    return ret
+
+  def GenerateBlockTypeName(self):
+    ret = ""
+    for t in self.type_id_name.items():
+      ret += "    case %s:\n      return \"%s\";\n" % (t[0], t[1])
     return ret
 
   def GenerateBlockNameFromID(self):
@@ -206,6 +223,7 @@ def main(args):
   header = HEADER_FILE_TEMPLATE % (header)
 
   source = SOURCE_FILE_TEMPLATE % (x.GenerateBlockTypeFromID(),
+                                   x.GenerateBlockTypeName(),
                                    x.GenerateBlockNameFromID(),
                                    x.GenerateBlockBypassParamID())
   WriteIfChanged(h_file, header)

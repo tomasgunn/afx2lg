@@ -11,6 +11,7 @@
       ],
       'include_dirs': [
         '..',
+        '../../jsoncpp/include',
       ],
       'dependencies': [
         '../axefx/axefx.gyp:*',

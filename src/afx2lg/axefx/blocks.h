@@ -10,6 +10,10 @@
 
 #include <vector>
 
+namespace Json {
+class Value;
+}
+
 namespace axefx {
 
 extern const int kFirstBlockId;
@@ -34,6 +38,8 @@ class BlockSceneState {
   bool IsBypassedInScene(int scene) const;
   bool IsConfigYEnabledInScene(int scene) const;
 
+  void ToJson(bool supports_xy, Json::Value* out) const;
+
  private:
   uint8_t bypass_;
   uint8_t xy_;
@@ -47,6 +53,8 @@ class BlockInMatrix {
   AxeFxIIBlockID block() const { return static_cast<AxeFxIIBlockID>(block_); }
   const uint16_t& input_mask() const { return input_mask_; }
 
+  void ToJson(Json::Value* out) const;
+
  private:
   uint16_t block_;
   // |input_mask| is a bit mask of 4 bits that shows how the current block
@@ -56,8 +64,8 @@ class BlockInMatrix {
   uint16_t input_mask_;
 };
 
-const int kMatrixRows = 4;
-const int kMatrixColumns = 12;
+const size_t kMatrixRows = 4u;
+const size_t kMatrixColumns = 12u;
 typedef BlockInMatrix Matrix[kMatrixColumns][kMatrixRows];
 
 #pragma pack(pop)
@@ -89,6 +97,8 @@ class BlockParameters {
   uint16_t GetParamValue(int index, bool get_x_value) const;
 
   BlockSceneState GetBypassState() const;
+
+  void ToJson(Json::Value* out) const;
 
  private:
   AxeFxIIBlockID block_;

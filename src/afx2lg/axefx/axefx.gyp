@@ -37,9 +37,11 @@
       'type': 'static_library',
       'include_dirs': [
         '..',
+        '../../jsoncpp/include',
       ],
       'dependencies': [
         'axefx_types',
+        '../jsoncpp/jsoncpp.gyp:*',
       ],
       'sources': [
         'axe_fx_sysex_parser.cc',

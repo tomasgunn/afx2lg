@@ -14,6 +14,10 @@
 #include <string>
 #include <vector>
 
+namespace Json {
+class Value;
+}
+
 namespace axefx {
 
 struct ParameterBlockHeader;
@@ -38,12 +42,14 @@ class Preset {
   // still valid (from AxeFx' edit buffer).
   bool from_edit_buffer() const;
 
-  shared_ptr<BlockParameters> LookupBlock(AxeFxIIBlockID block) const;
+  const BlockParameters* LookupBlock(AxeFxIIBlockID block) const;
 
   // Parse methods.
   bool SetPresetId(const PresetIdHeader& header, size_t size);
   bool AddParameterData(const ParameterBlockHeader& header, size_t size);
   bool Finalize(const PresetChecksumHeader& header, size_t size);
+
+  void ToJson(Json::Value* out) const;
 
  private:
   // Valid while parsing, then discarded.
@@ -54,7 +60,7 @@ class Preset {
   int id_;
   std::string name_;
   Matrix matrix_;
-  std::vector<shared_ptr<BlockParameters> > block_parameters_;
+  std::vector<unique_ptr<BlockParameters> > block_parameters_;
 };
 
 }  // namespace axefx

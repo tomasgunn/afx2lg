@@ -7,8 +7,11 @@
 
 #include <iostream>
 
+std::string g_process_path;
 
 int main(int argc, char** argv) {
+  g_process_path = argv[0];
+
   // TODO(tommi): make configurable.
   static const uint16_t port = 8888;
 

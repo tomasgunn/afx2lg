@@ -7,6 +7,7 @@
 #include "axefx/blocks.h"
 #include "axefx/preset.h"
 #include "axefx/sysex_types.h"
+#include "json/writer.h"
 #include "test/test_utils.h"
 
 namespace axefx {
@@ -67,7 +68,7 @@ TEST_F(AxeFxII, ParseFw9bBankFile) {
   PresetMap::const_iterator i = presets.begin();
   for (; i != presets.end(); ++i) {
     const Preset& p = *(i->second.get());
-    shared_ptr<BlockParameters> amp1 = p.LookupBlock(BLOCK_AMP_1);
+    const BlockParameters* amp1 = p.LookupBlock(BLOCK_AMP_1);
     if (amp1) {
       std::cout << "Preset: " << (*i).first << " " << p.name() << "\n";
       uint16_t amp_id = amp1->GetParamValue(DISTORT_TYPE,
@@ -122,8 +123,8 @@ TEST_F(AxeFxII, ParseScenesXYBypassFile) {
   EXPECT_EQ("BYPASS", p.name());
 
   // Check the scenes, bypass and x/y state of Amp1.
-  shared_ptr<BlockParameters> amp1 = p.LookupBlock(BLOCK_AMP_1);
-  ASSERT_TRUE(amp1.get() != NULL);
+  const BlockParameters* amp1 = p.LookupBlock(BLOCK_AMP_1);
+  ASSERT_TRUE(amp1 != NULL);
   BlockSceneState state = amp1->GetBypassState();
   bool bypassed = false;
   bool y_enabled = false;
@@ -257,6 +258,20 @@ TEST_F(AxeFxII, ParseSystemBackup) {
             << "(x='" << GetAmpName(amp_id_x)<< ", "
             << "y='" << GetAmpName(amp_id_y) << ")\n";
 #endif
+}
+
+TEST_F(AxeFxII, PresetToJson) {
+  ASSERT_TRUE(ParseFile("axefx2/one_amp_8scenes_xy_1.syx"));
+  const PresetMap& presets = parser_.presets();
+  ASSERT_EQ(1u, presets.size());
+
+  const Preset& p = *(presets.begin()->second.get());
+  Json::Value preset;
+  p.ToJson(&preset);
+  Json::Value root;
+  root["my_preset"] = preset;
+  Json::StyledWriter writer;
+  std::cout << writer.write(root);
 }
 
 }  // namespace axefx
