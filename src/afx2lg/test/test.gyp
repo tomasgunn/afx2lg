@@ -17,6 +17,7 @@
       'dependencies': [
         '../axefx/axefx.gyp:axefx',
         '../common/base.gyp:base',
+        '../jsoncpp/jsoncpp.gyp:*',
         '../gtest/gtest.gyp:gtest',
         '../lg/lg.gyp:lg',
         '../midi/midi.gyp:midi',

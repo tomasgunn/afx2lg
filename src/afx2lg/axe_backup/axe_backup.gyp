@@ -15,6 +15,7 @@
       'dependencies': [
         '../axefx/axefx.gyp:*',
         '../common/base.gyp:*',
+        '../jsoncpp/jsoncpp.gyp:*',
         '../midi/midi.gyp:*',
       ],
       'sources': [
