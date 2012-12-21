@@ -180,7 +180,7 @@ void BlockInMatrix::ToJson(Json::Value* out) const {
   ASSERT((input_mask_ >> 4) == 0);
   for (size_t i = 1; i <= 4; ++i) {
     if ((input_mask_ & (1 << i)) != 0)
-      inputs.append(i);
+      inputs.append(static_cast<Json::Value::UInt>(i));
   }
   j["input_rows"] = inputs;
 }
