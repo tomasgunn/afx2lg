@@ -91,6 +91,7 @@ class MidiInWin : public MidiIn {
 
   void OnCallback(UINT status, DWORD_PTR msg) {
     switch (status) {
+      case MIM_OPEN:
       case MIM_CLOSE:
         break;
       case MIM_DATA:
@@ -102,7 +103,7 @@ class MidiInWin : public MidiIn {
         break;
       default:
 #ifdef _DEBUG
-        std::cout << __FUNCTION__ << " " << msg << std::endl;
+        std::cout << __FUNCTION__ << " " << status << std::endl;
 #endif
         break;
     }

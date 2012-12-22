@@ -215,7 +215,7 @@ class BackupWriter {
         }
 
         auto checksum = static_cast<const axefx::PresetChecksumHeader*>(header);
-        if (!current_preset_->Finalize(*checksum, msg->size())) {
+        if (!current_preset_->Finalize(checksum, msg->size())) {
           ASSERT(current_preset_->valid());
           OnError("Preset checksum verification failed.\n");
           return;

@@ -63,8 +63,7 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end) {
 
         case PRESET_CHECKSUM: {
           ASSERT(preset);
-          const PresetChecksumHeader& checksum =
-              static_cast<const PresetChecksumHeader&>(header);
+          auto checksum = static_cast<const PresetChecksumHeader*>(&header);
           if (preset && preset->Finalize(checksum, size)) {
             ASSERT(preset->valid());
             presets_.insert(std::make_pair(preset->id(), preset));
@@ -89,6 +88,19 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end) {
     ++pos;
   }
 
+  if (preset.get() && presets_.empty()) {
+    // This is a possible bug in the AxeFx (experienced with 9.02) where
+    // a parameter checksum won't be included with a preset dump.
+    // To work around this for now, we skip verifying the checksum.
+    // We don't do this for full banks though since we'd rather not save
+    // a bogus bank.
+    if (preset->Finalize(NULL, 0)) {
+      ASSERT(preset->valid());
+      presets_.insert(std::make_pair(preset->id(), preset));
+      preset.reset();
+    }
+  }
+  ASSERT(!preset.get());  // Half way through parsing a preset?
   ASSERT(!presets_.empty());
   ASSERT(!sys_ex_begins);
 

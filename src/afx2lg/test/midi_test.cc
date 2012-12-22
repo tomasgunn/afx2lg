@@ -4,6 +4,9 @@
 #include "gtest/gtest.h"
 
 #include "common/common_types.h"
+
+#include "axefx/axe_fx_sysex_parser.h"
+#include "axefx/preset.h"
 #include "axefx/sysex_types.h"
 #include "midi/midi_in.h"
 #include "midi/midi_out.h"
@@ -16,6 +19,11 @@ using std::placeholders::_3;
 namespace midi {
 
 typedef std::shared_ptr<common::ThreadLoop> SharedThreadLoop;
+
+bool IsTempoOrTuner(Message* msg) {
+  return msg->IsFractalMessageType(axefx::TEMPO_HEARTBEAT) ||
+         msg->IsFractalMessageType(axefx::TUNER_DATA);
+}
 
 TEST(MidiOut, EnumerateDevices) {
   DeviceInfos devices;
@@ -87,13 +95,8 @@ void AssignToBufferAndQuit(Message* new_message,
     return;
   }
 
-  if (new_message->IsFractalMessageType(axefx::TEMPO_HEARTBEAT) ||
-      new_message->IsFractalMessageType(axefx::TUNER_DATA)) {
-    // std::cerr << "Ignoring tempo/tuner message\n";
-    return;
-  }
-
   new_message->swap(*message);
+  ASSERT(!message->empty());
   loop->Quit();
 }
 
@@ -114,13 +117,25 @@ TEST(Midi, GetPresetName) {
       std::bind(&AssignToBufferAndQuit, _1, loop, &data));
   buffer.Attach(in_device);
   EXPECT_TRUE(out_device->Send(std::move(message), nullptr));
-  EXPECT_TRUE(loop->Run());
-  ASSERT_FALSE(data.empty()) << "size: " << data.size();
-  ASSERT_TRUE(axefx::IsFractalSysEx(&data[0], data.size()));
-  auto p = reinterpret_cast<const axefx::FractalSysExHeader*>(&data[0]);
+
+  std::vector<uint8_t> received;
+  while (loop->Run()) {
+    if (IsTempoOrTuner(&data)) {
+      if (!received.empty())
+        break;
+    } else {
+      received.insert(received.end(), data.begin(), data.end());
+    }
+    data.clear();
+  }
+
+  ASSERT_FALSE(received.empty()) << "size: " << received.size();
+  ASSERT_TRUE(axefx::IsFractalSysEx(&received[0], received.size()));
+  auto p = reinterpret_cast<const axefx::FractalSysExHeader*>(&received[0]);
   ASSERT_EQ(axefx::PRESET_NAME, p->function());
-  std::string name(reinterpret_cast<const char*>(p + 1),
-                   reinterpret_cast<const char*>(&data[data.size() - 2]));
+  std::string name(
+      reinterpret_cast<const char*>(p + 1),
+      reinterpret_cast<const char*>(&received[received.size() - 2]));
   EXPECT_FALSE(name.empty());
 #ifndef NDEBUG
   std::cout << "preset name: " << name << std::endl;
@@ -151,6 +166,8 @@ TEST(Midi, DISABLED_PresetNameMonitor) {
   while (true) {
     ASSERT_TRUE(loop->Run());
     ASSERT_FALSE(data.empty());
+    if (IsTempoOrTuner(&data))
+      continue;
     ASSERT_TRUE(axefx::IsFractalSysEx(&data[0], data.size()));
     auto p = reinterpret_cast<const axefx::FractalSysExHeader*>(&data[0]);
     switch (p->function()) {
@@ -203,14 +220,103 @@ TEST(Midi, GetSystemBankDump) {
 
   EXPECT_TRUE(midi_out->Send(std::move(message), nullptr));
 
-  // TODO: Tempo messages can keep the loop running indefinetly.
-  // For now we have to run the test with sysex set to none.
-  // Need to fix that.
-  size_t msg_count = 0;
-  while (loop->Run())
-    ++msg_count;
+  std::vector<uint8_t> received;
+  while (loop->Run()) {
+    if (IsTempoOrTuner(&data)) {
+      if (!received.empty())
+        break;
+    } else {
+      received.insert(received.end(), data.begin(), data.end());
+    }
+    data.clear();
+  }
 
-  std::cout << "Received sysex count: " << msg_count << std::endl;
+  std::cout << "Received bytes: " << received.size() << std::endl;
+}
+
+TEST(Midi, GetPresetDump) {
+  SharedThreadLoop loop(new common::ThreadLoop());
+  // Set the timeout between buffer receives to be 1 second.
+  // We'll quit 1 second after receiving the last message.
+  loop->set_timeout(std::chrono::milliseconds(1000));
+
+  shared_ptr<MidiIn> midi_in(MidiIn::OpenAxeFx(loop));
+  ASSERT_TRUE(midi_in.get() != NULL);
+  unique_ptr<MidiOut> midi_out(MidiOut::OpenAxeFx());
+  ASSERT_TRUE(midi_out.get() != NULL);
+
+  axefx::PresetDumpRequest request;
+  unique_ptr<Message> message(new Message(&request, sizeof(request)));
+
+  midi::Message data;
+
+  midi::SysExDataBuffer buffer(
+      std::bind(&AssignToBufferAndQuit, _1, loop, &data));
+  buffer.Attach(midi_in);
+
+  EXPECT_TRUE(midi_out->Send(std::move(message), nullptr));
+
+  std::vector<uint8_t> received;
+  while (loop->Run()) {
+    if (IsTempoOrTuner(&data)) {
+      if (!received.empty())
+        break;
+    } else {
+      received.insert(received.end(), data.begin(), data.end());
+    }
+    data.clear();
+  }
+
+  ASSERT_FALSE(received.empty());
+
+  axefx::SysExParser parser;
+  bool ok;
+  EXPECT_TRUE(ok = parser.ParseSysExBuffer(&received[0],
+                                           &received[0] + received.size()));
+  if (ok) {
+    const axefx::PresetMap& presets = parser.presets();
+    ASSERT_EQ(1u, presets.size());
+    const axefx::Preset& p = *(presets.begin()->second.get());
+    std::cout << "Name: " << p.name() << std::endl;
+  }
+}
+
+TEST(Midi, SelectPreset) {
+  // TODO: Refactor this and the other methods that are basically the same.
+  SharedThreadLoop loop(new common::ThreadLoop());
+  loop->set_timeout(std::chrono::milliseconds(1000));
+
+  shared_ptr<MidiIn> midi_in(MidiIn::OpenAxeFx(loop));
+  ASSERT_TRUE(midi_in.get() != NULL);
+  unique_ptr<MidiOut> midi_out(MidiOut::OpenAxeFx());
+  ASSERT_TRUE(midi_out.get() != NULL);
+
+  midi::Message data;
+  midi::SysExDataBuffer buffer(
+      std::bind(&AssignToBufferAndQuit, _1, loop, &data));
+  buffer.Attach(midi_in);
+
+  // Selects preset 130.
+  EXPECT_TRUE(midi_out->Send(
+      unique_ptr<midi::Message>(new midi::ProgramChange(0, 1, 2)), nullptr));
+
+  std::vector<uint8_t> received;
+  while (loop->Run()) {
+    if (IsTempoOrTuner(&data)) {
+      if (!received.empty())
+        break;
+    } else {
+      received.insert(received.end(), data.begin(), data.end());
+    }
+    data.clear();
+  }
+
+  ASSERT_FALSE(received.empty());
+  ASSERT_TRUE(axefx::IsFractalSysEx(&received[0], received.size()));
+  auto p = reinterpret_cast<const axefx::FractalSysExHeader*>(&received[0]);
+  ASSERT_EQ(axefx::PRESET_CHANGE, p->function());
+  auto& preset_id = *reinterpret_cast<const axefx::SeptetPair*>(p + 1);
+  EXPECT_EQ(130u, preset_id.As16bit());
 }
 
 namespace {

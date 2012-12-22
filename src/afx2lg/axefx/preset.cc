@@ -64,9 +64,12 @@ bool Preset::AddParameterData(const ParameterBlockHeader& header, size_t size) {
   return ret;
 }
 
-bool Preset::Finalize(const PresetChecksumHeader& header, size_t size) {
+bool Preset::Finalize(const PresetChecksumHeader* header, size_t size) {
   ASSERT(valid());
-  if (header.checksum.As16bit() != params_.Checksum())
+  // Support for skipping checksum checks is here because a preset dump
+  // might not have a parameter checksum for some reason.  Possibly this
+  // is simply a bug in the AxeFx when realtime sysex sending is set to "All".
+  if (header && header->checksum.As16bit() != params_.Checksum())
     return false;
 
   PresetParameters::const_iterator p = params_.begin();

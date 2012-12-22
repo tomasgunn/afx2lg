@@ -63,6 +63,20 @@ Message::iterator Message::find(uint8_t i) {
   return std::find(begin(), end(), i);
 }
 
+ProgramChange::ProgramChange(uint8_t channel,
+                             uint8_t bank_id,
+                             uint8_t program) {
+  ASSERT(channel < 16);
+  ASSERT(bank_id < 0x80);
+  ASSERT(program < 0x80);
+  reserve(5);
+  push_back(0xB0 | channel);  // 0xB0 == CC.
+  push_back(0u);
+  push_back(bank_id);
+  push_back(0xC0 | channel);  // Program Change.
+  push_back(program);
+}
+
 
 MidiOut::MidiOut(const shared_ptr<MidiDeviceInfo>& device) : device_(device) {}
 

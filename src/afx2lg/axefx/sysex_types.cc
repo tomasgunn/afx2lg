@@ -41,6 +41,12 @@ uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, size_t size) {
   return checksum;
 }
 
+SeptetPair::SeptetPair(uint16_t value)
+    : ms(static_cast<uint8_t>(value >> 7)),
+      ls(static_cast<uint8_t>(value & 0x7F)) {
+  ASSERT((value >> 14) == 0);
+}
+
 uint16_t SeptetPair::As16bit() const {
   ASSERT((ms & 0x80) == 0);
   ASSERT((ls & 0x80) == 0);

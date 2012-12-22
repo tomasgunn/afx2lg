@@ -29,6 +29,9 @@ enum AxeFxModel {
 };
 
 enum FunctionId {
+  // To request a dump of the current preset, send REQUEST_PRESET_DUMP
+  // and set id to 7f 00 (edit buffer id).
+  REQUEST_PRESET_DUMP = 0x03,  // Includes SeptedPair == preset id.
   TUNER_DATA = 0x0D,  // Includes SeptetPair.
   PRESET_NAME = 0x0F,
   TEMPO_HEARTBEAT = 0x10,
@@ -45,6 +48,9 @@ enum FunctionId {
 
 // Convert two septets (7bit integers), into a 16 bit integer.
 struct SeptetPair {
+  SeptetPair() {}
+  SeptetPair(uint16_t value);
+
   uint8_t ms, ls;
 
   uint16_t As16bit() const;
@@ -125,6 +131,24 @@ struct GenericNoDataMessage : public FractalSysExHeader {
       : FractalSysExHeader(id) {
     end.CalculateChecksum(this);
   }
+  FractalSysExEnd end;
+};
+
+struct PresetDumpRequest : public FractalSysExHeader {
+  PresetDumpRequest(uint16_t preset_id)
+      : FractalSysExHeader(REQUEST_PRESET_DUMP),
+        preset_id_(preset_id) {
+    end.CalculateChecksum(this);
+  }
+
+  // The default constructor sets the preset id to the edit buffer id.
+  PresetDumpRequest() : FractalSysExHeader(REQUEST_PRESET_DUMP) {
+    preset_id_.ms = 0x7F;
+    preset_id_.ls = 0;
+    end.CalculateChecksum(this);
+  }
+
+  SeptetPair preset_id_;
   FractalSysExEnd end;
 };
 

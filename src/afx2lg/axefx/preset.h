@@ -47,7 +47,7 @@ class Preset {
   // Parse methods.
   bool SetPresetId(const PresetIdHeader& header, size_t size);
   bool AddParameterData(const ParameterBlockHeader& header, size_t size);
-  bool Finalize(const PresetChecksumHeader& header, size_t size);
+  bool Finalize(const PresetChecksumHeader* header, size_t size);
 
   void ToJson(Json::Value* out) const;
 

@@ -64,7 +64,7 @@ TEST_F(AxeFxII, ParseFw9bBankFile) {
   const PresetMap& presets = parser_.presets();
   EXPECT_EQ(128u, presets.size());
 
-#ifdef _DEBUG
+#if !defined(NDEBUG) && 0
   PresetMap::const_iterator i = presets.begin();
   for (; i != presets.end(); ++i) {
     const Preset& p = *(i->second.get());

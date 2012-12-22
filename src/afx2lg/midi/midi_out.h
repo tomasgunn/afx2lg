@@ -56,6 +56,13 @@ class Message : public std::vector<uint8_t> {
   Message& operator=(const Message&);
 };
 
+// A bank-select CC message + PC.
+class ProgramChange : public Message {
+ public:
+  // Note that channel is 0-based.  I.e. 0 == channel 1.
+  ProgramChange(uint8_t channel, uint8_t bank_id, uint8_t program);
+};
+
 // Interface class for a midi-out connection + device enumeration.
 class MidiOut {
  public:
