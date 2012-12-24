@@ -183,8 +183,7 @@ bool Preset::Serialize(const SysExCallback& callback) const {
 void Preset::WriteHeader(const SysExCallback& callback) const {
   std::vector<uint8_t> data;
   data.resize(sizeof(PresetIdHeader));
-  auto* header = reinterpret_cast<PresetIdHeader*>(&data[0]);
-  header->PresetIdHeader::PresetIdHeader(static_cast<uint16_t>(id_));
+  new (&data[0]) PresetIdHeader(static_cast<uint16_t>(id_));
   callback(data);
 }
 
@@ -219,9 +218,7 @@ void Preset::WriteChecksum(uint16_t checksum,
                            const SysExCallback& callback) const {
   std::vector<uint8_t> data;
   data.resize(sizeof(PresetChecksumHeader));
-  auto* header = reinterpret_cast<PresetChecksumHeader*>(&data[0]);
-  header->PresetChecksumHeader::PresetChecksumHeader(
-      static_cast<uint16_t>(checksum));
+  new (&data[0]) PresetChecksumHeader(static_cast<uint16_t>(checksum));
   callback(data);
 }
 

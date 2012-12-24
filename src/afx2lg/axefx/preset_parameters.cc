@@ -45,17 +45,14 @@ bool PresetParameters::Serialize(const SysExCallback& callback) const {
       sizeof(ParameterBlockHeader) +
       (sizeof(Fractal16bit) * (kValuesPerHeader - 1)) +
       sizeof(FractalSysExEnd));
-  auto* header = reinterpret_cast<ParameterBlockHeader*>(&data[0]);
-  header->ParameterBlockHeader::ParameterBlockHeader(kValuesPerHeader);
+  auto header = new (&data[0]) ParameterBlockHeader(kValuesPerHeader);
 
   size_t value_index = 0;
   for (size_t i = 0; i < size(); ++i) {
     value_index = i % kValuesPerHeader;
     header->values[value_index].From16bit(at(i));
     if (value_index == (kValuesPerHeader - 1)) {
-      auto checksum = reinterpret_cast<FractalSysExEnd*>(
-          &header->values[value_index + 1]);
-      checksum->FractalSysExEnd::FractalSysExEnd();
+      auto checksum = new (&header->values[value_index + 1]) FractalSysExEnd();
       checksum->CalculateChecksum(header);
       callback(data);
       memset(&header->values[0], 0,
@@ -65,9 +62,7 @@ bool PresetParameters::Serialize(const SysExCallback& callback) const {
 
   if (value_index != (kValuesPerHeader - 1)) {
     // TODO(tommi): Does this ever happen in practice?
-    auto checksum = reinterpret_cast<FractalSysExEnd*>(
-        &header->values[value_index + 1]);
-    checksum->FractalSysExEnd::FractalSysExEnd();
+    auto checksum = new (&header->values[value_index + 1]) FractalSysExEnd();
     checksum->CalculateChecksum(header);
     callback(data);
   }
