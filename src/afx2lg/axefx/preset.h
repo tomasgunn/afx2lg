@@ -51,7 +51,13 @@ class Preset {
 
   void ToJson(Json::Value* out) const;
 
+  bool Serialize(const SysExCallback& callback) const;
+
  private:
+  void WriteHeader(const SysExCallback& callback) const;
+  void FillParameters(PresetParameters* params) const;
+  void WriteChecksum(uint16_t checksum, const SysExCallback& callback) const;
+
   // Valid while parsing, then discarded.
   // TODO: rename PresetParameters to PresetData?
   PresetParameters params_;

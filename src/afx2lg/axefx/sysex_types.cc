@@ -61,6 +61,12 @@ uint16_t Fractal16bit::As16bit() const {
   return ret;
 }
 
+void Fractal16bit::From16bit(uint16_t value) {
+  b1 = (value & 0x7F);
+  b2 = ((value >> 7) & 0x7F);
+  b3 = ((value >> 14) & 0x7F);
+}
+
 FractalSysExHeader::FractalSysExHeader(FunctionId func)
     : sys_ex_start(kSysExStart),
       model_id(static_cast<uint8_t>(AXE_FX_II)),

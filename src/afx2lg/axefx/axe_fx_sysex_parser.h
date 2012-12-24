@@ -7,6 +7,8 @@
 
 #include "common/common_types.h"
 
+#include "axefx/preset_parameters.h"
+
 #include <map>
 
 namespace axefx {
@@ -22,6 +24,8 @@ class SysExParser {
   bool ParseSysExBuffer(const uint8_t* begin, const uint8_t* end);
 
   const PresetMap& presets() const { return presets_; }
+
+  bool Serialize(const SysExCallback& callback) const;
 
  private:
   PresetMap presets_;

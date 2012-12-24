@@ -10,6 +10,8 @@
 #include "json/writer.h"
 #include "test/test_utils.h"
 
+using std::placeholders::_1;
+
 namespace axefx {
 
 class AxeFxII : public testing::Test {
@@ -38,6 +40,10 @@ class AxeFxII : public testing::Test {
 TEST(FractalTypes, Fractal16bit) {
   Fractal16bit f = {0x45, 0x19, 0x3};
   EXPECT_EQ(0x0000ccc5, f.As16bit());
+  for (uint16_t i = 0; i < 0xffff; ++i) {
+    f.From16bit(i);
+    EXPECT_EQ(i, f.As16bit());
+  }
 }
 
 TEST(FractalTypes, BlockSceneState) {
@@ -105,6 +111,32 @@ TEST_F(AxeFxII, ParsePresetFile) {
   // file.
   EXPECT_TRUE(front->second->from_edit_buffer());
   EXPECT_EQ("Dynamic JCM800", front->second->name());
+}
+
+void DeserializeCallback(const std::vector<uint8_t>& data,
+                         std::vector<uint8_t>* out) {
+  ASSERT_TRUE(!data.empty());
+  ASSERT_TRUE(data[0] == 0xF0);
+  ASSERT_TRUE(data[data.size() - 1] == 0xF7);
+  ASSERT_TRUE(IsFractalSysEx(&data[0], data.size()));
+  out->insert(out->end(), data.begin(), data.end());
+}
+
+TEST_F(AxeFxII, SerializePresetFile) {
+  // First read and parse a preset file.
+  ASSERT_TRUE(ParseFile("axefx2/p000318_DynamicJCM800.syx"));
+  ASSERT_EQ(1u, parser_.presets().size());
+  std::vector<uint8_t> serialized;
+  parser_.Serialize(std::bind(&DeserializeCallback, _1, &serialized));
+  EXPECT_FALSE(serialized.empty());
+  if (!serialized.empty()) {
+    SysExParser parser2;
+    EXPECT_TRUE(parser2.ParseSysExBuffer(
+        &serialized[0], &serialized[0] + serialized.size()));
+    EXPECT_EQ(parser_.presets().size(), parser2.presets().size());
+    EXPECT_EQ(parser_.presets().begin()->second->name(),
+              parser2.presets().begin()->second->name());
+  }
 }
 
 TEST_F(AxeFxII, ParseXyPresetFile) {

@@ -66,6 +66,7 @@ struct Fractal16bit {
   uint8_t b1, b2, b3;
 
   uint16_t As16bit() const;
+  void From16bit(uint16_t value);
 };
 
 struct FractalSysExHeader {
@@ -92,12 +93,26 @@ struct FractalSysExEnd {
 
 struct PresetIdHeader : public FractalSysExHeader {
   PresetIdHeader() : FractalSysExHeader(PRESET_ID) {}
+
+  PresetIdHeader(uint16_t preset_id)
+      : FractalSysExHeader(PRESET_ID),
+        preset_number(preset_id),
+        unknown(0x10) {
+    end.CalculateChecksum(this);
+  }
+
   SeptetPair preset_number;
-  SeptetPair unknown;
+  SeptetPair unknown;  // always 0x10
+  FractalSysExEnd end;
 };
 
 struct ParameterBlockHeader : public FractalSysExHeader {
-  ParameterBlockHeader() : FractalSysExHeader(PRESET_PARAMETERS) {}
+  ParameterBlockHeader(uint8_t value_count)
+      : FractalSysExHeader(PRESET_PARAMETERS),
+        value_count(value_count),
+        reserved(0u) {
+  }
+
   uint8_t value_count;  // I've only ever seen this be 0x40.
   uint8_t reserved;  // Always 0.
   Fractal16bit values[1];  // Actual size is |value_count|.
@@ -105,7 +120,13 @@ struct ParameterBlockHeader : public FractalSysExHeader {
 
 struct PresetChecksumHeader : public FractalSysExHeader {
   PresetChecksumHeader() : FractalSysExHeader(PRESET_CHECKSUM) {}
+  PresetChecksumHeader(uint16_t sum)
+      : FractalSysExHeader(PRESET_CHECKSUM) {
+    checksum.From16bit(sum);
+    end.CalculateChecksum(this);
+  }
   Fractal16bit checksum;
+  FractalSysExEnd end;
 };
 
 struct BankDumpRequest : public FractalSysExHeader {

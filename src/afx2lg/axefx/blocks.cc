@@ -188,7 +188,7 @@ void BlockInMatrix::ToJson(Json::Value* out) const {
 BlockParameters::BlockParameters()
     : block_(BLOCK_INVALID),
       config_(CONFIG_X),
-      global_block_index_(0) {
+      global_block_index_(0u) {
 }
 
 BlockParameters::~BlockParameters() {}
@@ -215,6 +215,27 @@ size_t BlockParameters::Initialize(const uint16_t* data, size_t count) {
   for (uint16_t i = 0; i < data[1]; ++i)
     params_.push_back(data[i + 2]);
   return params_.size() + 2;
+}
+
+size_t BlockParameters::Write(uint16_t* dest, size_t buffer_size) const {
+  if (buffer_size < (params_.size() + 2)) {
+    ASSERT(false);
+    return 0u;
+  }
+
+  uint16_t id_and_state = static_cast<uint16_t>(block_);
+  if (config_ == CONFIG_Y)
+    id_and_state |= (0x80 << 8);
+  ASSERT((global_block_index_ & 0x0F) == global_block_index_);
+  id_and_state |= (global_block_index_ << 8);
+
+  size_t pos = 0u;
+  dest[pos++] = id_and_state;
+  dest[pos++] = static_cast<uint16_t>(params_.size());
+  for (const auto& value: params_)
+    dest[pos++] = value;
+
+  return pos;
 }
 
 AxeFxBlockType BlockParameters::type() const {
@@ -256,7 +277,7 @@ void BlockParameters::ToJson(Json::Value* out) const {
   j["name"] = GetBlockName(block_);
   j["type"] = GetBlockTypeName(GetBlockType(block_));
   j["supports_xy"] = supports_xy();
-  j["global_block_id"] = global_block_index_;
+  j["global_block_id"] = static_cast<int>(global_block_index_);
 
   Json::Value scenes;
   GetBypassState().ToJson(supports_xy(), &scenes);

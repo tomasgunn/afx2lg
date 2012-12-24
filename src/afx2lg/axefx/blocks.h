@@ -85,6 +85,8 @@ class BlockParameters {
   // wasn't big enough.
   size_t Initialize(const uint16_t* data, size_t count);
 
+  size_t Write(uint16_t* dest, size_t buffer_size) const;
+
   AxeFxBlockType type() const;
   AxeFxIIBlockID block() const;
 
@@ -92,7 +94,7 @@ class BlockParameters {
   size_t param_count() const;
   bool is_modifier() const;
   BlockConfig active_config() const { return config_; }
-  int global_block_index() const { return global_block_index_; }
+  uint8_t global_block_index() const { return global_block_index_; }
 
   uint16_t GetParamValue(int index, bool get_x_value) const;
 
@@ -103,7 +105,7 @@ class BlockParameters {
  private:
   AxeFxIIBlockID block_;
   BlockConfig config_;
-  int global_block_index_;
+  uint8_t global_block_index_;
   std::vector<uint16_t> params_;
 };
 

@@ -107,4 +107,12 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end) {
   return true;
 }
 
+bool SysExParser::Serialize(const SysExCallback& callback) const {
+  for (auto& entry: presets_) {
+    if (!entry.second->Serialize(callback))
+      return false;
+  }
+  return true;
+}
+
 }  // namespace axefx

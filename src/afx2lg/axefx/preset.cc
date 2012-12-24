@@ -12,7 +12,8 @@
 namespace axefx {
 
 const int kInvalidPresetId = -1;
-const int kPresetIdBuffer = 0x7F00;
+const int kPresetIdBuffer = (0x7F << 7u);
+const uint16_t kCurrentParameterVersion = 0x204;
 
 Preset::Preset() : id_(kInvalidPresetId) {}
 Preset::~Preset() {}
@@ -40,15 +41,15 @@ const BlockParameters* Preset::LookupBlock(AxeFxIIBlockID block) const {
 
 bool Preset::SetPresetId(const PresetIdHeader& header, size_t size) {
   ASSERT(header.function() == PRESET_ID);
-  ASSERT(size == (sizeof(header) + kSysExTerminationByteCount));
+  ASSERT(size == sizeof(header));
   ASSERT(header.unknown.As16bit() == 0x10);  // <- not sure what this is.
+
+  id_ = header.preset_number.As16bit();
   if (header.preset_number.ms == 0x7f && header.preset_number.ls == 0x0) {
     // This is a special case that means the preset is destined for (or comes
     // from) the edit buffer.  In this case, we just set the id to -1.
     // http://forum.fractalaudio.com/axe-fx-ii-discussion/58581-help-loading-presets-using-sysex-librarian.html#post732659
-    id_ = kPresetIdBuffer;
-  } else {
-    id_ = header.preset_number.As16bit();
+    ASSERT(id_ == kPresetIdBuffer);
   }
 
   return valid();
@@ -69,8 +70,12 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size) {
   // Support for skipping checksum checks is here because a preset dump
   // might not have a parameter checksum for some reason.  Possibly this
   // is simply a bug in the AxeFx when realtime sysex sending is set to "All".
-  if (header && header->checksum.As16bit() != params_.Checksum())
-    return false;
+  if (header) {
+    if (size != sizeof(PresetChecksumHeader) ||
+        header->checksum.As16bit() != params_.Checksum()) {
+      return false;
+    }
+  }
 
   PresetParameters::const_iterator p = params_.begin();
 
@@ -83,7 +88,7 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size) {
 
   uint16_t version = *p;
   // 0 == 516 for fw9 and higher. 514 for older.
-  if (version != 0x204 && version != 0x202) {
+  if (version != kCurrentParameterVersion && version != 0x202) {
     std::cerr << "Unsupported syx file - 0x" << std::hex << version << std::dec
               << std::endl;
     return false;
@@ -98,7 +103,7 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size) {
     --index;  
   name_.resize(index + 1);
   p += 31;
-  ++p;  // NULL terminator.
+  ++p;  // zero terminator.
 
   // Save the effect block matrix.
   static_assert(sizeof(matrix_[0][0]) == sizeof(*p) * 2,
@@ -158,6 +163,66 @@ void Preset::ToJson(Json::Value* out) const {
   }
 
   j["block_params"] = block_params;
+}
+
+bool Preset::Serialize(const SysExCallback& callback) const {
+  ASSERT(valid());
+
+  WriteHeader(callback);
+
+  PresetParameters params;
+  FillParameters(&params);
+  ASSERT(params.size() == 2048);
+  params.Serialize(callback);
+
+  WriteChecksum(params.Checksum(), callback);
+
+  return true;
+}
+
+void Preset::WriteHeader(const SysExCallback& callback) const {
+  std::vector<uint8_t> data;
+  data.resize(sizeof(PresetIdHeader));
+  auto* header = reinterpret_cast<PresetIdHeader*>(&data[0]);
+  header->PresetIdHeader::PresetIdHeader(static_cast<uint16_t>(id_));
+  callback(data);
+}
+
+void Preset::FillParameters(PresetParameters* params) const {
+  PresetParameters& p = *params;
+  if (is_global_setting()) {
+    p = params_;
+    return;
+  }
+
+  // Param block size is fixed at 2048.
+  p.assign(2048, 0);
+
+  size_t pos = 0;
+  p[pos++] = kCurrentParameterVersion;
+  pos++;  // Unknown value.
+  for (size_t i = 0; i < 31; ++i)
+    p[pos++] = (i < name_.length()) ? name_[i] : ' ';
+  ++pos;  // zero terminator.
+
+  // Copy the matrix.
+  memcpy(&p[pos], &matrix_[0][0], sizeof(matrix_));
+  pos += sizeof(matrix_) / sizeof(p[0]);
+
+  for (const auto& b: block_parameters_) {
+    size_t values = b->Write(&p[pos], p.size() - pos);
+    pos += values;
+  }
+}
+
+void Preset::WriteChecksum(uint16_t checksum,
+                           const SysExCallback& callback) const {
+  std::vector<uint8_t> data;
+  data.resize(sizeof(PresetChecksumHeader));
+  auto* header = reinterpret_cast<PresetChecksumHeader*>(&data[0]);
+  header->PresetChecksumHeader::PresetChecksumHeader(
+      static_cast<uint16_t>(checksum));
+  callback(data);
 }
 
 }  // namespace axefx
