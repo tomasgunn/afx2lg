@@ -13,6 +13,12 @@ inline bool IsBitSet(uint8_t byte, int index) {
   return (byte >> index) & 1;
 }
 
+inline void SetBit(uint8_t* byte, int index, bool set) {
+  ASSERT(index >= 0 && index < 8);
+  set ? ((*byte) |= 1 << index) : ((*byte) &= ~(1 << index));
+}
+
+
 #ifdef _DEBUG
 
 // If we really need this, it would be better to keep it in a separate file
@@ -140,12 +146,38 @@ BlockSceneState::BlockSceneState(uint16_t bypass_state)
 
 BlockSceneState::~BlockSceneState() {}
 
+uint16_t BlockSceneState::As16bit() const {
+  return bypass_ | static_cast<uint16_t>(xy_ << 8);
+}
+
 bool BlockSceneState::IsBypassedInScene(int scene) const {
   return IsBitSet(bypass_, scene);
 }
 
+void BlockSceneState::SetBypassedInScene(int scene, bool bypassed) {
+  SetBit(&bypass_, scene, bypassed);
+}
+
 bool BlockSceneState::IsConfigYEnabledInScene(int scene) const {
   return IsBitSet(xy_, scene);
+}
+
+void BlockSceneState::SetConfigYEnabledInScene(int scene, bool y_enabled) {
+  SetBit(&xy_, scene, y_enabled);
+}
+
+void BlockSceneState::CopyScene(int from, int to) {
+  SetConfigYEnabledInScene(to, IsConfigYEnabledInScene(from));
+  SetBypassedInScene(to, IsBypassedInScene(from));
+}
+
+bool BlockSceneState::ScenesAreEqual(int scene_a, int scene_b) const {
+  return IsConfigYEnabledInScene(scene_a) == IsConfigYEnabledInScene(scene_b) &&
+         IsBypassedInScene(scene_a) == IsBypassedInScene(scene_b);
+}
+
+bool BlockSceneState::IsEqual(const BlockSceneState& other) const {
+  return other.bypass_ == bypass_ && other.xy_ == xy_;
 }
 
 void BlockSceneState::ToJson(bool supports_xy, Json::Value* out) const {
@@ -265,10 +297,29 @@ uint16_t BlockParameters::GetParamValue(int index, bool get_x_value) const {
   return get_x_value ? params_[index] : params_[(params_.size() / 2) + index];
 }
 
+void BlockParameters::SetParamValue(int index,
+                                    uint16_t value,
+                                    bool set_x_value) {
+  ASSERT(set_x_value || supports_xy());
+  ASSERT(!supports_xy() || (static_cast<size_t>(index) < params_.size() / 2));
+  ASSERT(supports_xy() || static_cast<size_t>(index) < params_.size());
+  set_x_value ?
+      params_[index] = value :
+      params_[(params_.size() / 2) + index] = value;
+}
+
 BlockSceneState BlockParameters::GetBypassState() const {
   int bypass_id = GetBlockBypassParamID(type());
   return bypass_id == -1 ? BlockSceneState(0) :
                            BlockSceneState(GetParamValue(bypass_id, true));
+}
+
+bool BlockParameters::SetBypassState(const BlockSceneState& state) {
+  int bypass_id = GetBlockBypassParamID(type());
+  if (bypass_id == -1)
+    return false;
+  SetParamValue(bypass_id, state.As16bit(), true);
+  return true;
 }
 
 void BlockParameters::ToJson(Json::Value* out) const {

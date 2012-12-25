@@ -24,6 +24,7 @@ class SysExParser {
   bool ParseSysExBuffer(const uint8_t* begin, const uint8_t* end);
 
   const PresetMap& presets() const { return presets_; }
+  PresetMap& presets() { return presets_; }
 
   bool Serialize(const SysExCallback& callback) const;
 

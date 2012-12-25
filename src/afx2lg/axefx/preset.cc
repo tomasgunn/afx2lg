@@ -30,7 +30,7 @@ bool Preset::from_edit_buffer() const {
   return id_ == kPresetIdBuffer;
 }
 
-const BlockParameters* Preset::LookupBlock(AxeFxIIBlockID block) const {
+BlockParameters* Preset::LookupBlock(AxeFxIIBlockID block) {
   // TODO: Use a map for lookups?
   for (const auto& p: block_parameters_) {
     if (p->block() == block)

@@ -49,6 +49,7 @@ TEST(FractalTypes, Fractal16bit) {
 TEST(FractalTypes, BlockSceneState) {
   // The high order byte represents X/Y state, low order is bypassed flag.
   BlockSceneState state(0x66AA);
+  EXPECT_EQ(state.As16bit(), 0x66AA);
   bool bypassed = false;
   bool y_enabled = false;
   for (int i = 0; i < 8; ++i) {
@@ -58,6 +59,13 @@ TEST(FractalTypes, BlockSceneState) {
     if ((i & 1) == 0)
       y_enabled = !y_enabled;
   }
+  bypassed = state.IsBypassedInScene(0);
+  y_enabled = state.IsConfigYEnabledInScene(0);
+  EXPECT_FALSE(state.ScenesAreEqual(0, 1));
+  state.CopyScene(0, 1);
+  EXPECT_TRUE(state.ScenesAreEqual(0, 1));
+  EXPECT_EQ(bypassed, state.IsBypassedInScene(1));
+  EXPECT_EQ(y_enabled, state.IsConfigYEnabledInScene(1));
 }
 
 TEST_F(AxeFxII, ParseBankFile) {
@@ -151,11 +159,11 @@ TEST_F(AxeFxII, ParseScenesXYBypassFile) {
   const PresetMap& presets = parser_.presets();
   ASSERT_EQ(1u, presets.size());
 
-  const Preset& p = *(presets.begin()->second.get());
+  Preset& p = *(presets.begin()->second.get());
   EXPECT_EQ("BYPASS", p.name());
 
   // Check the scenes, bypass and x/y state of Amp1.
-  const BlockParameters* amp1 = p.LookupBlock(BLOCK_AMP_1);
+  BlockParameters* amp1 = p.LookupBlock(BLOCK_AMP_1);
   ASSERT_TRUE(amp1 != NULL);
   BlockSceneState state = amp1->GetBypassState();
   bool bypassed = false;
@@ -167,6 +175,11 @@ TEST_F(AxeFxII, ParseScenesXYBypassFile) {
     if ((i & 1) == 0)
       y_enabled = !y_enabled;
   }
+
+  state.CopyScene(0, 1);
+  EXPECT_FALSE(amp1->GetBypassState().IsEqual(state));
+  amp1->SetBypassState(state);
+  EXPECT_TRUE(amp1->GetBypassState().IsEqual(state));
 }
 
 #pragma pack(push)

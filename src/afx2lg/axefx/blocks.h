@@ -35,8 +35,16 @@ class BlockSceneState {
   explicit BlockSceneState(uint16_t bypass_state);
   ~BlockSceneState();
 
+  uint16_t As16bit() const;
+
   bool IsBypassedInScene(int scene) const;
+  void SetBypassedInScene(int scene, bool bypassed);
   bool IsConfigYEnabledInScene(int scene) const;
+  void SetConfigYEnabledInScene(int scene, bool y_enabled);
+  void CopyScene(int from, int to);
+  bool ScenesAreEqual(int scene_a, int scene_b) const;
+
+  bool IsEqual(const BlockSceneState& other) const;
 
   void ToJson(bool supports_xy, Json::Value* out) const;
 
@@ -97,8 +105,10 @@ class BlockParameters {
   uint8_t global_block_index() const { return global_block_index_; }
 
   uint16_t GetParamValue(int index, bool get_x_value) const;
+  void SetParamValue(int index, uint16_t value, bool set_x_value);
 
   BlockSceneState GetBypassState() const;
+  bool SetBypassState(const BlockSceneState& state);
 
   void ToJson(Json::Value* out) const;
 
