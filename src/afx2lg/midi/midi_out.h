@@ -41,6 +41,7 @@ class DeviceInfos : public std::vector<shared_ptr<MidiDeviceInfo> > {
 class Message : public std::vector<uint8_t> {
  public:
   Message();
+  Message(const Message& other) : std::vector<uint8_t>(other) {}
   Message(const axefx::FractalSysExHeader* header, size_t size);
 
   bool IsSysEx() const;
@@ -52,7 +53,6 @@ class Message : public std::vector<uint8_t> {
   iterator find(uint8_t i);
 
  private:
-  Message(const Message&);
   Message& operator=(const Message&);
 };
 

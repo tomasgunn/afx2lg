@@ -121,8 +121,8 @@ TEST_F(AxeFxII, ParsePresetFile) {
   EXPECT_EQ("Dynamic JCM800", front->second->name());
 }
 
-void DeserializeCallback(const std::vector<uint8_t>& data,
-                         std::vector<uint8_t>* out) {
+void SerializeCallback(const std::vector<uint8_t>& data,
+                       std::vector<uint8_t>* out) {
   ASSERT_TRUE(!data.empty());
   ASSERT_TRUE(data[0] == 0xF0);
   ASSERT_TRUE(data[data.size() - 1] == 0xF7);
@@ -135,7 +135,7 @@ TEST_F(AxeFxII, SerializePresetFile) {
   ASSERT_TRUE(ParseFile("axefx2/p000318_DynamicJCM800.syx"));
   ASSERT_EQ(1u, parser_.presets().size());
   std::vector<uint8_t> serialized;
-  parser_.Serialize(std::bind(&DeserializeCallback, _1, &serialized));
+  parser_.Serialize(std::bind(&SerializeCallback, _1, &serialized));
   EXPECT_FALSE(serialized.empty());
   if (!serialized.empty()) {
     SysExParser parser2;

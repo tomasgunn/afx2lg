@@ -24,7 +24,7 @@ typedef std::shared_ptr<common::ThreadLoop> SharedThreadLoop;
 void PrintUsage() {
   std::cerr <<
       "Usage:\n\n"
-      "  axebackup [-a] [-b] [-c] [-s]\n"
+      "  axebackup [-a] [-b] [-c] [-s] [-j]\n"
       "\n"
       "    -a     Creates a backup of bank A (presets 0-127).\n"
       "           The file will be stored in the current directory with the\n"
@@ -34,18 +34,23 @@ void PrintUsage() {
       "\n"
       "    -s     Back up system data and global blocks.\n"
       "\n"
+      "    -j     Writes out a JSON file for each bank.\n"
+      "\n"
       "If no arguments are given, a backup will be created for all banks and\n"
       "system data.\n\n";
 }
 
 struct Options {
   // Constructor sets the program defaults.
-  Options() : bank_a(true), bank_b(true), bank_c(true), system(true) {}
+  Options()
+      : bank_a(true), bank_b(true), bank_c(true), system(true), json(false) {}
 
   bool bank_a;
   bool bank_b;
   bool bank_c;
   bool system;
+
+  bool json;
 };
 
 bool ParseArgs(int argc, char* argv[], Options* options) {
@@ -56,6 +61,7 @@ bool ParseArgs(int argc, char* argv[], Options* options) {
   options->bank_b = false;
   options->bank_c = false;
   options->system = false;
+  options->json = false;
 
   struct {
     const char* name;
@@ -65,6 +71,7 @@ bool ParseArgs(int argc, char* argv[], Options* options) {
     { "-b", &options->bank_b },
     { "-c", &options->bank_c },
     { "-s", &options->system },
+    { "-j", &options->json },
   };
 
   for (int i = 1; i < argc; ++i) {
