@@ -243,7 +243,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
   // followed by regular block data.
   EXPECT_EQ(128u, parser_.presets().size());
 
-  std::vector<shared_ptr<BlockParameters> > global_blocks;
+  std::vector<unique_ptr<BlockParameters> > global_blocks;
   PresetParameters left_over_params;
 
   PresetMap::const_iterator i = parser_.presets().begin();
@@ -260,11 +260,11 @@ TEST_F(AxeFxII, ParseSystemBackup) {
       size_t missing_values = left_over_params[1] - left_over_params.size() + 2;
       left_over_params.insert(left_over_params.end(), &params[0],
                               &params[missing_values]);
-      shared_ptr<BlockParameters> block_params(new BlockParameters());
+      unique_ptr<BlockParameters> block_params(new BlockParameters());
       size_t values_eaten = block_params->Initialize(&left_over_params[0],
           left_over_params.size());
       EXPECT_EQ(left_over_params.size(), values_eaten);
-      global_blocks.push_back(block_params);
+      global_blocks.push_back(std::move(block_params));
       left_over_params.clear();
       p += missing_values;
     }
@@ -276,10 +276,10 @@ TEST_F(AxeFxII, ParseSystemBackup) {
           left_over_params.assign(p, params.end());
           break;
         }
-        shared_ptr<BlockParameters> block_params(new BlockParameters());
+        unique_ptr<BlockParameters> block_params(new BlockParameters());
         size_t values_eaten = block_params->Initialize(&(*p), params.end() - p);
         ASSERT_NE(0U, values_eaten);
-        global_blocks.push_back(block_params);
+        global_blocks.push_back(std::move(block_params));
         p += values_eaten;
       }
     } else if (*p == 0x1234) {
@@ -292,7 +292,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
     }
   }
   EXPECT_EQ(710u, global_blocks.size());
-  shared_ptr<BlockParameters> amp1 = global_blocks[0];
+  BlockParameters* amp1 = global_blocks[0].get();
   EXPECT_EQ(BLOCK_AMP_1, amp1->block());
 #if defined(_DEBUG)
   uint16_t amp_id_x = amp1->GetParamValue(DISTORT_TYPE, true);

@@ -30,7 +30,9 @@ class Preset {
   ~Preset();
 
   int id() const { return id_; }
+  void set_id(int id);
   const std::string& name() const { return name_; }
+  void set_name(const std::string& name);
   const Matrix& matrix() const { return matrix_; }
   const PresetParameters& params() const { return params_; }
 
@@ -41,6 +43,7 @@ class Preset {
   // Returns true if the preset doesn't have an ID assigned to it, but is
   // still valid (from AxeFx' edit buffer).
   bool from_edit_buffer() const;
+  void SetAsEditBuffer();
 
   BlockParameters* LookupBlock(AxeFxIIBlockID block);
 

@@ -18,6 +18,15 @@ const uint16_t kCurrentParameterVersion = 0x204;
 Preset::Preset() : id_(kInvalidPresetId) {}
 Preset::~Preset() {}
 
+void Preset::set_id(int id) {
+  ASSERT(id >= 0 && id < 512);
+  id_ = id;
+}
+
+void Preset::set_name(const std::string& name) {
+  name.length() >= 31 ? name_ = name.substr(0, 30) : name_ = name;
+}
+
 bool Preset::valid() const {
   return id_ != kInvalidPresetId;
 }
@@ -28,6 +37,14 @@ bool Preset::is_global_setting() const {
 
 bool Preset::from_edit_buffer() const {
   return id_ == kPresetIdBuffer;
+}
+
+void Preset::SetAsEditBuffer() {
+  ASSERT(valid());
+  ASSERT(!is_global_setting());
+  if (is_global_setting() || !valid())
+    return;
+  id_ = kPresetIdBuffer;
 }
 
 BlockParameters* Preset::LookupBlock(AxeFxIIBlockID block) {
