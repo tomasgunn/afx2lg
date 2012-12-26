@@ -30,6 +30,19 @@ axebackup:
     you'll know about it straight away instead of when you actually need
     the backup.
 
+axeloader:
+    Use it to send preset files to the AxeFx.  The utility will send the preset
+    file to the current edit buffer (overriding the embedded preset id) so that
+    no presets are ever overwritten.  This is to allow the user to pick a place
+    for storing the preset or to preview a preset without saving.  I.e. it's
+    great for previewing and adding AxeExchange presets to your AxeFx.
+
+    If you set it up as the default handler for .syx files, it will send the
+    prest file directly to the AxeFx when you double click the .syx file.
+
+    The utility only supports preset files right now, but support for bank files
+    and user cabs should be possible in the future.
+
 example_setup.lgp:
     This is an example setup file (actually it's what I use in
     conjunction with afx2lg) made with Control Center.
