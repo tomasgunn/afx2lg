@@ -272,7 +272,8 @@ TEST(Midi, GetPresetDump) {
   axefx::SysExParser parser;
   bool ok;
   EXPECT_TRUE(ok = parser.ParseSysExBuffer(&received[0],
-                                           &received[0] + received.size()));
+                                           &received[0] + received.size(),
+                                           true));
   if (ok) {
     const axefx::PresetMap& presets = parser.presets();
     ASSERT_EQ(1u, presets.size());

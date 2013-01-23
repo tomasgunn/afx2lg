@@ -264,7 +264,7 @@ int main(int argc, char* argv[]) {
     size_t size = 0;
     if (ReadFileIntoBuffer(syx_files[i].path(), &buffer, &size)) {
       const uint8_t* b = reinterpret_cast<const uint8_t*>(buffer.get());
-      if (!parser.ParseSysExBuffer(b, b + size)) {
+      if (!parser.ParseSysExBuffer(b, b + size, true)) {
         std::cerr << "Failed to parse " << syx_files[i].path() << std::endl;
         return -1;
       }

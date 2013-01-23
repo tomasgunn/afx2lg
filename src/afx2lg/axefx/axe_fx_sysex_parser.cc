@@ -17,7 +17,8 @@ SysExParser::SysExParser() {
 SysExParser::~SysExParser() {
 }
 
-bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end) {
+bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
+                                   bool parse_parameter_data) {
   const uint8_t* sys_ex_begins = NULL;
   const uint8_t* pos = begin;
   shared_ptr<Preset> preset;
@@ -64,7 +65,8 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end) {
         case PRESET_CHECKSUM: {
           ASSERT(preset);
           auto checksum = static_cast<const PresetChecksumHeader*>(&header);
-          if (preset && preset->Finalize(checksum, size)) {
+          if (preset &&
+              preset->Finalize(checksum, size, !parse_parameter_data)) {
             ASSERT(preset->valid());
             presets_.insert(std::make_pair(preset->id(), preset));
           } else {
@@ -94,7 +96,7 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end) {
     // To work around this for now, we skip verifying the checksum.
     // We don't do this for full banks though since we'd rather not save
     // a bogus bank.
-    if (preset->Finalize(NULL, 0)) {
+    if (preset->Finalize(NULL, 0, !parse_parameter_data)) {
       ASSERT(preset->valid());
       presets_.insert(std::make_pair(preset->id(), preset));
       preset.reset();

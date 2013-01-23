@@ -24,6 +24,7 @@ void Preset::set_id(int id) {
 }
 
 void Preset::set_name(const std::string& name) {
+  ASSERT(params_.empty());
   name.length() >= 31 ? name_ = name.substr(0, 30) : name_ = name;
 }
 
@@ -48,6 +49,7 @@ void Preset::SetAsEditBuffer() {
 }
 
 BlockParameters* Preset::LookupBlock(AxeFxIIBlockID block) {
+  ASSERT(params_.empty());
   // TODO: Use a map for lookups?
   for (const auto& p: block_parameters_) {
     if (p->block() == block)
@@ -82,7 +84,8 @@ bool Preset::AddParameterData(const ParameterBlockHeader& header, size_t size) {
   return ret;
 }
 
-bool Preset::Finalize(const PresetChecksumHeader* header, size_t size) {
+bool Preset::Finalize(const PresetChecksumHeader* header, size_t size,
+                      bool verify_only) {
   ASSERT(valid());
   // Support for skipping checksum checks is here because a preset dump
   // might not have a parameter checksum for some reason.  Possibly this
@@ -112,7 +115,13 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size) {
   }
 
   // Parse the preset name (values 2-32).
-  ASSERT(p[1] == 0);  // Not sure what this is.
+  if (p[1] != 0) {
+    // Not sure what this is.  When not 0, the preset seems to be
+    // encoded/compressed somehow. I pinged Fractal support about this.
+    // Let's see what they say.
+    return verify_only;
+  }
+
   p += 2;
   name_.assign(p, p + 31);
   std::string::size_type index = name_.length() - 1;
@@ -153,7 +162,7 @@ void Preset::ToJson(Json::Value* out) const {
   }
   j["name"] = name_;
 
-  if (is_global_setting()) {
+  if (is_global_setting() || !params_.empty()) {
     // TODO: Support at least user cabs and the 0x1234 "preset".
     return;
   }
@@ -206,7 +215,10 @@ void Preset::WriteHeader(const SysExCallback& callback) const {
 
 void Preset::FillParameters(PresetParameters* params) const {
   PresetParameters& p = *params;
-  if (is_global_setting()) {
+  if (is_global_setting() || !params_.empty()) {
+    // If we get here for non-global settings, we haven't parsed the parameters
+    // and therefore we don't support modifying them (including the preset
+    // name).  So, let's copy the original parameters over directly.
     p = params_;
     return;
   }

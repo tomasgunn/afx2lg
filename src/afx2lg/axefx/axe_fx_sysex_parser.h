@@ -21,7 +21,8 @@ class SysExParser {
   SysExParser();
   ~SysExParser();
 
-  bool ParseSysExBuffer(const uint8_t* begin, const uint8_t* end);
+  bool ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
+                        bool parse_parameter_data);
 
   const PresetMap& presets() const { return presets_; }
   PresetMap& presets() { return presets_; }

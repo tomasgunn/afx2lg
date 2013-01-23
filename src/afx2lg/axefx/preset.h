@@ -50,7 +50,13 @@ class Preset {
   // Parse methods.
   bool SetPresetId(const PresetIdHeader& header, size_t size);
   bool AddParameterData(const ParameterBlockHeader& header, size_t size);
-  bool Finalize(const PresetChecksumHeader* header, size_t size);
+
+  // Verify and optionally parse the preset data.  If you set |verify_only| to
+  // true, the data will not be parsed but the checksum will be verified.
+  // If you only verify the data, don't expect methods that access blocks,
+  // matrix or other parameters to work correctly.
+  bool Finalize(const PresetChecksumHeader* header, size_t size,
+                bool verify_only);
 
   void ToJson(Json::Value* out) const;
 

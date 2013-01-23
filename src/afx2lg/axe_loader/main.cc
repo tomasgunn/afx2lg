@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
   }
 
   axefx::SysExParser parser;
-  if (!parser.ParseSysExBuffer(buffer.get(), buffer.get() + size)) {
+  if (!parser.ParseSysExBuffer(buffer.get(), buffer.get() + size, false)) {
     std::cerr << "Failed to parse preset file.\n";
     return -1;
   }

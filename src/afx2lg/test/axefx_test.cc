@@ -29,7 +29,8 @@ class AxeFxII : public testing::Test {
     ASSERT(ok);
     if (ok) {
       EXPECT_TRUE(ok = parser_.ParseSysExBuffer(buffer.get(),
-                                                buffer.get() + file_size));
+                                                buffer.get() + file_size,
+                                                true));
     }
     return ok;
   }
@@ -140,7 +141,7 @@ TEST_F(AxeFxII, SerializePresetFile) {
   if (!serialized.empty()) {
     SysExParser parser2;
     EXPECT_TRUE(parser2.ParseSysExBuffer(
-        &serialized[0], &serialized[0] + serialized.size()));
+        &serialized[0], &serialized[0] + serialized.size(), true));
     EXPECT_EQ(parser_.presets().size(), parser2.presets().size());
     EXPECT_EQ(parser_.presets().begin()->second->name(),
               parser2.presets().begin()->second->name());
