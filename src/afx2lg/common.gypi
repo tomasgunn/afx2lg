@@ -102,11 +102,13 @@
             'TargetMachine': '1',
           },
         },
+        'msbuild_toolset': 'v110_xp',  # Outputs executables that run on XP.
         'msvs_configuration_platform': 'Win32',
       },
       'x64_Base': {
         'abstract': 1,
         'msvs_configuration_platform': 'x64',
+        'msbuild_toolset': 'v110_xp',  # Outputs executables that run on XP.
         'msvs_settings': {
           'VCLinkerTool': {
             'TargetMachine': '17', # x86 - 64
