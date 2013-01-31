@@ -114,14 +114,12 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size,
     return false;
   }
 
-  // Parse the preset name (values 2-32).
-  if (p[1] != 0) {
-    // Not sure what this is.  When not 0, the preset seems to be
-    // encoded/compressed somehow. I pinged Fractal support about this.
-    // Let's see what they say.
-    return verify_only;
-  }
+  // Not sure what this is.  When not 0, the preset seems to be
+  // encoded/compressed somehow. I pinged Fractal support about this.
+  // Let's see what they say.
+  bool parameter_format_recognized = (p[1] == 0);
 
+  // Parse the preset name (values 2-32).
   p += 2;
   name_.assign(p, p + 31);
   std::string::size_type index = name_.length() - 1;
@@ -129,7 +127,12 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size,
     --index;  
   name_.resize(index + 1);
   p += 31;
-  ++p;  // zero terminator.
+  ASSERT(p[0] == 0);  // zero terminator.
+  ++p;
+
+  // Don't go further if we don't know what's coming.
+  if (!parameter_format_recognized)
+    return verify_only;
 
   // Save the effect block matrix.
   static_assert(sizeof(matrix_[0][0]) == sizeof(*p) * 2,
