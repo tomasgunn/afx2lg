@@ -3,7 +3,7 @@ Disclaimer: http://sam.zoy.org/wtfpl/COPYING
 NOTE: This is the third update of this utility.
 Still TODO: Add version information!
 
-This package contains two AxeFx II utilities for Windows and Mac.
+This package contains three AxeFx II utilities for Windows and Mac.
 
 afx2lg:
     A simple utility to update and generate setup files for
