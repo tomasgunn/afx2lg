@@ -67,6 +67,27 @@ void Fractal16bit::From16bit(uint16_t value) {
   b3 = ((value >> 14) & 0x7F);
 }
 
+uint32_t Fractal32bit::As32bit() const {
+  // TODO: Is this correct for big endian?
+  return static_cast<uint32_t>(b1) << 24 |
+      (static_cast<uint32_t>(b2) & 1) << 31 |
+      (static_cast<uint32_t>(b2) >> 1) << 16 |
+      (static_cast<uint32_t>(b3) & 3) << 22 |
+      (static_cast<uint32_t>(b3) >> 2) << 8 |
+      (static_cast<uint32_t>(b4) & 7) << 13 |
+      (static_cast<uint32_t>(b4) >> 3) |
+      (static_cast<uint32_t>(b5) & 0xF) << 4;
+}
+
+void Fractal32bit::From32bit(uint32_t value) {
+  uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
+  b1 = bytes[3] & 0x7F;
+  b2 = (bytes[3] >> 7) | ((bytes[2] & 0x3F) << 1);
+  b3 = (bytes[2] >> 6) | ((bytes[1] & 0x1F) << 2);
+  b4 = (bytes[1] >> 5) | ((bytes[0] & 0x0F) << 3);
+  b5 = (bytes[0] >> 4);
+}
+
 FractalSysExHeader::FractalSysExHeader(FunctionId func)
     : sys_ex_start(kSysExStart),
       model_id(static_cast<uint8_t>(AXE_FX_II)),

@@ -10,6 +10,8 @@
 #include "json/writer.h"
 #include "test/test_utils.h"
 
+#include <functional>
+
 using std::placeholders::_1;
 
 namespace axefx {
@@ -44,6 +46,23 @@ TEST(FractalTypes, Fractal16bit) {
   for (uint16_t i = 0; i < 0xffff; ++i) {
     f.From16bit(i);
     EXPECT_EQ(i, f.As16bit());
+  }
+}
+
+TEST(FractalTypes, Fractal32bit) {
+  Fractal32bit f = {0x4F, 0x10, 0x01, 0x11, 0x04};
+  EXPECT_EQ(0x4F482042, f.As32bit());
+  f.From32bit(f.As32bit());
+  EXPECT_EQ(0x4F, f.b1);
+  EXPECT_EQ(0x10, f.b2);
+  EXPECT_EQ(0x01, f.b3);
+  EXPECT_EQ(0x11, f.b4);
+  EXPECT_EQ(0x04, f.b5);
+  std::hash<int> hash;
+  for (int i = 0; i < 0xffff; ++i) {
+    uint32_t v = static_cast<uint32_t>(hash(i));
+    f.From32bit(v);
+    ASSERT_EQ(v, f.As32bit());
   }
 }
 

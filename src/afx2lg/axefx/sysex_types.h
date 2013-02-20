@@ -23,6 +23,7 @@ bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, size_t size);
 uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, size_t size);
 
 enum AxeFxModel {
+  // I've seen 0 being set for .syx files that contain only IR data.
   AXE_FX_STANDARD = 0x01,  // or 0?
   AXE_FX_ULTRA = 0x02,
   AXE_FX_II = 0x03,
@@ -41,6 +42,9 @@ enum FunctionId {
   PRESET_ID = 0x77,  // Use PresetIdHeader.
   PRESET_PARAMETERS = 0x78,  // Use ParameterBlockHeader.
   PRESET_CHECKSUM = 0x79,  // Use PresetChecksumHeader.
+  IR_BEGIN = 0x7A,
+  IR_DATA = 0x7B,
+  IR_END = 0x7C,
 };
 
 #pragma pack(push)
@@ -67,6 +71,16 @@ struct Fractal16bit {
 
   uint16_t As16bit() const;
   void From16bit(uint16_t value);
+};
+
+// IR data is 32 bit where each 32bit chunk is encoded in 5 bytes.
+// http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx#Obtaining_Parameter_Values_via_SYSEX_Messages
+// TODO: This class probably doesn't work correctly on big endian systems.
+struct Fractal32bit {
+  uint8_t b1, b2, b3, b4, b5;
+
+  uint32_t As32bit() const;
+  void From32bit(uint32_t value);
 };
 
 struct FractalSysExHeader {
