@@ -51,13 +51,13 @@ TEST(FractalTypes, Fractal16bit) {
 
 TEST(FractalTypes, Fractal32bit) {
   Fractal32bit f = {0x4F, 0x10, 0x01, 0x11, 0x04};
-  EXPECT_EQ(0x4F482042, f.As32bit());
+  EXPECT_EQ(0x4F482042u, f.As32bit());
   f.From32bit(f.As32bit());
-  EXPECT_EQ(0x4F, f.b1);
-  EXPECT_EQ(0x10, f.b2);
-  EXPECT_EQ(0x01, f.b3);
-  EXPECT_EQ(0x11, f.b4);
-  EXPECT_EQ(0x04, f.b5);
+  EXPECT_EQ(0x4Fu, f.b1);
+  EXPECT_EQ(0x10u, f.b2);
+  EXPECT_EQ(0x01u, f.b3);
+  EXPECT_EQ(0x11u, f.b4);
+  EXPECT_EQ(0x04u, f.b5);
   std::hash<int> hash;
   for (int i = 0; i < 0xffff; ++i) {
     uint32_t v = static_cast<uint32_t>(hash(i));
