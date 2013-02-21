@@ -5,6 +5,7 @@
 
 #include "axefx/axe_fx_sysex_parser.h"
 #include "axefx/blocks.h"
+#include "axefx/ir_data.h"
 #include "axefx/preset.h"
 #include "axefx/sysex_types.h"
 #include "json/writer.h"
@@ -19,40 +20,49 @@ namespace axefx {
 class AxeFxII : public testing::Test {
  protected:
   virtual void SetUp() {
+    file_size_ = 0;
   }
 
   virtual void TearDown() {
   }
 
   bool ParseFile(const char* file_path) {
-    std::unique_ptr<uint8_t> buffer;
-    int file_size;
-    bool ok = ReadTestFileIntoBuffer(file_path, &buffer, &file_size);
+    bool ok = ReadTestFileIntoBuffer(file_path, &file_contents_, &file_size_);
     ASSERT(ok);
     if (ok) {
-      EXPECT_TRUE(ok = parser_.ParseSysExBuffer(buffer.get(),
-                                                buffer.get() + file_size,
-                                                true));
+      ok = parser_.ParseSysExBuffer(
+          file_contents_.get(), file_contents_.get() + file_size_, true);
+    } else {
+      file_contents_.reset();
+      file_size_ = 0;
     }
     return ok;
   }
 
+  bool MatchesFileContent(const std::vector<uint8_t>& data) const {
+    if (data.size() != static_cast<size_t>(file_size_))
+      return false;
+    return memcmp(&data[0], file_contents_.get(), file_size_) == 0;
+  }
+
   SysExParser parser_;
+  std::unique_ptr<uint8_t> file_contents_;
+  int file_size_;
 };
 
 TEST(FractalTypes, Fractal16bit) {
   Fractal16bit f = {0x45, 0x19, 0x3};
-  EXPECT_EQ(0x0000ccc5, f.As16bit());
+  EXPECT_EQ(0x0000ccc5, f.Decode());
   for (uint16_t i = 0; i < 0xffff; ++i) {
-    f.From16bit(i);
-    EXPECT_EQ(i, f.As16bit());
+    f.Encode(i);
+    EXPECT_EQ(i, f.Decode());
   }
 }
 
 TEST(FractalTypes, Fractal32bit) {
   Fractal32bit f = {0x4F, 0x10, 0x01, 0x11, 0x04};
-  EXPECT_EQ(0x4F482042u, f.As32bit());
-  f.From32bit(f.As32bit());
+  EXPECT_EQ(0x4F482042u, f.Decode());
+  f.Encode(f.Decode());
   EXPECT_EQ(0x4Fu, f.b1);
   EXPECT_EQ(0x10u, f.b2);
   EXPECT_EQ(0x01u, f.b3);
@@ -61,8 +71,8 @@ TEST(FractalTypes, Fractal32bit) {
   std::hash<int> hash;
   for (int i = 0; i < 0xffff; ++i) {
     uint32_t v = static_cast<uint32_t>(hash(i));
-    f.From32bit(v);
-    ASSERT_EQ(v, f.As32bit());
+    f.Encode(v);
+    ASSERT_EQ(v, f.Decode());
   }
 }
 
@@ -337,6 +347,30 @@ TEST_F(AxeFxII, PresetToJson) {
   root["my_preset"] = preset;
   Json::StyledWriter writer;
   std::cout << writer.write(root);
+}
+
+TEST_F(AxeFxII, ParseIRFile) {
+  ASSERT_TRUE(ParseFile("axefx2/FreakIR.syx"));
+  EXPECT_TRUE(parser_.presets().empty());
+  const IRDataArray& ir = parser_.ir_array();
+  ASSERT_EQ(1u, ir.size());
+  EXPECT_EQ("freakkitchen", ir[0]->name());
+  EXPECT_TRUE(ir[0]->from_edit_buffer());
+}
+
+TEST_F(AxeFxII, SerializeIRFile) {
+  // First read and parse a preset file.
+  ASSERT_TRUE(ParseFile("axefx2/FreakIR.syx"));
+  EXPECT_TRUE(parser_.presets().empty());
+  const IRDataArray& ir = parser_.ir_array();
+  ASSERT_EQ(1u, ir.size());
+  std::vector<uint8_t> serialized;
+  parser_.Serialize(std::bind(&SerializeCallback, _1, &serialized));
+  EXPECT_FALSE(serialized.empty());
+  if (!serialized.empty()) {
+    EXPECT_EQ(static_cast<size_t>(file_size_), serialized.size());
+    EXPECT_TRUE(MatchesFileContent(serialized));
+  }
 }
 
 }  // namespace axefx

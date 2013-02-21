@@ -53,7 +53,7 @@ uint16_t SeptetPair::As16bit() const {
   return (static_cast<uint16_t>(ls) | (static_cast<uint16_t>(ms) << 7));
 }
 
-uint16_t Fractal16bit::As16bit() const {
+uint16_t Fractal16bit::Decode() const {
   uint16_t ret = (b3 & 0x3) << 14;
   ret |= ((b2 & 0x7f) >> 1) << 8;
   ret |= (b2 & 0x1) << 7;
@@ -61,14 +61,13 @@ uint16_t Fractal16bit::As16bit() const {
   return ret;
 }
 
-void Fractal16bit::From16bit(uint16_t value) {
+void Fractal16bit::Encode(uint16_t value) {
   b1 = (value & 0x7F);
   b2 = ((value >> 7) & 0x7F);
   b3 = ((value >> 14) & 0x7F);
 }
 
-uint32_t Fractal32bit::As32bit() const {
-  // TODO: Is this correct for big endian?
+uint32_t Fractal32bit::Decode() const {
   return static_cast<uint32_t>(b1) << 24 |
       (static_cast<uint32_t>(b2) & 1) << 31 |
       (static_cast<uint32_t>(b2) >> 1) << 16 |
@@ -79,8 +78,13 @@ uint32_t Fractal32bit::As32bit() const {
       (static_cast<uint32_t>(b5) & 0xF) << 4;
 }
 
-void Fractal32bit::From32bit(uint32_t value) {
-  uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
+void Fractal32bit::Encode(uint32_t value) {
+  const uint8_t bytes[4] = {
+    (value) & 0xFF,
+    (value >> 8) & 0xFF,
+    (value >> 16) & 0xFF,
+    (value >> 24) & 0xFF,
+  };
   b1 = bytes[3] & 0x7F;
   b2 = (bytes[3] >> 7) | ((bytes[2] & 0x3F) << 1);
   b3 = (bytes[2] >> 6) | ((bytes[1] & 0x1F) << 2);

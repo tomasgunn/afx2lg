@@ -4,6 +4,7 @@
 #include "axefx/axe_fx_sysex_parser.h"
 
 #include "axefx/blocks.h"
+#include "axefx/ir_data.h"
 #include "axefx/preset.h"
 #include "axefx/sysex_types.h"
 
@@ -21,7 +22,10 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
                                    bool parse_parameter_data) {
   const uint8_t* sys_ex_begins = NULL;
   const uint8_t* pos = begin;
+
   shared_ptr<Preset> preset;
+  unique_ptr<IRData> ir_data;
+
   while (pos < end) {
     if (pos[0] == kSysExStart) {
       ASSERT(!sys_ex_begins);
@@ -30,8 +34,9 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
       ASSERT(sys_ex_begins);
       size_t size = (pos - sys_ex_begins) + 1;
       if (!IsFractalSysEx(sys_ex_begins, size)) {
-        ASSERT(false);
-        std::cerr << "This doesn't look like a sysex file for AxeFx\n";
+#ifndef NDEBUG
+        std::cerr << "This doesn't look like an AxeFx preset file\n";
+#endif
         return false;
       }
 
@@ -81,6 +86,36 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
           break;
         }
 
+        case IR_BEGIN: {
+          ASSERT(!ir_data);
+          auto ir_header = static_cast<const IRIdHeader&>(header);
+          ir_data.reset(new IRData(ir_header));
+          break;
+        }
+
+        case IR_DATA:
+          ASSERT(ir_data);
+          if (ir_data) {
+            ir_data->AppendFromSysEx(
+                static_cast<const IRBlockHeader&>(header), size);
+          } else {
+            return false;
+          }
+          break;
+
+        case IR_END: {
+          ASSERT(ir_data);
+          auto checksum = static_cast<const IRChecksumHeader*>(&header);
+          if (!ir_data || checksum->checksum.Decode() != ir_data->Checksum()) {
+            std::cerr
+                << "Invalid/corrupt IR data or not meant for the AxeFx II\n";
+            return false;
+          }
+
+          ir_array_.push_back(std::move(ir_data));
+          break;
+        }
+
         default:
           ASSERT(false);
           return false;
@@ -102,8 +137,9 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
       preset.reset();
     }
   }
+
   ASSERT(!preset.get());  // Half way through parsing a preset?
-  ASSERT(!presets_.empty());
+  ASSERT(!presets_.empty() ^ !ir_array_.empty());
   ASSERT(!sys_ex_begins);
 
   return true;
@@ -114,6 +150,12 @@ bool SysExParser::Serialize(const SysExCallback& callback) const {
     if (!entry.second->Serialize(callback))
       return false;
   }
+
+  for (auto& entry: ir_array_) {
+    if (!entry->Serialize(callback))
+      return false;
+  }
+
   return true;
 }
 

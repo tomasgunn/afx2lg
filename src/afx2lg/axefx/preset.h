@@ -9,6 +9,7 @@
 
 #include "axefx/blocks.h"
 #include "axefx/preset_parameters.h"
+#include "axefx/sysex_types.h"
 
 #include <map>
 #include <string>
@@ -19,10 +20,6 @@ class Value;
 }
 
 namespace axefx {
-
-struct ParameterBlockHeader;
-struct PresetIdHeader;
-struct PresetChecksumHeader;
 
 class Preset {
  public:

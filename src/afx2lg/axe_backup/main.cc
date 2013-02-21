@@ -191,7 +191,7 @@ class BackupWriter {
     switch (header->function()) {
       case axefx::PRESET_ID: {
         auto preset_hdr = static_cast<const axefx::PresetIdHeader*>(header);
-        std::cout << preset_hdr->preset_number.As16bit() << ": ";
+        std::cout << preset_hdr->id.As16bit() << ": ";
 
         current_preset_.reset(new axefx::Preset());
         if (!current_preset_->SetPresetId(*preset_hdr, msg->size())) {

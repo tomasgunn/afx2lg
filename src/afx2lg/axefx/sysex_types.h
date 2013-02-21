@@ -15,6 +15,7 @@ const uint8_t kSysExStart = 0xF0;
 const uint8_t kSysExEnd = 0xF7;
 const int kSysExTerminationByteCount = 2;  // checksum + kSysExEnd == 2 bytes.
 const uint8_t kFractalMidiId[] = { 0x00, 0x01, 0x74 };
+const uint16_t kEditBufferId = (0x7F << 7u);  // Used for presets and IR data.
 
 bool IsFractalSysEx(const uint8_t* sys_ex, size_t size);
 bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, size_t size);
@@ -69,18 +70,17 @@ struct SeptetPair {
 struct Fractal16bit {
   uint8_t b1, b2, b3;
 
-  uint16_t As16bit() const;
-  void From16bit(uint16_t value);
+  uint16_t Decode() const;
+  void Encode(uint16_t value);
 };
 
 // IR data is 32 bit where each 32bit chunk is encoded in 5 bytes.
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx#Obtaining_Parameter_Values_via_SYSEX_Messages
-// TODO: This class probably doesn't work correctly on big endian systems.
 struct Fractal32bit {
   uint8_t b1, b2, b3, b4, b5;
 
-  uint32_t As32bit() const;
-  void From32bit(uint32_t value);
+  uint32_t Decode() const;
+  void Encode(uint32_t value);
 };
 
 struct FractalSysExHeader {
@@ -105,43 +105,56 @@ struct FractalSysExEnd {
   uint8_t sys_ex_end;  // kSysExend.
 };
 
-struct PresetIdHeader : public FractalSysExHeader {
-  PresetIdHeader() : FractalSysExHeader(PRESET_ID) {}
+template<FunctionId func, typename UnknownType>
+struct IdHeader : public FractalSysExHeader {
+  IdHeader() : FractalSysExHeader(func) {}
 
-  PresetIdHeader(uint16_t preset_id)
-      : FractalSysExHeader(PRESET_ID),
-        preset_number(preset_id),
+  IdHeader(uint16_t entry_id)
+      : FractalSysExHeader(func),
+        id(entry_id),
         unknown(0x10) {
     end.CalculateChecksum(this);
   }
 
-  SeptetPair preset_number;
-  SeptetPair unknown;  // always 0x10
+  SeptetPair id;
+  UnknownType unknown;  // always 0x10
   FractalSysExEnd end;
 };
 
-struct ParameterBlockHeader : public FractalSysExHeader {
-  ParameterBlockHeader(uint8_t value_count)
-      : FractalSysExHeader(PRESET_PARAMETERS),
+typedef IdHeader<PRESET_ID, SeptetPair> PresetIdHeader;
+typedef IdHeader<IR_BEGIN, uint8_t> IRIdHeader;
+
+// Common template class for header types that contain 7bit encoded data.
+template<typename EncodingType, FunctionId func>
+struct DataBlockHeader : public FractalSysExHeader {
+  DataBlockHeader(uint8_t value_count)
+      : FractalSysExHeader(func),
         value_count(value_count),
         reserved(0u) {
   }
 
-  uint8_t value_count;  // I've only ever seen this be 0x40.
-  uint8_t reserved;  // Always 0.
-  Fractal16bit values[1];  // Actual size is |value_count|.
+  uint8_t value_count;     // Typically 0x40 (16bit) or 0x20 (32bit).
+  uint8_t reserved;        // Always 0.
+  EncodingType values[1];  // Actual size is |value_count|.
 };
 
-struct PresetChecksumHeader : public FractalSysExHeader {
-  PresetChecksumHeader() : FractalSysExHeader(PRESET_CHECKSUM) {}
-  PresetChecksumHeader(uint16_t sum)
-      : FractalSysExHeader(PRESET_CHECKSUM) {
-    checksum.From16bit(sum);
+typedef DataBlockHeader<Fractal16bit, PRESET_PARAMETERS> ParameterBlockHeader;
+typedef DataBlockHeader<Fractal32bit, IR_DATA> IRBlockHeader;
+
+template<typename EncodingType, typename int_type, FunctionId func>
+struct ChecksumHeader : public FractalSysExHeader {
+  ChecksumHeader() : FractalSysExHeader(func) {}
+  ChecksumHeader(int_type sum) : FractalSysExHeader(func) {
+    checksum.Encode(sum);
     end.CalculateChecksum(this);
   }
-  Fractal16bit checksum;
+  EncodingType checksum;
   FractalSysExEnd end;
 };
+
+typedef ChecksumHeader<Fractal16bit, uint16_t, PRESET_CHECKSUM>
+    PresetChecksumHeader;
+typedef ChecksumHeader<Fractal32bit, uint32_t, IR_END> IRChecksumHeader;
 
 struct BankDumpRequest : public FractalSysExHeader {
   enum BankId {

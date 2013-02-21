@@ -56,6 +56,7 @@ class BlockSceneState {
 class BlockInMatrix {
  public:
   BlockInMatrix();
+  BlockInMatrix(uint16_t block, uint16_t mask);
 
   bool is_shunt() const;
   AxeFxIIBlockID block() const { return static_cast<AxeFxIIBlockID>(block_); }

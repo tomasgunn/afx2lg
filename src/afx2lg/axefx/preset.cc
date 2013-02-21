@@ -12,7 +12,6 @@
 namespace axefx {
 
 const int kInvalidPresetId = -1;
-const int kPresetIdBuffer = (0x7F << 7u);
 const uint16_t kCurrentParameterVersion = 0x204;
 
 Preset::Preset() : id_(kInvalidPresetId) {}
@@ -37,7 +36,7 @@ bool Preset::is_global_setting() const {
 }
 
 bool Preset::from_edit_buffer() const {
-  return id_ == kPresetIdBuffer;
+  return id_ == static_cast<int>(kEditBufferId);
 }
 
 void Preset::SetAsEditBuffer() {
@@ -45,7 +44,7 @@ void Preset::SetAsEditBuffer() {
   ASSERT(!is_global_setting());
   if (is_global_setting() || !valid())
     return;
-  id_ = kPresetIdBuffer;
+  id_ = static_cast<uint16_t>(kEditBufferId);
 }
 
 BlockParameters* Preset::LookupBlock(AxeFxIIBlockID block) {
@@ -63,12 +62,12 @@ bool Preset::SetPresetId(const PresetIdHeader& header, size_t size) {
   ASSERT(size == sizeof(header));
   ASSERT(header.unknown.As16bit() == 0x10);  // <- not sure what this is.
 
-  id_ = header.preset_number.As16bit();
-  if (header.preset_number.ms == 0x7f && header.preset_number.ls == 0x0) {
+  id_ = header.id.As16bit();
+  if (header.id.ms == 0x7f && header.id.ls == 0x0) {
     // This is a special case that means the preset is destined for (or comes
-    // from) the edit buffer.  In this case, we just set the id to -1.
+    // from) the edit buffer.
     // http://forum.fractalaudio.com/axe-fx-ii-discussion/58581-help-loading-presets-using-sysex-librarian.html#post732659
-    ASSERT(id_ == kPresetIdBuffer);
+    ASSERT(id_ == static_cast<uint16_t>(kEditBufferId));
   }
 
   return valid();
@@ -92,7 +91,7 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size,
   // is simply a bug in the AxeFx when realtime sysex sending is set to "All".
   if (header) {
     if (size != sizeof(PresetChecksumHeader) ||
-        header->checksum.As16bit() != params_.Checksum()) {
+        header->checksum.Decode() != params_.Checksum()) {
       return false;
     }
   }

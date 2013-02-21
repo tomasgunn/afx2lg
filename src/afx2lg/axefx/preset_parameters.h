@@ -6,15 +6,12 @@
 #define AXE_FX_PRESET_PARAMETERS_H_
 
 #include "common/common_types.h"
+#include "axefx/sysex_callback.h"
+#include "axefx/sysex_types.h"
 
-#include <functional>
 #include <vector>
 
 namespace axefx {
-
-typedef std::function<void(const std::vector<uint8_t>&)> SysExCallback;
-
-struct ParameterBlockHeader;
 
 class PresetParameters : public std::vector<uint16_t> {
  public:

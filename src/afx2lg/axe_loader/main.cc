@@ -132,27 +132,23 @@ int main(int argc, char* argv[]) {
   unique_ptr<midi::MidiOut> midi_out(midi::MidiOut::OpenAxeFx());
   if (!midi_in || !midi_out) {
     std::cerr << "Failed to open AxeFx midi devices\n";
-    //return -1;
+    return -1;
   }
 
   axefx::SysExParser parser;
   if (!parser.ParseSysExBuffer(buffer.get(), buffer.get() + size, false)) {
     std::cerr << "Failed to parse preset file.\n";
-    // TODO: Support cab files?
     return -1;
   }
 
-  if (parser.presets().size() != 1u) {
-    std::cerr << "Sorry, bank files aren't yet supported.\n";
-    // TODO: Support bank files.
-    return -1;
+  if (parser.presets().size() == 1u) {
+    shared_ptr<axefx::Preset> p(parser.presets().begin()->second);
+    p->SetAsEditBuffer();
   }
 
-  shared_ptr<axefx::Preset> p(parser.presets().begin()->second);
-  p->SetAsEditBuffer();
   MessageQueue messages;
-  if (!p->Serialize(std::bind(&SerializeCallback, _1, &messages))) {
-    std::cerr << "Failed to re-serialize the preset\n";
+  if (!parser.Serialize(std::bind(&SerializeCallback, _1, &messages))) {
+    std::cerr << "An error occured while sending sysex data.\n";
     return -1;
   }
 

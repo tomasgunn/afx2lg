@@ -198,6 +198,10 @@ void BlockSceneState::ToJson(bool supports_xy, Json::Value* out) const {
 
 BlockInMatrix::BlockInMatrix() : block_(0), input_mask_(0) {}
 
+BlockInMatrix::BlockInMatrix(uint16_t block, uint16_t mask)
+    : block_(block), input_mask_(mask) {
+}
+
 bool BlockInMatrix::is_shunt() const {
   // NOTE: The maximum value is just a guess.
   return block_ >= 200 && block_ < (200 + (12 * 4));
