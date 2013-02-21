@@ -8,9 +8,9 @@ vars = {
 
 deps = {
   "src/gtest": "http://googletest.googlecode.com/svn/trunk",
+  "src/jsoncpp": "https://jsoncpp.svn.sourceforge.net/svnroot/jsoncpp/trunk/jsoncpp",
+  "src/JUCE": "git://github.com/julianstorer/JUCE.git",
   "src/tools/gyp": "http://gyp.googlecode.com/svn/trunk",
-  "src/jsoncpp":
-    "https://jsoncpp.svn.sourceforge.net/svnroot/jsoncpp/trunk/jsoncpp"
 }
 
 deps_os = {
