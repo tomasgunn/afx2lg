@@ -80,10 +80,10 @@ uint32_t Fractal32bit::Decode() const {
 
 void Fractal32bit::Encode(uint32_t value) {
   const uint8_t bytes[4] = {
-    (value) & 0xFF,
-    (value >> 8) & 0xFF,
-    (value >> 16) & 0xFF,
-    (value >> 24) & 0xFF,
+    static_cast<uint8_t>((value) & 0xFF),
+    static_cast<uint8_t>((value >> 8) & 0xFF),
+    static_cast<uint8_t>((value >> 16) & 0xFF),
+    static_cast<uint8_t>((value >> 24) & 0xFF),
   };
   b1 = bytes[3] & 0x7F;
   b2 = (bytes[3] >> 7) | ((bytes[2] & 0x3F) << 1);
