@@ -18,18 +18,9 @@ namespace {
 
 bool IsVersionSupported(uint16_t version) {
   // 0 == 516 for fw9 and higher. 514 for older.
-  static const uint16_t kSupportedVersions[] = {
-    kCurrentParameterVersion,
-    0x202,
-    0x105,
-  };
-
-  for (const auto& v: kSupportedVersions) {
-    if (version == v)
-      return true;
-  }
-
-  return false;
+  // Versions 0x01nn seem to be using the same format, so we optimistically
+  // allow them to pass.
+  return version >= 0x0100 && version <= kCurrentParameterVersion;
 }
 
 }  // namespace
