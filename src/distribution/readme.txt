@@ -1,19 +1,9 @@
 Disclaimer: http://sam.zoy.org/wtfpl/COPYING
 
-NOTE: This is the third update of this utility.
+NOTE: This is the fourth update of this utility.
 Still TODO: Add version information!
 
 This package contains three AxeFx II utilities for Windows and Mac.
-
-afx2lg:
-    A simple utility to update and generate setup files for
-    the Little Giant from Gordius (http://gordius.be).
-    You can run the utility without any arguments and it will prompt
-    you for input.  If you do prefer to use arguments run "afx2lg -?"
-    for details.
-
-    For a little tutorial on how to use this utility, see
-    'example_setup.lgp' below.
 
 axebackup:
     This is a backup utility for AxeFx II (tested with firmware 9).
@@ -31,19 +21,29 @@ axebackup:
     the backup.
 
 axeloader:
-    Use it to send preset files to the AxeFx.  The utility will send the preset
-    file to the current edit buffer (overriding the embedded preset id) so that
+    Use it to send preset, backup or IR files to the AxeFx.
+    When sending only a single preset, the utility will send the preset
+    to the current edit buffer, overriding the embedded preset id, so that
     no presets are ever overwritten.  This is to allow the user to pick a place
     for storing the preset or to preview a preset without saving.  I.e. it's
     great for previewing and adding AxeExchange presets to your AxeFx.
 
-    If you set it up as the default handler for .syx files, it will send the
-    prest file directly to the AxeFx when you double click the .syx file.
+    If you set axeloader up as the default handler for .syx files, it will send
+    the data directly to the AxeFx when you double click the .syx file.
+    Alternatively, you can drag and drop .syx files onto axeloader to send it
+    to the AxeFx.
 
-    The utility only supports preset files right now, but support for bank files
-    and user cabs should be possible in the future.
+afx2lg:
+    A simple utility to update and generate setup files for
+    the Little Giant from Gordius (http://gordius.be).
+    You can run the utility without any arguments and it will prompt
+    you for input.  If you do prefer to use arguments run "afx2lg -?"
+    for details.
+
+    For more, see 'example_setup.lgp' below.
 
 example_setup.lgp:
+
     This is an example setup file (actually it's what I use in
     conjunction with afx2lg) made with Control Center.
     Open this file up in Control Center, take a look at the patches,
@@ -73,14 +73,15 @@ example_setup.lgp:
        and the location of the exported setup file (step 2).
        Additionally you'll need to provide a name for the output file.
        The output will look something like this:
-	   
-        I need a path to a LittleGiant exported text file: mysetup.txt        I need a path to a preset file or bank (.syx): BankA.syx
+
+        I need a path to a LittleGiant exported text file: mysetup.txt
+        I need a path to a preset file or bank (.syx): BankA.syx
         Enter a preset range or * for all:*
         Enter an output file name:my_new_setup.txt
 
     4. Open up Control Center again and import the output file (my_new_setup.txt)
        via 'File->Import from...->Text...'.
-	   
+
     5. Voila, you have your new setup file with proper preset names from the AxeFx
        that you can send to your LG.
 
