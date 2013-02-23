@@ -108,6 +108,7 @@ void QueueNext(const SharedThreadLoop& loop,
   } else {
     std::function<void()> on_complete(std::bind(&QueueNext, loop, midi_out, q));
     loop->QueueTask(std::bind(&SendMessage, loop, midi_out, q, on_complete));
+    std::cout << "#";
   }
 }
 
@@ -154,6 +155,8 @@ int main(int argc, char* argv[]) {
     p->SetAsEditBuffer();
   }
 
+  std::cout << "Sending data...\n";
+
   MessageQueue messages;
   if (!parser.Serialize(std::bind(&SerializeCallback, _1, &messages))) {
     std::cerr << "An error occurred while sending sysex data.\n";
@@ -164,7 +167,7 @@ int main(int argc, char* argv[]) {
   QueueNext(loop, midi_out.get(), &messages);
   loop->Run();
 
-  std::cout << "All done\n";
+  std::cout << "\n\nAll done\n";
 
   return 0;
 }
