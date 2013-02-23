@@ -103,9 +103,11 @@ std::string GetDate() {
 #endif
   std::ostringstream stream;
   // Same as "%d%02d%02d_%02d%02d".
-  stream << std::setfill('0') << std::setw(2) << (1900 + timeinfo.tm_year)
-         << (timeinfo.tm_mon + 1) << timeinfo.tm_mday << '_' << timeinfo.tm_hour
-         << timeinfo.tm_min;
+  stream << std::setfill('0') << (1900 + timeinfo.tm_year)
+         << std::setw(2) << (timeinfo.tm_mon + 1)
+         << std::setw(2) << timeinfo.tm_mday << '_'
+         << std::setw(2) << timeinfo.tm_hour
+         << std::setw(2) << timeinfo.tm_min;
   return stream.str();
 }
 
