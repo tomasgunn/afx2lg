@@ -34,7 +34,7 @@ bool IsVersionSupported(uint16_t version) {
 
 }  // namespace
 
-Preset::Preset() : id_(kInvalidPresetId), version_(kCurrentParameterVersion) {}
+Preset::Preset() : version_(kCurrentParameterVersion), id_(kInvalidPresetId) {}
 Preset::~Preset() {}
 
 void Preset::set_id(int id) {
