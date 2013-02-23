@@ -14,7 +14,27 @@ namespace axefx {
 const int kInvalidPresetId = -1;
 const uint16_t kCurrentParameterVersion = 0x204;
 
-Preset::Preset() : id_(kInvalidPresetId) {}
+namespace {
+
+bool IsVersionSupported(uint16_t version) {
+  // 0 == 516 for fw9 and higher. 514 for older.
+  static const uint16_t kSupportedVersions[] = {
+    kCurrentParameterVersion,
+    0x202,
+    0x105,
+  };
+
+  for (const auto& v: kSupportedVersions) {
+    if (version == v)
+      return true;
+  }
+
+  return false;
+}
+
+}  // namespace
+
+Preset::Preset() : id_(kInvalidPresetId), version_(kCurrentParameterVersion) {}
 Preset::~Preset() {}
 
 void Preset::set_id(int id) {
@@ -105,11 +125,9 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size,
     return true;
   }
 
-  uint16_t version = *p;
-  // 0 == 516 for fw9 and higher. 514 for older.
-  if (version != kCurrentParameterVersion && version != 0x202) {
-    std::cerr << "Unsupported syx file - 0x" << std::hex << version << std::dec
-              << std::endl;
+  version_ = *p;
+  if (!IsVersionSupported(version_)) {
+    std::cerr << "Unsupported syx version - " << version_ << std::endl;
     return false;
   }
 
@@ -229,7 +247,7 @@ void Preset::FillParameters(PresetParameters* params) const {
   p.assign(2048, 0);
 
   size_t pos = 0;
-  p[pos++] = kCurrentParameterVersion;
+  p[pos++] = version_;
   pos++;  // Unknown value.
   for (size_t i = 0; i < 31; ++i)
     p[pos++] = (i < name_.length()) ? name_[i] : ' ';

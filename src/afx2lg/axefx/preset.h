@@ -69,6 +69,7 @@ class Preset {
   PresetParameters params_;
 
   // Valid after parsing only.
+  uint16_t version_;
   int id_;
   std::string name_;
   Matrix matrix_;

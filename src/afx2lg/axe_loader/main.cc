@@ -30,9 +30,7 @@ void PrintUsage() {
       "The utility will load a preset file into the AxeFx' edit buffer.\n"
       "The preset will not be stored or overwrite an existing preset\n"
       "regardless of the default target ID of the preset file.  You must\n"
-      "store the preset yourself where you want it.\n"
-      "\n"
-      "Currently bank files and user cabs are not supported.\n\n";
+      "store the preset yourself where you want it.\n\n";
 }
 
 // TODO: Move to common and remove duplicates.
@@ -113,17 +111,25 @@ void QueueNext(const SharedThreadLoop& loop,
   }
 }
 
+void Wait() {
+  std::cout << "Press any key to continue." << std::endl;
+  std::cin.get();
+}
+
 int main(int argc, char* argv[]) {
   std::string path;
   if (!ParseArgs(argc, argv, &path)) {
     PrintUsage();
+    Wait();
     return -1;
   }
 
   unique_ptr<uint8_t> buffer;
   size_t size = 0u;
-  if (!ReadFileIntoBuffer(path, &buffer, &size))
+  if (!ReadFileIntoBuffer(path, &buffer, &size)) {
+    Wait();
     return -1;
+  }
 
   std::cout << "Opening MIDI devices...\n";
 
@@ -132,12 +138,14 @@ int main(int argc, char* argv[]) {
   unique_ptr<midi::MidiOut> midi_out(midi::MidiOut::OpenAxeFx());
   if (!midi_in || !midi_out) {
     std::cerr << "Failed to open AxeFx midi devices\n";
+    Wait();
     return -1;
   }
 
   axefx::SysExParser parser;
   if (!parser.ParseSysExBuffer(buffer.get(), buffer.get() + size, false)) {
     std::cerr << "Failed to parse preset file.\n";
+    Wait();
     return -1;
   }
 
@@ -148,7 +156,8 @@ int main(int argc, char* argv[]) {
 
   MessageQueue messages;
   if (!parser.Serialize(std::bind(&SerializeCallback, _1, &messages))) {
-    std::cerr << "An error occured while sending sysex data.\n";
+    std::cerr << "An error occurred while sending sysex data.\n";
+    Wait();
     return -1;
   }
 
