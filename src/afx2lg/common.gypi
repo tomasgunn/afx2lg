@@ -136,6 +136,7 @@
         'defines': [
           'DYNAMIC_ANNOTATIONS_ENABLED=1',
           'WTF_USE_DYNAMIC_ANNOTATIONS=1',
+          '_DEBUG',
         ],
         'xcode_settings': {
           'COPY_PHASE_STRIP': 'NO',
