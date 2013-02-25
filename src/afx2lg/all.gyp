@@ -11,7 +11,7 @@
         'axe_backup/axe_backup.gyp:*',
         'axe_http/axe_http.gyp:*',
         'axe_loader/axe_loader.gyp:*',
-        'juce/juce.gyp:*',
+        'axys/axys.gyp:*',
         'main/afx2lg.gyp:*',
         'test/test.gyp:*',
       ],

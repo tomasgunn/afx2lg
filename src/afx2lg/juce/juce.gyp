@@ -460,6 +460,14 @@
               'RuntimeTypeInfo': 'true',
             },
           },
+          'direct_dependent_settings': {
+            'msvs_settings': {
+              'VCCLCompilerTool': {
+                'WarnAsError': 'false',
+                'RuntimeTypeInfo': 'true',
+              },
+            },
+          },
         }],
 
         ['OS=="mac"', {
@@ -467,6 +475,13 @@
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'CLANG_ENABLE_OBJC_ARC': 'NO',
              'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',    # -Werror
+          },
+          'direct_dependent_settings': {
+            'xcode_settings': {
+              'GCC_ENABLE_CPP_RTTI': 'YES',
+              'CLANG_ENABLE_OBJC_ARC': 'NO',
+               'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',    # -Werror
+            },
           },
           'sources': [
             "<(DEPTH)/JUCE/modules/juce_audio_devices/juce_audio_devices.mm",
@@ -500,7 +515,12 @@
         ['OS=="linux"', {
           'cflags_cc!': [
             '-fno-rtti',
-          ]
+          ],
+          'direct_dependent_settings': {
+            'cflags_cc!': [
+              '-fno-rtti',
+            ],
+          },
         }],
       ],
     },
