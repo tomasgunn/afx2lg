@@ -454,6 +454,11 @@
       ],
       'conditions': [
         # JUCE requires RTTI :-/ so we have to override common.gypi.
+        # There are also plenty of warnings we hit when compiling Juce so
+        # we'll have to disable warnings-as-errors here. :-(
+        # The JUCE coding style prevents use of things like 'override'
+        # ('virtual' isn't used when overriding virtual methods) so we
+        # can't use that either.
         ['OS=="win"', {
           'msvs_settings': {
             'VCCLCompilerTool': {
@@ -466,6 +471,20 @@
                 'WarnAsError': 'false',
                 'RuntimeTypeInfo': 'true',
               },
+              'VCLinkerTool': {
+                'AdditionalDependencies': [
+                  'kernel32.lib',
+                  'gdi32.lib',
+                  'comdlg32.lib',
+                  'advapi32.lib',
+                  'shell32.lib',
+                  'ole32.lib',
+                  'oleaut32.lib',
+                  'user32.lib',
+                  'uuid.lib',
+                  'delayimp.lib',
+                ],
+              },
             },
           },
         }],
@@ -474,13 +493,13 @@
           'xcode_settings': {
             'GCC_ENABLE_CPP_RTTI': 'YES',
             'CLANG_ENABLE_OBJC_ARC': 'NO',
-             'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',    # -Werror
+            'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',    # -Werror
           },
           'direct_dependent_settings': {
             'xcode_settings': {
               'GCC_ENABLE_CPP_RTTI': 'YES',
               'CLANG_ENABLE_OBJC_ARC': 'NO',
-               'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',    # -Werror
+              'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',    # -Werror
             },
           },
           'sources': [

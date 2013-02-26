@@ -273,7 +273,7 @@ bool MainView::keyPressed (const KeyPress& key)
     //[/UserCode_keyPressed]
 }
 
-bool MainView::keyStateChanged (const bool isKeyDown)
+bool MainView::keyStateChanged (bool isKeyDown)
 {
     //[UserCode_keyStateChanged] -- Add your code here...
     DBG(__FUNCTION__);

@@ -49,7 +49,7 @@ class MainView  : public Component,
   void mouseDoubleClick (const MouseEvent& e);
   void mouseWheelMove (const MouseEvent& e, const MouseWheelDetails& wheel);
   bool keyPressed (const KeyPress& key);
-  bool keyStateChanged (const bool isKeyDown);
+  bool keyStateChanged (bool isKeyDown);
   void modifierKeysChanged (const ModifierKeys& modifiers);
   void focusGained (FocusChangeType cause);
   void focusLost (FocusChangeType cause);
