@@ -6,7 +6,7 @@
 #include "axefx/axe_fx_sysex_parser.h"
 #include "axefx/preset.h"
 #include "axefx/sysex_types.h"
-#include "axys/MainWnd.h"
+#include "axys/main_view.h"
 #include "midi/midi_in.h"
 #include "midi/midi_out.h"
 
@@ -178,11 +178,11 @@ int main(int argc, char* argv[]) {
 }
 */
 
-class MainWnd  : public DocumentWindow {
+class MainWnd  : public juce::DocumentWindow {
  public:
   MainWnd()
-      : DocumentWindow(
-          "Axys", Colours::lightgrey,
+      : juce::DocumentWindow(
+          "Axys", juce::Colours::lightgrey,
           DocumentWindow::minimiseButton | DocumentWindow::closeButton,
           true) {
     // Create an instance of our main content component, and add it to our window..
@@ -196,8 +196,8 @@ class MainWnd  : public DocumentWindow {
     // (the content component will be deleted automatically)
   }
 
-  void closeButtonPressed() {
-    JUCEApplication::quit();
+  virtual void closeButtonPressed() {
+    juce::JUCEApplication::quit();
   }
 };
 

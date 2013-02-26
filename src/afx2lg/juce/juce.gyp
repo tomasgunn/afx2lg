@@ -473,16 +473,16 @@
               },
               'VCLinkerTool': {
                 'AdditionalDependencies': [
-                  'kernel32.lib',
-                  'gdi32.lib',
-                  'comdlg32.lib',
                   'advapi32.lib',
-                  'shell32.lib',
+                  'comdlg32.lib',
+                  'delayimp.lib',
+                  'gdi32.lib',
+                  'kernel32.lib',
                   'ole32.lib',
                   'oleaut32.lib',
+                  'shell32.lib',
                   'user32.lib',
                   'uuid.lib',
-                  'delayimp.lib',
                 ],
               },
             },
@@ -491,43 +491,43 @@
 
         ['OS=="mac"', {
           'xcode_settings': {
-            'GCC_ENABLE_CPP_RTTI': 'YES',
             'CLANG_ENABLE_OBJC_ARC': 'NO',
+            'GCC_ENABLE_CPP_RTTI': 'YES',
             'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',    # -Werror
           },
           'direct_dependent_settings': {
             'xcode_settings': {
-              'GCC_ENABLE_CPP_RTTI': 'YES',
               'CLANG_ENABLE_OBJC_ARC': 'NO',
+              'GCC_ENABLE_CPP_RTTI': 'YES',
               'GCC_TREAT_WARNINGS_AS_ERRORS': 'NO',    # -Werror
             },
           },
           'sources': [
             "<(DEPTH)/JUCE/modules/juce_audio_devices/juce_audio_devices.mm",
+            "<(DEPTH)/JUCE/modules/juce_audio_formats/juce_audio_formats.mm",
             "<(DEPTH)/JUCE/modules/juce_audio_processors/juce_audio_processors.mm",
             "<(DEPTH)/JUCE/modules/juce_audio_utils/juce_audio_utils.mm",
             "<(DEPTH)/JUCE/modules/juce_core/juce_core.mm",
-            "<(DEPTH)/JUCE/modules/juce_audio_formats/juce_audio_formats.mm",
             "<(DEPTH)/JUCE/modules/juce_events/juce_events.mm",
             "<(DEPTH)/JUCE/modules/juce_graphics/juce_graphics.mm",
+            "<(DEPTH)/JUCE/modules/juce_gui_basics/juce_gui_basics.mm",
             "<(DEPTH)/JUCE/modules/juce_gui_extra/juce_gui_extra.mm",
             "<(DEPTH)/JUCE/modules/juce_opengl/juce_opengl.mm",
             "<(DEPTH)/JUCE/modules/juce_video/juce_video.mm",
-            "<(DEPTH)/JUCE/modules/juce_gui_basics/juce_gui_basics.mm",
           ],
         }, {
           'sources': [
             "<(DEPTH)/JUCE/modules/juce_audio_devices/juce_audio_devices.cpp",
+            "<(DEPTH)/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp",
             "<(DEPTH)/JUCE/modules/juce_audio_processors/juce_audio_processors.cpp",
             "<(DEPTH)/JUCE/modules/juce_audio_utils/juce_audio_utils.cpp",
             "<(DEPTH)/JUCE/modules/juce_core/juce_core.cpp",
-            "<(DEPTH)/JUCE/modules/juce_audio_formats/juce_audio_formats.cpp",
             "<(DEPTH)/JUCE/modules/juce_events/juce_events.cpp",
             "<(DEPTH)/JUCE/modules/juce_graphics/juce_graphics.cpp",
+            "<(DEPTH)/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp",
             "<(DEPTH)/JUCE/modules/juce_gui_extra/juce_gui_extra.cpp",
             "<(DEPTH)/JUCE/modules/juce_opengl/juce_opengl.cpp",
             "<(DEPTH)/JUCE/modules/juce_video/juce_video.cpp",
-            "<(DEPTH)/JUCE/modules/juce_gui_basics/juce_gui_basics.cpp",
           ]
         }],
 

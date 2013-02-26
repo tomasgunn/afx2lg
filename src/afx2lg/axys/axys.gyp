@@ -14,14 +14,16 @@
     'dependencies': [
       '../axefx/axefx.gyp:*',
       '../common/base.gyp:*',
-      '../midi/midi.gyp:*',
       '../juce/juce.gyp:*',
+      '../midi/midi.gyp:*',
     ],
     'sources': [
       '../common/common_types.h',
       'main.cc',
-      'MainWnd.h',
+      'main_view.cc',
+      'main_view.h',
       'MainWnd.cpp',
+      'MainWnd.h',
     ],
     'conditions': [
       ['OS=="win"', {

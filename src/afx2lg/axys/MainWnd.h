@@ -4,57 +4,42 @@
 // This is a generated file created by the Jucer!
 
 #pragma once
-#ifndef __JUCER_HEADER_MAINVIEW_MAINWND_FC92E9F8__
-#define __JUCER_HEADER_MAINVIEW_MAINWND_FC92E9F8__
+#ifndef __JUCER_HEADER_MAINVIEWBASE_MAINWND_1EDCBC8A__
+#define __JUCER_HEADER_MAINVIEWBASE_MAINWND_1EDCBC8A__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "juce/JuceHeader.h"
-using namespace juce;
+using juce::Component;
+using juce::Button;
+using juce::ButtonListener;
+using juce::TextButton;
+using juce::ToggleButton;
+using juce::TreeView;
+using juce::Graphics;
+using juce::GroupComponent;
 //[/Headers]
 
 
 //[Comments]
 // The main window.
 //[/Comments]
-class MainView  : public Component,
-                  public ButtonListener {
+class MainViewBase  : public Component,
+                      public ButtonListener {
  public:
-  MainView();
-  ~MainView();
+  MainViewBase();
+  ~MainViewBase();
 
   //[UserMethods]     -- You can add your own custom methods in this section.
-  void OpenSysEx();
+  TextButton* close_btn() { return close_btn_; }
+  TreeView* tree_view() { return tree_view_; }
+  TextButton* open_btn() { return open_btn_; }
+  TextButton* send_btn() { return send_btn_; }
+  ToggleButton* edit_buffer_chk() { return edit_buffer_chk_; }
   //[/UserMethods]
 
   void paint (Graphics& g);
   void resized();
   void buttonClicked (Button* buttonThatWasClicked);
-  void visibilityChanged();
-  void moved();
-  void parentHierarchyChanged();
-  void parentSizeChanged();
-  void lookAndFeelChanged();
-  bool hitTest (int x, int y);
-  void broughtToFront();
-  void filesDropped (const StringArray& filenames, int mouseX, int mouseY);
-  void handleCommandMessage (int commandId);
-  void childrenChanged();
-  void enablementChanged();
-  void mouseMove (const MouseEvent& e);
-  void mouseEnter (const MouseEvent& e);
-  void mouseExit (const MouseEvent& e);
-  void mouseDown (const MouseEvent& e);
-  void mouseDrag (const MouseEvent& e);
-  void mouseUp (const MouseEvent& e);
-  void mouseDoubleClick (const MouseEvent& e);
-  void mouseWheelMove (const MouseEvent& e, const MouseWheelDetails& wheel);
-  bool keyPressed (const KeyPress& key);
-  bool keyStateChanged (bool isKeyDown);
-  void modifierKeysChanged (const ModifierKeys& modifiers);
-  void focusGained (FocusChangeType cause);
-  void focusLost (FocusChangeType cause);
-  void focusOfChildComponentChanged (FocusChangeType cause);
-  void inputAttemptWhenModal();
 
 
  private:
@@ -70,10 +55,10 @@ class MainView  : public Component,
   ToggleButton* edit_buffer_chk_;
 
 
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainView);
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainViewBase);
 };
 
 //[EndFile] You can add extra defines here...
 //[/EndFile]
 
-#endif   // __JUCER_HEADER_MAINVIEW_MAINWND_FC92E9F8__
+#endif   // __JUCER_HEADER_MAINVIEWBASE_MAINWND_1EDCBC8A__
