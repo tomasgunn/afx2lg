@@ -462,6 +462,7 @@
         ['OS=="win"', {
           'msvs_settings': {
             'VCCLCompilerTool': {
+              'WarnAsError': 'false',
               'RuntimeTypeInfo': 'true',
             },
           },
