@@ -330,7 +330,7 @@ int main(int argc, char* argv[]) {
     std::ofstream& j = files[i].json;
     if (files[i].enabled &&
         CreateOutputFile(&files[i].name, &f) &&
-        CreateOutputFile(&files[i].json_name, &j)) {
+        (!options.json || CreateOutputFile(&files[i].json_name, &j))) {
       std::cout << "\nWriting " << files[i].description << " to "
                 << files[i].name << ".\n";
       BackupWriter writer(&f, loop);
@@ -361,8 +361,10 @@ int main(int argc, char* argv[]) {
           return -1;
         }
 
-        j << writer.ToJson();
-        j.flush();
+        if (options.json) {
+          j << writer.ToJson();
+          j.flush();
+        }
         std::cout << "\n" << "Backup " << files[i].name << " ready.\n";
       } else {
         std::cerr << "Failed to send bank request.\n";
