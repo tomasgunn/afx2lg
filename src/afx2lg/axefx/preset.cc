@@ -12,15 +12,15 @@
 namespace axefx {
 
 const int kInvalidPresetId = -1;
-const uint16_t kCurrentParameterVersion = 0x204;
+const uint16_t kCurrentParameterVersion = 0x0206;
 
 namespace {
 
 bool IsVersionSupported(uint16_t version) {
-  // 0 == 516 for fw9 and higher. 514 for older.
   // Versions 0x01nn seem to be using the same format, so we optimistically
-  // allow them to pass.
-  return version >= 0x0100 && version <= kCurrentParameterVersion;
+  // allow them to pass.  We also assume that all version with major version
+  // 0x02 will have the same format.
+  return version >= 0x0100 && version < 0x0300;
 }
 
 }  // namespace

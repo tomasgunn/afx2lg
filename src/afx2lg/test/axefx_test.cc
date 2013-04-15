@@ -139,6 +139,24 @@ TEST_F(AxeFxII, ParseMultipleBankFiles) {
   EXPECT_EQ(arraysize(files) * 128u, parser_.presets().size());
 }
 
+TEST_F(AxeFxII, ParseMultipleBankFilesV10) {
+  const char* files[] = {
+    "axefx2/v10/V10_Bank_A.syx",
+    "axefx2/v10/V10_Bank_B.syx",
+    "axefx2/v10/V10_Bank_C.syx",
+  };
+
+  for (size_t i = 0; i < arraysize(files); ++i)
+    EXPECT_TRUE(ParseFile(files[i]));
+
+  EXPECT_EQ(arraysize(files) * 128u, parser_.presets().size());
+}
+
+TEST_F(AxeFxII, ParseHugeBankFileV10) {
+  EXPECT_TRUE(ParseFile("axefx2/v10/V10_All_Banks.syx"));
+  EXPECT_EQ(3 * 128u, parser_.presets().size());
+}
+
 TEST_F(AxeFxII, ParsePresetFile) {
   ASSERT_TRUE(ParseFile("axefx2/p000318_DynamicJCM800.syx"));
   const PresetMap& presets = parser_.presets();
