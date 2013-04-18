@@ -41,6 +41,7 @@
             '$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
             '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
             '$(SDKROOT)/System/Library/Frameworks/CoreMIDI.framework',
+            '$(SDKROOT)/System/Library/Frameworks/IOKit.framework',
           ],
         },
       }],
