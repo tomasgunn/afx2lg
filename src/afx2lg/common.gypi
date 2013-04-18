@@ -31,7 +31,7 @@
     'mac_debug_optimization%': '0',   # Use -O0 unless overridden
     'mac_deployment_target%': '10.7',
     'mac_release_optimization%': '3', # Use -O3 unless overridden
-    'mac_sdk%': '10.7',
+    'mac_sdk%': '', # Use the latest version.
     'mac_sdk_path%': '',
     'mac_strip_release%': 0,
     'msvs_debug_link_incremental%': 1,
@@ -961,6 +961,7 @@
                                                     # (Equivalent to -fPIC)
           # MACOSX_DEPLOYMENT_TARGET maps to -mmacosx-version-min
           'MACOSX_DEPLOYMENT_TARGET': '<(mac_deployment_target)',
+          'COMBINE_HIDPI_IMAGES': 'YES',            # To appease xcode.
           # Keep pch files below xcodebuild/.
           'SHARED_PRECOMPS_DIR': '$(CONFIGURATION_BUILD_DIR)/SharedPrecompiledHeaders',
           'OTHER_CFLAGS': [
