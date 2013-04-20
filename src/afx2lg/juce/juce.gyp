@@ -77,7 +77,6 @@
         "<(DEPTH)/JUCE/modules/juce_audio_processors/format/juce_AudioPluginFormat.h",
         "<(DEPTH)/JUCE/modules/juce_audio_processors/format/juce_AudioPluginFormatManager.h",
         "<(DEPTH)/JUCE/modules/juce_audio_processors/format_types/juce_AudioUnitPluginFormat.h",
-        "<(DEPTH)/JUCE/modules/juce_audio_processors/format_types/juce_DirectXPluginFormat.h",
         "<(DEPTH)/JUCE/modules/juce_audio_processors/format_types/juce_LADSPAPluginFormat.h",
         "<(DEPTH)/JUCE/modules/juce_audio_processors/format_types/juce_VSTMidiEventList.h",
         "<(DEPTH)/JUCE/modules/juce_audio_processors/format_types/juce_VSTPluginFormat.h",
