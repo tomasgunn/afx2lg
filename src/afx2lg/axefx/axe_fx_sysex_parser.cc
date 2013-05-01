@@ -116,10 +116,29 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
           break;
         }
 
-        case FIRMWARE_BEGIN:
-        case FIRMWARE_DATA:
-        case FIRMWARE_END:
-          // TODO.
+        case FIRMWARE_BEGIN: {
+          auto fw_header = static_cast<const FirmwareBegin&>(header);
+          if (!fw_header.end.VerifyChecksum(&fw_header)) {
+            std::cerr << "Checksum error in firmware header.\n";
+            return false;
+          }
+          std::cout << "Total value count: " << fw_header.count.Decode() << "\n";
+          break;
+        }
+
+        case FIRMWARE_DATA: {
+          auto fw_data = static_cast<const FirmwareData&>(header);
+          // |value_count| will usually be 32.
+          // std::cout << "Value count: " << fw_data.value_count.Decode() << "\n";
+          break;
+        }
+
+        case FIRMWARE_END: {
+          auto fw_checksum = static_cast<const FirmwareChecksum&>(header);
+          std::cout << "Checksum: " << fw_checksum.checksum.Decode() << "\n";
+          break;
+        }
+
         default:
           ASSERT(false);
           return false;

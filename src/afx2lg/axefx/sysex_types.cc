@@ -34,8 +34,7 @@ bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, size_t size) {
 
 uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, size_t size) {
   uint8_t checksum = 0;
-  size_t i = 0;
-  for (; i < size - 2; ++i)
+  for (size_t i = 0; i < size - 2; ++i)
     checksum ^= sys_ex[i];
   checksum &= 0x7F;
   return checksum;
@@ -55,8 +54,7 @@ uint16_t SeptetPair::As16bit() const {
 
 uint16_t Fractal16bit::Decode() const {
   uint16_t ret = (b3 & 0x3) << 14;
-  ret |= ((b2 & 0x7f) >> 1) << 8;
-  ret |= (b2 & 0x1) << 7;
+  ret |= (b2 & 0x7F) << 7;
   ret |= (b1 & 0x7F);
   return ret;
 }
@@ -92,6 +90,36 @@ void Fractal32bit::Encode(uint32_t value) {
   b5 = (bytes[0] >> 4);
 }
 
+uint32_t Fractal28bit::Decode() const {
+  uint32_t ret =
+      (b1 & 0x7F) |
+      (b2 & 0x7F) << 7 |
+      (b3 & 0x7F) << 14 |
+      (b4 & 0x7F) << 21;
+  ASSERT((ret & 0xF0000000) == 0);
+  return ret;
+}
+
+void Fractal28bit::Encode(uint32_t value) {
+  ASSERT((value & 0xF0000000) == 0);
+  b1 = (value & 0x7F);
+  b2 = ((value >> 7) & 0x7F);
+  b3 = ((value >> 14) & 0x7F);
+  b4 = ((value >> 21) & 0x7F);
+}
+
+uint16_t Fractal14bit::Decode() const {
+  uint16_t ret = (b1 & 0x7F) | (b2 & 0x7F) << 7;
+  ASSERT((ret & 0xC000) == 0);
+  return ret;
+}
+
+void Fractal14bit::Encode(uint16_t value) {
+  ASSERT((value & 0xC000) == 0);
+  b1 = (value & 0x7F);
+  b2 = ((value >> 7) & 0x7F);
+}
+
 FractalSysExHeader::FractalSysExHeader(FunctionId func)
     : sys_ex_start(kSysExStart),
       model_id(static_cast<uint8_t>(AXE_FX_II)),
@@ -113,6 +141,12 @@ void FractalSysExEnd::CalculateChecksum(const FractalSysExHeader* start) {
   const uint8_t* sys_ex = reinterpret_cast<const uint8_t*>(start);
   size_t size = (&sys_ex_end - sys_ex) + 1;
   checksum = CalculateSysExChecksum(sys_ex, size);
+}
+
+bool FractalSysExEnd::VerifyChecksum(const FractalSysExHeader* start) const {
+  const uint8_t* sys_ex = reinterpret_cast<const uint8_t*>(start);
+  size_t size = (&sys_ex_end - sys_ex) + 1;
+  return checksum == CalculateSysExChecksum(sys_ex, size);
 }
 
 }  // namespace axefx

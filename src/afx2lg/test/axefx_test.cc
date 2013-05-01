@@ -76,6 +76,25 @@ TEST(FractalTypes, Fractal32bit) {
   }
 }
 
+TEST(FractalTypes, Fractal28bit) {
+  Fractal28bit f;
+  std::hash<int> hash;
+  for (int i = 0; i < 0xffff; ++i) {
+    uint32_t v = static_cast<uint32_t>(hash(i));
+    v &= 0xF0000000;  // Make sure the hash is 28 bit.
+    f.Encode(v);
+    ASSERT_EQ(v, f.Decode());
+  }
+}
+
+TEST(FractalTypes, Fractal14bit) {
+  Fractal14bit f;
+  for (uint16_t i = 0; i < 0x3FFF; ++i) {
+    f.Encode(i);
+    EXPECT_EQ(i, f.Decode());
+  }
+}
+
 TEST(FractalTypes, BlockSceneState) {
   // The high order byte represents X/Y state, low order is bypassed flag.
   BlockSceneState state(0x66AA);
@@ -158,8 +177,7 @@ TEST_F(AxeFxII, ParseHugeBankFileV10) {
 }
 
 TEST_F(AxeFxII, ParseFirmwareFileV10) {
-  // TODO
-  // EXPECT_TRUE(ParseFile("axefx2/v10/axefx2_10p02.syx"))
+  EXPECT_TRUE(ParseFile("axefx2/v10/axefx2_10p02.syx"));
 }
 
 TEST_F(AxeFxII, ParsePresetFile) {
