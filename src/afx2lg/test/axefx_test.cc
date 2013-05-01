@@ -157,6 +157,11 @@ TEST_F(AxeFxII, ParseHugeBankFileV10) {
   EXPECT_EQ(3 * 128u, parser_.presets().size());
 }
 
+TEST_F(AxeFxII, ParseFirmwareFileV10) {
+  // TODO
+  // EXPECT_TRUE(ParseFile("axefx2/v10/axefx2_10p02.syx"))
+}
+
 TEST_F(AxeFxII, ParsePresetFile) {
   ASSERT_TRUE(ParseFile("axefx2/p000318_DynamicJCM800.syx"));
   const PresetMap& presets = parser_.presets();

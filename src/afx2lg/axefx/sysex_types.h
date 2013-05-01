@@ -46,6 +46,9 @@ enum FunctionId {
   IR_BEGIN = 0x7A,
   IR_DATA = 0x7B,
   IR_END = 0x7C,
+  FIRMWARE_BEGIN = 0x7D,
+  FIRMWARE_DATA = 0x7E,
+  FIRMWARE_END = 0x7F,
 };
 
 #pragma pack(push)

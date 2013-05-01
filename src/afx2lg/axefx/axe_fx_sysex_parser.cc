@@ -116,6 +116,10 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
           break;
         }
 
+        case FIRMWARE_BEGIN:
+        case FIRMWARE_DATA:
+        case FIRMWARE_END:
+          // TODO.
         default:
           ASSERT(false);
           return false;
