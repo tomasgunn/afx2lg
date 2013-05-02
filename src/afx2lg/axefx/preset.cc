@@ -6,6 +6,9 @@
 #include "axefx/sysex_types.h"
 #include "json/value.h"
 
+// TODO: Support compressed presets.
+// #include "bcl/source/src/huffman.h"
+
 #include <algorithm>
 #include <iostream>
 

@@ -12,7 +12,7 @@
       'target_name': 'axefx_types',
       'type': 'none',
       'sources': [
-        'AxeFxII_7.axeml',
+        'AxeFxII_9_2.axeml',
         'type_gen.py',
       ],
       'actions': [
@@ -20,14 +20,14 @@
           'action_name': 'generate_types',
           'msvs_cygwin_shell': 0,
           'inputs': [
-            'AxeFxII_7.axeml',
+            'AxeFxII_9_2.axeml',
           ],
           'outputs': [
             'axefx_ii_ids.cc',
             'axefx_ii_ids.h',
           ],
           'action': [
-            'python', 'type_gen.py', 'AxeFxII_7.axeml', './'
+            'python', 'type_gen.py', 'AxeFxII_9_2.axeml', './'
           ],
         },
       ],
@@ -37,11 +37,13 @@
       'type': 'static_library',
       'include_dirs': [
         '..',
+        '../../',
         '../../jsoncpp/include',
       ],
       'dependencies': [
-        'axefx_types',
+        '../../bcl/bcl.gyp:bcl',
         '../jsoncpp/jsoncpp.gyp:*',
+        'axefx_types',
       ],
       'sources': [
         'axe_fx_sysex_parser.cc',

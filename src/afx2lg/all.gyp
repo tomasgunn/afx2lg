@@ -8,6 +8,7 @@
       'target_name': 'All',
       'type': 'none',
       'dependencies': [
+        '../bcl/bcl.gyp:*',
         'axe_backup/axe_backup.gyp:*',
         'axe_http/axe_http.gyp:*',
         'axe_loader/axe_loader.gyp:*',

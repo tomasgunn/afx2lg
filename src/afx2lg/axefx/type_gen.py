@@ -131,7 +131,8 @@ class AxeMlParser:
         self.current_block = attrs["name"]
         self.type_id_to_name[attrs["typeID"]] = self.current_type_name
         self.type_id_name[self.current_type_name] = self.current_block
-        self.current_bypass_id = attrs["bypassParam"]
+        if "bypassParam" in attrs:
+          self.current_bypass_id = attrs["bypassParam"]
     elif name == "EffectParameter":
       self.current_entries += ["%s = %s" % (attrs["name"], attrs["id"])]
       if attrs["id"] == self.current_bypass_id:
