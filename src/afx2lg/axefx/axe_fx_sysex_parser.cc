@@ -129,7 +129,7 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
         case FIRMWARE_DATA: {
           auto fw_data = static_cast<const FirmwareData&>(header);
           // |value_count| will usually be 32.
-          // std::cout << "Value count: " << fw_data.value_count.Decode() << "\n";
+          std::cout << "Value count: " << fw_data.value_count.Decode() << "\n";
           break;
         }
 

@@ -166,10 +166,10 @@ TEST_F(AxeFxII, ParseBankFile) {
 
 TEST_F(AxeFxII, ParseFw9bBankFile) {
   ASSERT_TRUE(ParseFile("axefx2/9b_A.syx"));
-  const PresetMap& presets = parser_.presets();
   EXPECT_EQ(128u, parser_.preset_count());
 
 #if !defined(NDEBUG) && 0
+  const PresetMap& presets = parser_.presets();
   PresetMap::const_iterator i = presets.begin();
   for (; i != presets.end(); ++i) {
     const Preset& p = *(i->second.get());
