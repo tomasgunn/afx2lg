@@ -33,6 +33,10 @@ class Preset {
   const Matrix& matrix() const { return matrix_; }
   const PresetParameters& params() const { return params_; }
 
+  // Returns the embedded IR data if any.  Used in presets that use the tone
+  // match block.
+  const std::vector<uint16_t>& ir_data() const { return ir_data_; }
+
   bool valid() const;
 
   bool is_global_setting() const;
@@ -67,6 +71,7 @@ class Preset {
   // Valid while parsing, then discarded.
   // TODO: rename PresetParameters to PresetData?
   PresetParameters params_;
+  std::vector<uint16_t> ir_data_;
 
   // Valid after parsing only.
   uint16_t version_;

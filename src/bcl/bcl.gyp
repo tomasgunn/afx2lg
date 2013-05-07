@@ -10,12 +10,13 @@
       'defines': [
       ],
       'include_dirs': [
+        'overrides/src',
         'source/src',
       ],
       'sources': [
         # We only use the Huffman encoder/decoder.
-        'source/src/huffman.h',
-        'source/src/huffman.c',
+        'overrides/src/huffman.h',
+        'overrides/src/huffman.c',
       ],
     },
   ],

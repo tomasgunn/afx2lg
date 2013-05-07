@@ -17,20 +17,15 @@ using std::placeholders::_1;
 
 namespace axefx {
 
-class AxeFxII : public testing::Test {
- protected:
-  virtual void SetUp() {
-    file_size_ = 0;
-  }
-
-  virtual void TearDown() {
-  }
+class ParserTestUtil {
+ public:
+  ParserTestUtil() : parser_(new SysExParser()), file_size_(0u) {}
 
   bool ParseFile(const char* file_path) {
     bool ok = ReadTestFileIntoBuffer(file_path, &file_contents_, &file_size_);
     ASSERT(ok);
     if (ok) {
-      ok = parser_.ParseSysExBuffer(
+      ok = parser_->ParseSysExBuffer(
           file_contents_.get(), file_contents_.get() + file_size_, true);
     } else {
       file_contents_.reset();
@@ -45,9 +40,56 @@ class AxeFxII : public testing::Test {
     return memcmp(&data[0], file_contents_.get(), file_size_) == 0;
   }
 
-  SysExParser parser_;
+  size_t preset_count() const {
+    return parser_->presets().size();
+  }
+
+  const PresetMap& presets() const {
+    return parser_->presets();
+  }
+
+  IRDataArray& ir_array() {
+    return parser_->ir_array();
+  }
+
+  static void SerializeCallback(const std::vector<uint8_t>& data,
+                                std::vector<uint8_t>* out) {
+    ASSERT_TRUE(!data.empty());
+    ASSERT_TRUE(data[0] == 0xF0);
+    ASSERT_TRUE(data[data.size() - 1] == 0xF7);
+    ASSERT_TRUE(IsFractalSysEx(&data[0], data.size()));
+    out->insert(out->end(), data.begin(), data.end());
+  }
+
+  void Serialize(std::vector<uint8_t>* serialized) {
+    parser_->Serialize(std::bind(&SerializeCallback, _1, serialized));
+  }
+
+  void Reset() {
+    parser_.reset(new SysExParser());
+    file_contents_.reset();
+    file_size_ = 0u;
+  }
+
+ private:
+  unique_ptr<SysExParser> parser_;
   std::unique_ptr<uint8_t> file_contents_;
   int file_size_;
+};
+
+class AxeFxII : public testing::Test {
+ protected:
+  virtual void SetUp() {
+  }
+
+  virtual void TearDown() {
+  }
+
+  bool ParseFile(const char* file_path) {
+    return parser_.ParseFile(file_path);
+  }
+
+  ParserTestUtil parser_;
 };
 
 TEST(FractalTypes, Fractal16bit) {
@@ -81,7 +123,7 @@ TEST(FractalTypes, Fractal28bit) {
   std::hash<int> hash;
   for (int i = 0; i < 0xffff; ++i) {
     uint32_t v = static_cast<uint32_t>(hash(i));
-    v &= 0xF0000000;  // Make sure the hash is 28 bit.
+    v &= 0x0FFFFFFF;  // Make sure the hash is 28 bit.
     f.Encode(v);
     ASSERT_EQ(v, f.Decode());
   }
@@ -119,13 +161,13 @@ TEST(FractalTypes, BlockSceneState) {
 
 TEST_F(AxeFxII, ParseBankFile) {
   ASSERT_TRUE(ParseFile("axefx2/V7_Bank_A.syx"));
-  EXPECT_EQ(128u, parser_.presets().size());
+  EXPECT_EQ(128u, parser_.preset_count());
 }
 
 TEST_F(AxeFxII, ParseFw9bBankFile) {
   ASSERT_TRUE(ParseFile("axefx2/9b_A.syx"));
   const PresetMap& presets = parser_.presets();
-  EXPECT_EQ(128u, presets.size());
+  EXPECT_EQ(128u, parser_.preset_count());
 
 #if !defined(NDEBUG) && 0
   PresetMap::const_iterator i = presets.begin();
@@ -155,7 +197,7 @@ TEST_F(AxeFxII, ParseMultipleBankFiles) {
   for (size_t i = 0; i < arraysize(files); ++i)
     EXPECT_TRUE(ParseFile(files[i]));
 
-  EXPECT_EQ(arraysize(files) * 128u, parser_.presets().size());
+  EXPECT_EQ(arraysize(files) * 128u, parser_.preset_count());
 }
 
 TEST_F(AxeFxII, ParseMultipleBankFilesV10) {
@@ -168,15 +210,16 @@ TEST_F(AxeFxII, ParseMultipleBankFilesV10) {
   for (size_t i = 0; i < arraysize(files); ++i)
     EXPECT_TRUE(ParseFile(files[i]));
 
-  EXPECT_EQ(arraysize(files) * 128u, parser_.presets().size());
+  EXPECT_EQ(arraysize(files) * 128u, parser_.preset_count());
 }
 
 TEST_F(AxeFxII, ParseHugeBankFileV10) {
   EXPECT_TRUE(ParseFile("axefx2/v10/V10_All_Banks.syx"));
-  EXPECT_EQ(3 * 128u, parser_.presets().size());
+  EXPECT_EQ(3 * 128u, parser_.preset_count());
 }
 
-TEST_F(AxeFxII, ParseFirmwareFileV10) {
+// Disabled while the work is in progress.
+TEST_F(AxeFxII, DISABLED_ParseFirmwareFileV10) {
   EXPECT_TRUE(ParseFile("axefx2/v10/axefx2_10p02.syx"));
 }
 
@@ -192,29 +235,36 @@ TEST_F(AxeFxII, ParsePresetFile) {
   EXPECT_EQ("Dynamic JCM800", front->second->name());
 }
 
-void SerializeCallback(const std::vector<uint8_t>& data,
-                       std::vector<uint8_t>* out) {
-  ASSERT_TRUE(!data.empty());
-  ASSERT_TRUE(data[0] == 0xF0);
-  ASSERT_TRUE(data[data.size() - 1] == 0xF7);
-  ASSERT_TRUE(IsFractalSysEx(&data[0], data.size()));
-  out->insert(out->end(), data.begin(), data.end());
+TEST_F(AxeFxII, ParseCompressedPresetFile) {
+  ASSERT_TRUE(ParseFile("axefx2/tone_match_preset.syx"));
+  const PresetMap& presets = parser_.presets();
+  EXPECT_EQ(1u, presets.size());
+  PresetMap::const_iterator front = presets.begin();
+  // This particular test file was saved from the edit buffer, so even though
+  // the name suggests 318, the id will be -1 because of what's in the sysex
+  // file.
+  EXPECT_EQ(33, front->second->id());
+  EXPECT_FALSE(front->second->ir_data().empty());
+  EXPECT_EQ("Bagpipe G# p cab ctl yek", front->second->name());
 }
 
 TEST_F(AxeFxII, SerializePresetFile) {
-  // First read and parse a preset file.
-  ASSERT_TRUE(ParseFile("axefx2/p000318_DynamicJCM800.syx"));
-  ASSERT_EQ(1u, parser_.presets().size());
-  std::vector<uint8_t> serialized;
-  parser_.Serialize(std::bind(&SerializeCallback, _1, &serialized));
-  EXPECT_FALSE(serialized.empty());
-  if (!serialized.empty()) {
-    SysExParser parser2;
-    EXPECT_TRUE(parser2.ParseSysExBuffer(
-        &serialized[0], &serialized[0] + serialized.size(), true));
-    EXPECT_EQ(parser_.presets().size(), parser2.presets().size());
-    EXPECT_EQ(parser_.presets().begin()->second->name(),
-              parser2.presets().begin()->second->name());
+  const char* test_files[] = {
+    "axefx2/p000318_DynamicJCM800.syx",  // Typical preset file.
+    "axefx2/tone_match_preset.syx",  // Contains tone match data.
+  };
+
+  for (size_t i = 0; i < arraysize(test_files); ++i) {
+    // First read and parse a preset file.
+    ASSERT_TRUE(ParseFile(test_files[i]));
+    ASSERT_EQ(1u, parser_.preset_count());
+    std::vector<uint8_t> serialized;
+    parser_.Serialize(&serialized);
+    EXPECT_FALSE(serialized.empty());
+    if (!serialized.empty()) {
+      EXPECT_TRUE(parser_.MatchesFileContent(serialized));
+    }
+    parser_.Reset();
   }
 }
 
@@ -312,7 +362,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
   // As global blocks get used, these slots get overwritten with the block
   // state.  Then the |version| field will contain the block id instead,
   // followed by regular block data.
-  EXPECT_EQ(128u, parser_.presets().size());
+  EXPECT_EQ(128u, parser_.preset_count());
 
   std::vector<unique_ptr<BlockParameters> > global_blocks;
   PresetParameters left_over_params;
@@ -406,11 +456,10 @@ TEST_F(AxeFxII, SerializeIRFile) {
   const IRDataArray& ir = parser_.ir_array();
   ASSERT_EQ(1u, ir.size());
   std::vector<uint8_t> serialized;
-  parser_.Serialize(std::bind(&SerializeCallback, _1, &serialized));
+  parser_.Serialize(&serialized);
   EXPECT_FALSE(serialized.empty());
   if (!serialized.empty()) {
-    EXPECT_EQ(static_cast<size_t>(file_size_), serialized.size());
-    EXPECT_TRUE(MatchesFileContent(serialized));
+    EXPECT_TRUE(parser_.MatchesFileContent(serialized));
   }
 }
 

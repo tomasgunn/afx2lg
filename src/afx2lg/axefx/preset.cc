@@ -4,10 +4,8 @@
 #include "axefx/preset.h"
 
 #include "axefx/sysex_types.h"
+#include "bcl/overrides/src/huffman.h"
 #include "json/value.h"
-
-// TODO: Support compressed presets.
-// #include "bcl/source/src/huffman.h"
 
 #include <algorithm>
 #include <iostream>
@@ -110,7 +108,7 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size,
     }
   }
 
-  PresetParameters::const_iterator p = params_.begin();
+  PresetParameters::iterator p = params_.begin();
 
   if (is_global_setting()) {
     // For system backups, we treat each preset block as an opaque block of
@@ -125,10 +123,10 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size,
     return false;
   }
 
-  // Not sure what this is.  When not 0, the preset seems to be
-  // encoded/compressed somehow. I pinged Fractal support about this.
-  // Let's see what they say.
-  bool parameter_format_recognized = (p[1] == 0);
+  // After the revision number comes the number of compressed bytes.
+  // Usually this will be 0, but for presets that use the Tone Match block,
+  // this will ne non-zero.
+  uint16_t compressed_bytes = p[1];
 
   // Parse the preset name (values 2-32).
   p += 2;
@@ -141,9 +139,33 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size,
   ASSERT(p[0] == 0);  // zero terminator.
   ++p;
 
-  // Don't go further if we don't know what's coming.
-  if (!parameter_format_recognized)
-    return verify_only;
+  if (compressed_bytes != 0) {
+    // In this case, the last 1024 16bit values in params_, contain the tone
+    // match IR data.  Let's chop that off and save it.
+    ir_data_.assign(params_.end() - 1024, params_.end());
+    ASSERT(ir_data_.size() == 1024);
+    params_.erase(params_.end() - 1024, params_.end());
+
+    // The compression seems to assume that the bytes are ordered in a little
+    // endian 16 bit fashion - which is what we already have - so no conversion
+    // to network byte order (big endian) is necessary.
+
+    // TODO: Come up with a better heuristic for picking a good buffer size
+    // and truncating the buffer.
+    std::vector<uint16_t> decompressed;
+    decompressed.resize((compressed_bytes / sizeof(p[0])) * 10, 0xBADF);
+
+    size_t uncompressed_size = Huffman_Uncompress(
+        reinterpret_cast<uint8_t*>(&p[0]),
+        reinterpret_cast<uint8_t*>(&decompressed[0]),
+        compressed_bytes,
+        decompressed.size() * sizeof(decompressed[0]));
+
+    decompressed.resize(uncompressed_size / sizeof(decompressed[0]));
+
+    p = params_.erase(p, p + (compressed_bytes / sizeof(p[0])));
+    p = params_.insert(p, decompressed.begin(), decompressed.end());
+  }
 
   // Save the effect block matrix.
   static_assert(sizeof(matrix_[0][0]) == sizeof(*p) * 2,
@@ -228,6 +250,7 @@ void Preset::WriteHeader(const SysExCallback& callback) const {
 }
 
 void Preset::FillParameters(PresetParameters* params) const {
+  // TODO: Configure a struct for the version, compressed_size and name values.
   PresetParameters& p = *params;
   if (is_global_setting() || !params_.empty()) {
     // If we get here for non-global settings, we haven't parsed the parameters
@@ -242,18 +265,44 @@ void Preset::FillParameters(PresetParameters* params) const {
 
   size_t pos = 0;
   p[pos++] = version_;
-  pos++;  // Unknown value.
+  uint16_t& compressed_size = p[pos++];
+
   for (size_t i = 0; i < 31; ++i)
     p[pos++] = (i < name_.length()) ? name_[i] : ' ';
   ++pos;  // zero terminator.
 
   // Copy the matrix.
+  size_t matrix_begins = pos;
   memcpy(&p[pos], &matrix_[0][0], sizeof(matrix_));
   pos += sizeof(matrix_) / sizeof(p[0]);
 
   for (const auto& b: block_parameters_) {
     size_t values = b->Write(&p[pos], p.size() - pos);
     pos += values;
+  }
+
+  if (!ir_data_.empty()) {
+    // Compress the parameters.
+    std::vector<uint16_t> compressed;
+    // Assume the compressed size will be smaller or equal to the data being
+    // compressed.
+    compressed.resize((pos + 1) - matrix_begins, 0);
+    compressed_size = static_cast<uint16_t>(Huffman_Compress(
+        reinterpret_cast<uint8_t*>(&p[matrix_begins]),
+        reinterpret_cast<uint8_t*>(&compressed[0]),
+        compressed.size() * sizeof(p[0])));
+    compressed.resize(compressed_size / sizeof(compressed[0]));
+
+    // Overwrite the parameters etc with the compressed equivalent.
+    std::copy(compressed.begin(), compressed.end(), p.begin() + matrix_begins);
+
+    // Fill the remains between the compressed data and the IR data with 0's.
+    ASSERT(&p[matrix_begins + compressed.size()] <= &p[p.size() - 1024]);
+    std::fill(&p[matrix_begins + compressed.size()], &p[p.size() - 1024], 0);
+
+    // Copy uncompressed ir_data_ to the last 1024 words of p.
+    ASSERT(ir_data_.size() == 1024);
+    std::copy(ir_data_.begin(), ir_data_.end(), p.end() - 1024);
   }
 }
 
