@@ -20,108 +20,6 @@ inline void SetBit(uint8_t* byte, int index, bool set) {
   set ? ((*byte) |= 1 << index) : ((*byte) &= ~(1 << index));
 }
 
-
-#ifdef _DEBUG
-
-// If we really need this, it would be better to keep it in a separate file
-// (e.g. json) that can be updated separately.
-// AxeEdit uses .profile files (a copy of one is in this directory)
-// to track valid values for parameters per AxeFx firmware version.
-// This data comes from and is only for basic testing.
-// http://wiki.fractalaudio.com/axefx2/index.php?title=AMP_(block):_list
-// TODO: Come up with a better list :) Some entries missing etc (see below).
-const char* const kAmpNames[] = {
-  "59 Bassguy ('59 Fender Bassman)",
-  "65 Bassguy ('65 Fender Bassman)",
-  "Vibrato Verb (Fender Vibroverb)",
-  "Deluxe Verb (Fender Deluxe Reverb)",
-  "Double Verb (Fender Twin Reverb)",
-  "JR Blues (Fender Blues Junior)",
-  "Class-A 15W TB (Vox AC-15 Top Boost)",
-  "Class-A 30W (Vox AC-30)",
-  "Class-A 30W TB (Vox AC-30 Top Boost)",
-  "Brit JM45 (Marshall JTM45)",
-  "Plexi Normal / Treble (Marshall Super Lead 1959)",
-  "1987X Normal / Treble (Marshall 1987x Vintage Series)",
-  "Brit 800 (Marshall JCM800 2204)",
-  "Brit Super (Marshall AFD100)",
-  "HiPower Normal / Brilliant (Hiwatt DR103)",
-  "USA Clean 1 (Mesa Boogie Mark IV)",
-  "USA Clean 2 (Mesa Boogie Triaxis)",
-  "USA Rhy 1 (Mesa Boogie Mark IV)",
-  "USA IIC+ Norm / Bright (Mesa Boogie Mark IIC+)",
-  "USA Lead 1 / Lead 2 (Mesa Boogie Mark IV)",
-  "Recto Orange / Red, Vintage / Modern (Mesa Boogie Dual Rectifier)",
-  "Euro Blue / Red (Bogner Ecstasy 20th Anniversary)",
-  "Shiver Clean / Lead (Bogner Shiva 20th Anniversary)",
-  "Euro Uber (Bogner Uberschall)",
-  "Solo 99 Clean (Soldano X99)",
-  "Solo 100 Rhy / Lead (Soldano SLO-100)",
-  "Friedman BE / HBE (Friedman Brown Eye and Hairy Brown Eye)",
-  "PVH 6160 (Peavey 5150 II)",
-  "MR Z 38 Sr (Dr. Z Maz 38 SR)",
-  "CA3+ Rhy / Lead (CAE 3+ SE)",
-  "Wrecker 1 (Trainwreck Express)",
-  "Corncob M50 (Cornford MK50II)",
-  "Carol-Ann Od-2 (Carol-Ann OD-2r)",
-  "Fryette D60 L / M (Fryette Deliverance 60)",
-  "Brit Brown (Van Halen's Marshall)",
-  "Citrus RV50 (Orange Rockerverb)",
-  "Jazz 120 (Roland JC-120)",
-  "Energyball (Engl Powerball)",
-  "ODS-100 Clean / Lead (Dumble OD Special)",  // two amps?
-  "FAS Rhythm",
-  "FAS Lead 1",
-  "FAS Lead 2",
-  "FAS Modern",
-  "Das Metall (Diezel VH4)",
-  "Brit Pre (Marshall JMP-1)",
-  "Buttery (Budda Twinmaster)",
-  "Boutique 1 / 2 (Matchless Chieftain)",  // two amps?
-  "Cameron Ch.1 / Ch.2 (Cameron CCV)",
-  "SV Bass (Ampeg SVT)",
-  "Tube Pre (generic tube preamp)",
-  "FAS Brown (Van Halen's Marshall)",
-  "FAS Big Hair",
-  "Solo X99 Lead (Soldano X99)",
-  "Supertweed",
-  "FAS Wreck (Trainwreck Express)",
-  "TX Star Lead (Mesa Boogie Lone Star)",
-  "Brit JVM OD1 / OD2 (Marshall JVM410)",
-  "FAS 6160 (Peavey 5150)",
-  "Cali Leggy (Carvin Legacy)",
-  "USA Lead 1+ / Lead 2+ (Mesa Boogie Mark IV)",
-  "Prince Tone (Fender Princeton)",
-  "Blanknshp Leeds (Blankenship Leeds)",
-  "5153 Green / Blue / Red (EVH 5150 III)",
-  "Solo 88 Rhythm (Soldano X88)",
-  "Division13 CJ (Divided by 13 CJ11)",
-  "Herbie CH2- / CH2+ / CH3 (Diezel Herbert)",  // multiple amps?
-  "Dizzy V4 2 / 3 / 4 (Diezel VH4)",  // Is this several different amps?
-  "Dirty Shirley (Friedman Dirty Shirley)",
-  "Suhr Badger 18 / 30",
-  "Prince Tone 2 (Fender Princeton)",
-  "Super Trem (Supro 1964T)",
-  "Atomica Low / High (Cameron Atomica)",
-  "Deluxe Tweed (Fender Tweed Deluxe)",
-  "Spawn Q-Rod 1st / 2nd / 3rd (Splawn Quickrod)",
-  "Brit Silver (Marshall Silver Jubilee)",
-  "Spawn Nitrous (Splawn Nitro)",
-  "FAS Crunch",
-  "Two Stone J-35 (Two-Rock Jet 35)",
-  "Fox ODS (Fuchs Overdrive Supreme)",
-  "Hot Kitty (Bad Cat Hot Cat)",
-  "Band-Commander (1968 Fender Bandmaster)",
-  "Super Verb (1964 Fender Super Reverb)",
-};
-
-const char* GetAmpName(uint16_t amp_id) {
-  if (amp_id >= arraysize(kAmpNames))
-    return "AmpUnknown";
-  return kAmpNames[amp_id];
-}
-#endif
-
 bool BlockSupportsXY(AxeFxBlockType type) {
   switch(type) {
     case BLOCK_TYPE_AMP:
@@ -336,7 +234,21 @@ void BlockParameters::ToJson(Json::Value* out) const {
   j["name"] = GetBlockName(block_);
   j["type"] = type_name;
   j["supports_xy"] = supports_xy();
-  j["global_block_id"] = static_cast<int>(global_block_index_);
+  if (global_block_index_)
+    j["global_block_id"] = static_cast<int>(global_block_index_);
+
+  // Used for x/y configs.
+  size_t y_offset = params_.size() / 2u;
+
+  if (block_type == BLOCK_TYPE_AMP && !params_.empty()) {
+    j["amp_x"] = GetAmpName(params_[DISTORT_TYPE]);
+    j["amp_y"] = GetAmpName(params_[y_offset + DISTORT_TYPE]);
+  } else if (block_type == BLOCK_TYPE_CAB) {
+    j["cab_x_left"] = GetCabName(params_[CABINET_TYPEL]);
+    j["cab_x_right"] = GetCabName(params_[CABINET_TYPER]);
+    j["cab_y_left"] = GetCabName(params_[y_offset + CABINET_TYPEL]);
+    j["cab_y_right"] = GetCabName(params_[y_offset + CABINET_TYPER]);
+  }
 
   std::string default_param_prefix(type_name);
   std::transform(default_param_prefix.begin(), default_param_prefix.end(),
@@ -352,11 +264,10 @@ void BlockParameters::ToJson(Json::Value* out) const {
     Json::Value values_x, values_y;
     Json::Value* x_and_y[] = { &values_x, &values_y };
     int v = 0;
-    size_t half = params_.size() / 2u;
     for (size_t i = 0; i < params_.size(); ++i) {
       const char* param_name =
-          GetParamName(block_type, static_cast<int>(i % half));
-      if (i == half)
+          GetParamName(block_type, static_cast<int>(i % y_offset));
+      if (i == y_offset)
         ++v;
 
       Json::Value& dict = *x_and_y[v];

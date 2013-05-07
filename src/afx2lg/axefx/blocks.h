@@ -20,12 +20,6 @@ extern const int kFirstBlockId;
 
 bool BlockSupportsXY(AxeFxBlockType type);
 
-#ifdef _DEBUG
-// TODO: This list is really version specific, so it should take
-// more arguments (or be a member method of Preset).
-const char* GetAmpName(uint16_t amp_id);
-#endif
-
 #pragma pack(push)
 #pragma pack(1)
 

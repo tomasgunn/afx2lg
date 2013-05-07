@@ -421,7 +421,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
   if (amp1->global_block_index())
     std::cout << " - global=" << amp1->global_block_index() << std::endl;
   std::cout << " - amp=" << amp_id_x << "," << amp_id_y
-            << "(x='" << GetAmpName(amp_id_x)<< ", "
+            << "(x='" << GetAmpName(amp_id_x) << ", "
             << "y='" << GetAmpName(amp_id_y) << ")\n";
 #endif
 }

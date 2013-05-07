@@ -26,6 +26,8 @@ const char* GetBlockTypeName(AxeFxBlockType type);
 const char* GetBlockName(AxeFxIIBlockID id);
 int GetBlockBypassParamID(AxeFxBlockType type);
 const char* GetParamName(AxeFxBlockType type, int param_id);
+const char* GetAmpName(int index);
+const char* GetCabName(int index);
 
 // Forward declarations for block parameter lookups.
 %s
@@ -84,6 +86,22 @@ const char* GetParamName(AxeFxBlockType type, int param_id) {
   return "";
 }
 
+const char* GetAmpName(int index) {
+  switch (index) {
+    default:
+      break;
+%s  }
+  return "";
+}
+
+const char* GetCabName(int index) {
+  switch (index) {
+    default:
+      break;
+%s  }
+  return "";
+}
+
 // Implementations of block parameter lookup functions.
 
 %s
@@ -119,24 +137,24 @@ const char* Get%sParamName(%sParamID id) {
   return "";
 }"""
 
-# TODO: Parse CabPool and AmpPool.
-
 class AxeMlParser:
-  parser = None
-  block_types = []
+  amp_names = {}
   block_ids = []
+  block_to_type_id = {}
   block_type_bypass_ids = {}
+  block_types = []
+  cab_names = {}
+  current_block = None
+  current_bypass_id = None
+  current_type_name = None
+  effect_parameter_names = []
+  effect_parameters = []
   param_ids = []
   param_lookup_fn_fwd = []
   param_lookup_fn_impl = []
-  effect_parameters = []
-  effect_parameter_names = []
-  current_block = None
-  current_type_name = None
-  current_bypass_id = None
-  block_to_type_id = {}
-  type_id_to_name = {}
+  parser = None
   type_id_name = {}
+  type_id_to_name = {}
 
   def __init__(self):
     self.parser = xml.parsers.expat.ParserCreate()
@@ -172,6 +190,10 @@ class AxeMlParser:
       self.effect_parameter_names += [attrs["name"]]
       if attrs["id"] == self.current_bypass_id:
         self.block_type_bypass_ids[self.current_type_name] = attrs["name"]
+    elif name == "Amp":
+      self.amp_names[int(attrs["id"])] = attrs["name"]
+    elif name == "Cab":
+      self.cab_names[int(attrs["id"])] = attrs["name"]
 
   def onEndElement(self, name):
     if name == "EffectParameters":
@@ -232,6 +254,18 @@ class AxeMlParser:
         (t, block_name, block_name)
     return ret
 
+  def GenerateAmpNames(self):
+    ret = ""
+    for i, n in sorted(self.amp_names.items()):
+      ret += '    case %s:\n      return "%s";\n' %  (i, n)
+    return ret
+
+  def GenerateCabNames(self):
+    ret = ""
+    for i, n in sorted(self.cab_names.items()):
+      ret += '    case %s:\n      return "%s";\n' %  (i, n)
+    return ret
+
 def WriteIfChanged(path, contents):
   if os.path.exists(path):
     if open(path, 'r').read() == contents:
@@ -285,6 +319,8 @@ def main(args):
                                    x.GenerateBlockNameFromID(),
                                    x.GenerateBlockBypassParamID(),
                                    x.GenerateParamNamesForBlocks(),
+                                   x.GenerateAmpNames(),
+                                   x.GenerateCabNames(),
                                    "\n".join(x.param_lookup_fn_impl))
   WriteIfChanged(h_file, header)
   WriteIfChanged(cc_file, source)
