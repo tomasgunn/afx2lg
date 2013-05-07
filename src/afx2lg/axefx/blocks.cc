@@ -4,6 +4,8 @@
 #include "axefx/blocks.h"
 #include "json/value.h"
 
+#include <algorithm>
+
 namespace axefx {
 
 const int kFirstBlockId = 100;
@@ -328,11 +330,18 @@ bool BlockParameters::SetBypassState(const BlockSceneState& state) {
 
 void BlockParameters::ToJson(Json::Value* out) const {
   Json::Value& j = *out;
+  AxeFxBlockType block_type = GetBlockType(block_);
+  const char* type_name = GetBlockTypeName(block_type);
   j["id"] = block_;
   j["name"] = GetBlockName(block_);
-  j["type"] = GetBlockTypeName(GetBlockType(block_));
+  j["type"] = type_name;
   j["supports_xy"] = supports_xy();
   j["global_block_id"] = static_cast<int>(global_block_index_);
+
+  std::string default_param_prefix(type_name);
+  std::transform(default_param_prefix.begin(), default_param_prefix.end(),
+                 default_param_prefix.begin(), &tolower);
+  default_param_prefix += '_';
 
   Json::Value scenes;
   GetBypassState().ToJson(supports_xy(), &scenes);
@@ -345,15 +354,29 @@ void BlockParameters::ToJson(Json::Value* out) const {
     int v = 0;
     size_t half = params_.size() / 2u;
     for (size_t i = 0; i < params_.size(); ++i) {
+      const char* param_name =
+          GetParamName(block_type, static_cast<int>(i % half));
       if (i == half)
         ++v;
-      x_and_y[v]->append(params_[i]);
+
+      Json::Value& dict = *x_and_y[v];
+      if (!param_name[0]) {
+        dict[default_param_prefix + std::to_string(i)] = params_[i];
+      } else {
+        dict[param_name] = params_[i];
+      }
     }
     values["x"] = values_x;
     values["y"] = values_y;
   } else {
-    for (const auto& p: params_)
-      values.append(p);
+    for (size_t i = 0; i < params_.size(); ++i) {
+      const char* param_name = GetParamName(block_type, static_cast<int>(i));
+      if (!param_name[0]) {
+        values[default_param_prefix + std::to_string(i)] = params_[i];
+      } else {
+        values[param_name] = params_[i];
+      }
+    }
   }
   j["values"] = values;
 }

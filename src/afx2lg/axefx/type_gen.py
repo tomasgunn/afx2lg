@@ -25,6 +25,10 @@ AxeFxBlockType GetBlockType(AxeFxIIBlockID id);
 const char* GetBlockTypeName(AxeFxBlockType type);
 const char* GetBlockName(AxeFxIIBlockID id);
 int GetBlockBypassParamID(AxeFxBlockType type);
+const char* GetParamName(AxeFxBlockType type, int param_id);
+
+// Forward declarations for block parameter lookups.
+%s
 
 }  // namespace axefx
 
@@ -72,6 +76,18 @@ int GetBlockBypassParamID(AxeFxBlockType type) {
   return -1;
 }
 
+const char* GetParamName(AxeFxBlockType type, int param_id) {
+  switch (type) {
+    default:
+      break;
+%s  }
+  return "";
+}
+
+// Implementations of block parameter lookup functions.
+
+%s
+
 }  // namespace axefx
 """
 
@@ -90,13 +106,31 @@ PARAM_ID_TEMPLATE = """enum %sParamID {
   %s
 };"""
 
+PARAM_ID_LOOKUP_FUNCTION_FWD_TEMPLATE = \
+  "const char* Get%sParamName(%sParamID id);"
+
+PARAM_ID_LOOKUP_FUNCTION_TEMPLATE = \
+"""
+const char* Get%sParamName(%sParamID id) {
+  switch (id) {
+    default:
+      break;
+%s  }
+  return "";
+}"""
+
+# TODO: Parse CabPool and AmpPool.
+
 class AxeMlParser:
   parser = None
   block_types = []
   block_ids = []
   block_type_bypass_ids = {}
   param_ids = []
-  current_entries = []
+  param_lookup_fn_fwd = []
+  param_lookup_fn_impl = []
+  effect_parameters = []
+  effect_parameter_names = []
   current_block = None
   current_type_name = None
   current_bypass_id = None
@@ -134,7 +168,8 @@ class AxeMlParser:
         if "bypassParam" in attrs:
           self.current_bypass_id = attrs["bypassParam"]
     elif name == "EffectParameter":
-      self.current_entries += ["%s = %s" % (attrs["name"], attrs["id"])]
+      self.effect_parameters += ["%s = %s" % (attrs["name"], attrs["id"])]
+      self.effect_parameter_names += [attrs["name"]]
       if attrs["id"] == self.current_bypass_id:
         self.block_type_bypass_ids[self.current_type_name] = attrs["name"]
 
@@ -143,11 +178,25 @@ class AxeMlParser:
       if self.current_block != None:
         self.param_ids += \
           [PARAM_ID_TEMPLATE % (self.current_block,
-                                ",\n  ".join(self.current_entries))]
+                                ",\n  ".join(self.effect_parameters))]
+        self.param_lookup_fn_fwd += \
+          [PARAM_ID_LOOKUP_FUNCTION_FWD_TEMPLATE %
+           (self.current_block, self.current_block)]
+        self.param_lookup_fn_impl += \
+          [PARAM_ID_LOOKUP_FUNCTION_TEMPLATE %
+           (self.current_block, self.current_block,
+            self.GenerateCaseLabelsWithReturn(self.effect_parameter_names))]
       self.current_block = None
       self.current_type_name = None
-      self.current_entries = []
+      self.effect_parameters = []
+      self.effect_parameter_names = []
       self.current_bypass_id = None
+
+  def GenerateCaseLabelsWithReturn(self, entries):
+    ret = ""
+    for e in entries:
+      ret += '    case %s:\n      return "%s";\n' % (e, e.lower())
+    return ret
 
   def GenerateBlockTypeFromID(self):
     ret = ""
@@ -173,6 +222,14 @@ class AxeMlParser:
       if n in self.block_type_bypass_ids:
         ret += "    case %s:\n      return %s;\n" % \
                (n, self.block_type_bypass_ids[n])
+    return ret
+
+  def GenerateParamNamesForBlocks(self):
+    ret = ""
+    for t in self.type_id_to_name.values():
+      block_name = self.type_id_name[t]
+      ret += "    case %s:\n      return Get%sParamName(static_cast<%sParamID>(param_id));\n" % \
+        (t, block_name, block_name)
     return ret
 
 def WriteIfChanged(path, contents):
@@ -221,12 +278,14 @@ def main(args):
   header += "\n\n"
   header += "\n\n".join(x.param_ids)
 
-  header = HEADER_FILE_TEMPLATE % (header)
+  header = HEADER_FILE_TEMPLATE % (header, "\n".join(x.param_lookup_fn_fwd))
 
   source = SOURCE_FILE_TEMPLATE % (x.GenerateBlockTypeFromID(),
                                    x.GenerateBlockTypeName(),
                                    x.GenerateBlockNameFromID(),
-                                   x.GenerateBlockBypassParamID())
+                                   x.GenerateBlockBypassParamID(),
+                                   x.GenerateParamNamesForBlocks(),
+                                   "\n".join(x.param_lookup_fn_impl))
   WriteIfChanged(h_file, header)
   WriteIfChanged(cc_file, source)
 

@@ -427,7 +427,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
 }
 
 TEST_F(AxeFxII, PresetToJson) {
-  ASSERT_TRUE(ParseFile("axefx2/one_amp_8scenes_xy_1.syx"));
+  ASSERT_TRUE(ParseFile("axefx2/tone_match_preset.syx"));
   const PresetMap& presets = parser_.presets();
   ASSERT_EQ(1u, presets.size());
 
