@@ -151,8 +151,8 @@ struct DataBlockHeader : public FractalSysExHeader {
         reserved(0u) {
   }
 
-  uint8_t value_count;     // Typically 0x40 (16bit) or 0x20 (32bit).
-  uint8_t reserved;        // Always 0.
+  uint8_t value_count;  // Typically 0x40 (16bit) or 0x20 (32bit).
+  uint8_t reserved;  // Always 0.
   ValueType values[1];  // Actual size is |value_count|.
 };
 
@@ -166,6 +166,11 @@ struct ChecksumHeader : public FractalSysExHeader {
     checksum.Encode(sum);
     end.CalculateChecksum(this);
   }
+
+  int_type package_checksum() const {
+    return checksum.Decode();
+  }
+
   ChecksumType checksum;
   FractalSysExEnd end;
 };
@@ -173,7 +178,8 @@ struct ChecksumHeader : public FractalSysExHeader {
 typedef ChecksumHeader<Fractal16bit, uint16_t, PRESET_CHECKSUM>
     PresetChecksumHeader;
 typedef ChecksumHeader<Fractal32bit, uint32_t, IR_END> IRChecksumHeader;
-typedef ChecksumHeader<Fractal32bit, uint32_t, FIRMWARE_END> FirmwareChecksum;
+typedef ChecksumHeader<Fractal32bit, uint32_t, FIRMWARE_END>
+    FirmwareChecksumHeader;
 
 struct BankDumpRequest : public FractalSysExHeader {
   enum BankId {
@@ -219,16 +225,16 @@ struct PresetDumpRequest : public FractalSysExHeader {
   FractalSysExEnd end;
 };
 
-struct FirmwareBegin : public FractalSysExHeader {
-  FirmwareBegin() : FractalSysExHeader(FIRMWARE_BEGIN) {
+struct FirmwareBeginHeader : public FractalSysExHeader {
+  FirmwareBeginHeader() : FractalSysExHeader(FIRMWARE_BEGIN) {
     end.CalculateChecksum(this);
   }
   Fractal28bit count;
   FractalSysExEnd end;
 };
 
-struct FirmwareData : public FractalSysExHeader {
-  FirmwareData() : FractalSysExHeader(FIRMWARE_DATA) {}
+struct FirmwareDataHeader : public FractalSysExHeader {
+  FirmwareDataHeader() : FractalSysExHeader(FIRMWARE_DATA) {}
   Fractal14bit value_count;
   Fractal32bit values[1];  // Actual size determined by |value_count|.
   // checksum + F7 follows.

@@ -219,7 +219,7 @@ TEST_F(AxeFxII, ParseHugeBankFileV10) {
 }
 
 // Disabled while the work is in progress.
-TEST_F(AxeFxII, DISABLED_ParseFirmwareFileV10) {
+TEST_F(AxeFxII, ParseFirmwareFileV10) {
   EXPECT_TRUE(ParseFile("axefx2/v10/axefx2_10p02.syx"));
 }
 

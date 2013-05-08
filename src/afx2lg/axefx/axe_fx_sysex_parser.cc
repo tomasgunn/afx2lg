@@ -6,11 +6,56 @@
 #include "axefx/blocks.h"
 #include "axefx/ir_data.h"
 #include "axefx/preset.h"
-#include "axefx/sysex_types.h"
 
 #include <iostream>
 
 namespace axefx {
+FirmwareData::FirmwareData(const FirmwareBeginHeader& header)
+    : expected_total_words_(header.count.Decode()) {
+}
+
+void FirmwareData::AddData(const FirmwareDataHeader& header, size_t size) {
+  const uint8_t* end = (reinterpret_cast<const uint8_t*>(&header) + size) - 2;
+  uint16_t count = header.value_count.Decode();
+  if (count != 32)
+    std::cerr << "Data count: " << count << "\n";
+  //ASSERT(count == 32);
+  /*for (uint16_t i = 0; i < count; ++i) {
+    ASSERT(&header.values[i] < end);
+    data_.push_back(header.values[i].Decode());
+  }*/
+  const Fractal32bit* p = &header.values[0];
+  uint16_t read = 0;
+  while (p < reinterpret_cast<const Fractal32bit*>(end)) {
+    data_.push_back(p->Decode());
+    ++p;
+    read++;
+  }
+
+  if (read != count)
+    std::cerr << "read: " << read << " count: " << count << "\n";
+  //ASSERT(read == count);
+}
+
+bool FirmwareData::Verify(const FirmwareChecksumHeader& header) {
+  if (data_.size() != expected_total_words_) {
+    std::cerr << "Firmware data corrupt.  Expected " << expected_total_words_
+              << " words, but got " << data_.size() << ".\n";
+    return false;
+  }
+  // TODO: Keep all checksum calculation code in one place.
+  uint32_t checksum = 0;
+  for (const auto& i: data_)
+    checksum ^= i;
+
+  if (checksum != header.package_checksum()) {
+    std::cerr << "Firmware checksum doesn't match.  Header says: " << std::hex
+              << header.package_checksum() << ", calculated: " << checksum
+              << ".\n";
+    return false;
+  }
+  return true;
+}
 
 SysExParser::SysExParser() {
 }
@@ -117,25 +162,32 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
         }
 
         case FIRMWARE_BEGIN: {
-          auto fw_header = static_cast<const FirmwareBegin&>(header);
-          if (!fw_header.end.VerifyChecksum(&fw_header)) {
-            std::cerr << "Checksum error in firmware header.\n";
-            return false;
-          }
-          std::cout << "Total value count: " << fw_header.count.Decode() << "\n";
+          ASSERT(!firmware_.get());
+          firmware_.reset(new FirmwareData(
+              static_cast<const FirmwareBeginHeader&>(header)));
           break;
         }
 
         case FIRMWARE_DATA: {
-          auto fw_data = static_cast<const FirmwareData&>(header);
-          // |value_count| will usually be 32.
-          std::cout << "Value count: " << fw_data.value_count.Decode() << "\n";
+          ASSERT(firmware_.get());
+          if (!firmware_.get()) {
+            std::cerr << "Received out of band firmware data.\n";
+            return false;
+          }
+          auto fw_data = static_cast<const FirmwareDataHeader&>(header);
+          firmware_->AddData(fw_data, size);
           break;
         }
 
         case FIRMWARE_END: {
-          auto fw_checksum = static_cast<const FirmwareChecksum&>(header);
-          std::cout << "Checksum: " << fw_checksum.checksum.Decode() << "\n";
+          ASSERT(firmware_.get());
+          if (!firmware_.get()) {
+            std::cerr << "Received out of band firmware checksum.";
+            return false;
+          }
+          auto fw_checksum = static_cast<const FirmwareChecksumHeader&>(header);
+          if (!firmware_->Verify(fw_checksum))
+            return false;
           break;
         }
 
@@ -162,7 +214,10 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
   }
 
   ASSERT(!preset.get());  // Half way through parsing a preset?
-  ASSERT(!presets_.empty() ^ !ir_array_.empty());
+#ifndef NDEBUG
+  int success_count = !presets_.empty() + !ir_array_.empty() + !firmware_.get();
+  ASSERT(success_count == 1);
+#endif
   ASSERT(!sys_ex_begins);
 
   return true;

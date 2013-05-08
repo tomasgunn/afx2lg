@@ -9,6 +9,7 @@
 
 #include "axefx/preset_parameters.h"
 #include "axefx/sysex_callback.h"
+#include "axefx/sysex_types.h"
 
 #include <map>
 
@@ -16,8 +17,22 @@ namespace axefx {
 
 class IRData;
 class Preset;
+
 typedef std::map<int, shared_ptr<Preset> > PresetMap;
 typedef std::vector<unique_ptr<IRData> > IRDataArray;
+
+class FirmwareData {
+ public:
+  explicit FirmwareData(const FirmwareBeginHeader& header);
+
+  void AddData(const FirmwareDataHeader& header, size_t size);
+
+  bool Verify(const FirmwareChecksumHeader& header);
+
+ private:
+  uint32_t expected_total_words_;
+  std::vector<uint32_t> data_;
+};
 
 class SysExParser {
  public:
@@ -36,6 +51,7 @@ class SysExParser {
  private:
   PresetMap presets_;
   IRDataArray ir_array_;
+  unique_ptr<FirmwareData> firmware_;
 };
 
 }  // namespace axefx
