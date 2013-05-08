@@ -37,20 +37,23 @@ class ParserTestUtil {
   bool MatchesFileContent(const std::vector<uint8_t>& data) const {
     if (data.size() != static_cast<size_t>(file_size_))
       return false;
+#ifndef NDEBUG
+    for (size_t i = 0; i < static_cast<size_t>(file_size_); ++i) {
+      if (data[i] != file_contents_[i]) {
+        std::cerr << "File contents don't match @ offset: " << i;
+        return false;
+      }
+    }
+    return true;
+#else
     return memcmp(&data[0], file_contents_.get(), file_size_) == 0;
+#endif
   }
 
-  size_t preset_count() const {
-    return parser_->presets().size();
-  }
-
-  const PresetMap& presets() const {
-    return parser_->presets();
-  }
-
-  IRDataArray& ir_array() {
-    return parser_->ir_array();
-  }
+  size_t preset_count() const { return parser_->presets().size(); }
+  const PresetMap& presets() const { return parser_->presets(); }
+  IRDataArray& ir_array() { return parser_->ir_array(); }
+  int file_size() const { return file_size_; }
 
   static void SerializeCallback(const std::vector<uint8_t>& data,
                                 std::vector<uint8_t>* out) {
@@ -73,7 +76,7 @@ class ParserTestUtil {
 
  private:
   unique_ptr<SysExParser> parser_;
-  std::unique_ptr<uint8_t> file_contents_;
+  std::unique_ptr<uint8_t[]> file_contents_;
   int file_size_;
 };
 
@@ -229,6 +232,20 @@ TEST_F(AxeFxII, ParseHugeBankFileV10) {
 // Disabled while the work is in progress.
 TEST_F(AxeFxII, ParseFirmwareFileV10) {
   EXPECT_TRUE(ParseFile("axefx2/v10/axefx2_10p02.syx"));
+  std::vector<uint8_t> serialized;
+  parser_.Serialize(&serialized);
+  EXPECT_FALSE(serialized.empty());
+  EXPECT_EQ(parser_.file_size(), static_cast<int>(serialized.size()));
+#if 0
+  EXPECT_TRUE(parser_.MatchesFileContent(serialized));
+#else
+  if (!parser_.MatchesFileContent(serialized)) {
+    // See comment in FirmwareData::AddData for why we only print a
+    // warning in this case.
+    std::cerr
+        << "WRN: Firmware data doesn't exactly match our serialized data\n";
+  }
+#endif
 }
 
 TEST_F(AxeFxII, ParsePresetFile) {

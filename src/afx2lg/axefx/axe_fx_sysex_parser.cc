@@ -13,12 +13,26 @@ namespace axefx {
 
 FirmwareData::FirmwareData(const FirmwareBeginHeader& header)
     : expected_total_words_(header.count.Decode()) {
+  data_.reserve(expected_total_words_);
 }
 
 void FirmwareData::AddData(const FirmwareDataHeader& header) {
   uint16_t count = header.value_count.Decode();
-  for (uint16_t i = 0; i < count; ++i)
-    data_.push_back(header.values[i].Decode());
+  ASSERT(reinterpret_cast<const uint8_t*>(&header)[
+      sizeof(FirmwareDataHeader) + ((count - 1) * sizeof(Fractal32bit)) + 1] == 0xF7);
+  for (uint16_t i = 0; i < count; ++i) {
+    uint32_t value = header.values[i].Decode();
+    data_.push_back(value);
+#if !defined(NDEBUG) && 0
+    // There appears to be a bug in the encoder that's used to encode firmware
+    // data, which causes the 4 upper most bits of the 5byte midi data to be
+    // used when they should be 0.  This means that we can't compare bit for bit
+    // the output of our serialization and the original fw file.
+    Fractal32bit test(value);
+    ASSERT(test.Decode() == value);
+    ASSERT(memcmp(&test, &header.values[i], sizeof(test)) == 0);
+#endif
+  }
 }
 
 bool FirmwareData::Verify(const FirmwareChecksumHeader& header) {
@@ -35,6 +49,57 @@ bool FirmwareData::Verify(const FirmwareChecksumHeader& header) {
               << ".\n";
     return false;
   }
+  return true;
+}
+
+bool FirmwareData::Serialize(const SysExCallback& callback) const {
+  ASSERT(expected_total_words_ == data_.size());
+
+  // TODO: This is very similar to the IRData::Serialize call.
+  // Refactor to maintain the common parts in a single place.
+
+  // Write the firmware header;
+  std::vector<uint8_t> data;
+  data.resize(sizeof(FirmwareBeginHeader));
+  new (&data[0]) FirmwareBeginHeader(data_.size());
+  callback(data);
+
+  // Write all the firmware data, 32 words at a time.
+  const uint16_t kFirmwareWordsPerHeader = 32u;
+  data.resize(
+      sizeof(FirmwareDataHeader) +
+      (sizeof(Fractal32bit) * (kFirmwareWordsPerHeader - 1)) +
+      sizeof(FractalSysExEnd));
+
+  auto* header = new (&data[0]) FirmwareDataHeader(kFirmwareWordsPerHeader);
+  uint16_t value_index = 0;
+  for (size_t i = 0; i < data_.size(); ++i) {
+    value_index = i % kFirmwareWordsPerHeader;
+    header->values[value_index].Encode(data_[i]);
+    if (value_index == (kFirmwareWordsPerHeader - 1)) {
+      auto checksum = new (&header->values[value_index + 1]) FractalSysExEnd();
+      checksum->CalculateChecksum(header);
+      callback(data);
+      memset(&header->values[0], 0,
+             kFirmwareWordsPerHeader * sizeof(header->values[0]));
+    }
+  }
+
+  if (value_index != (kFirmwareWordsPerHeader - 1)) {
+    header->value_count.Encode(value_index + 1);
+    auto checksum = new (&header->values[value_index + 1]) FractalSysExEnd();
+    checksum->CalculateChecksum(header);
+    data.resize(data.size() -
+                ((kFirmwareWordsPerHeader - (value_index + 1)) *
+                 sizeof(Fractal32bit)));
+    callback(data);
+  }
+
+  // Write the Checksum.
+  data.resize(sizeof(FirmwareChecksumHeader));
+  new (&data[0]) FirmwareChecksumHeader(CalculateChecksum(data_));
+  callback(data);
+
   return true;
 }
 
@@ -196,7 +261,8 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
   }
 
   ASSERT(!preset.get());  // Half way through parsing a preset?
-#ifndef NDEBUG
+  ASSERT(!sys_ex_begins);
+
   // The expectation is that we were only parsing one type of syx data stream.
   int success_count = 0;
   if (!presets_.empty())
@@ -206,8 +272,11 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
   if (firmware_)
     ++success_count;
   ASSERT(success_count == 1);
-#endif
-  ASSERT(!sys_ex_begins);
+
+  if (success_count != 1) {
+    std::cerr << "Received a mix bag of data. Not safe to continue...\n";
+    return false;
+  }
 
   return true;
 }
@@ -220,6 +289,11 @@ bool SysExParser::Serialize(const SysExCallback& callback) const {
 
   for (auto& entry: ir_array_) {
     if (!entry->Serialize(callback))
+      return false;
+  }
+
+  if (firmware_) {
+    if (!firmware_->Serialize(callback))
       return false;
   }
 

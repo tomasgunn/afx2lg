@@ -103,6 +103,7 @@ struct Fractal16bit {
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx#Obtaining_Parameter_Values_via_SYSEX_Messages
 struct Fractal32bit {
   Fractal32bit() : b1(), b2(), b3(), b4(), b5() {}
+  explicit Fractal32bit(uint32_t value) { Encode(value); }
 
   uint8_t b1, b2, b3, b4, b5;
 
@@ -115,6 +116,7 @@ struct Fractal32bit {
 
 struct Fractal28bit {
   Fractal28bit() : b1(), b2(), b3(), b4() {}
+  explicit Fractal28bit(uint32_t value) { Encode(value); }
 
   uint8_t b1, b2, b3, b4;
 
@@ -127,6 +129,7 @@ struct Fractal28bit {
 
 struct Fractal14bit {
   Fractal14bit() : b1(), b2() {}
+  explicit Fractal14bit(uint16_t value) { Encode(value); }
 
   uint8_t b1, b2;
 
@@ -287,7 +290,8 @@ struct PresetDumpRequest : public FractalSysExHeader {
 };
 
 struct FirmwareBeginHeader : public FractalSysExHeader {
-  FirmwareBeginHeader() : FractalSysExHeader(FIRMWARE_BEGIN) {
+  explicit FirmwareBeginHeader(uint32_t total_count)
+      : FractalSysExHeader(FIRMWARE_BEGIN), count(total_count) {
     end.CalculateChecksum(this);
   }
   Fractal28bit count;
@@ -298,7 +302,8 @@ struct FirmwareBeginHeader : public FractalSysExHeader {
 };
 
 struct FirmwareDataHeader : public FractalSysExHeader {
-  FirmwareDataHeader() : FractalSysExHeader(FIRMWARE_DATA) {}
+  explicit FirmwareDataHeader(uint16_t count)
+      : FractalSysExHeader(FIRMWARE_DATA), value_count(count) {}
   Fractal14bit value_count;
   Fractal32bit values[1];  // Actual size determined by |value_count|.
   // checksum + F7 follows.

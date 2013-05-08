@@ -343,7 +343,7 @@ void VerifyIsSysEx(Message* msg) {
 }  // namespace
 
 TEST(SysExDataBuffer, Basic) {
-  std::unique_ptr<uint8_t> buffer;
+  std::unique_ptr<uint8_t[]> buffer;
   int file_size;
   ASSERT_TRUE(ReadTestFileIntoBuffer("axefx2/9b_A.syx", &buffer, &file_size));
 

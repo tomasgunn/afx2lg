@@ -71,7 +71,7 @@ bool IRData::Serialize(const SysExCallback& callback) const {
       sizeof(IRBlockHeader) +
       (sizeof(Fractal32bit) * (kIRValuesPerHeader - 1)) +
       sizeof(FractalSysExEnd));
-  auto header = new (&data[0]) IRBlockHeader(kIRValuesPerHeader);
+  auto* header = new (&data[0]) IRBlockHeader(kIRValuesPerHeader);
   size_t value_index = 0;
   for (size_t i = 0; i < data_.size(); ++i) {
     value_index = i % kIRValuesPerHeader;

@@ -29,6 +29,8 @@ class FirmwareData {
 
   bool Verify(const FirmwareChecksumHeader& header);
 
+  bool Serialize(const SysExCallback& callback) const;
+
  private:
   uint32_t expected_total_words_;
   std::vector<uint32_t> data_;

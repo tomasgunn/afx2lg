@@ -27,7 +27,7 @@ class MockCallback : public LgParserCallback {
 };
 
 TEST(LittleGiant, BasicReadInputFile) {
-  std::unique_ptr<uint8_t> buffer;
+  std::unique_ptr<uint8_t[]> buffer;
   int file_size;
   ASSERT_TRUE(ReadTestFileIntoBuffer("lg2/input.txt", &buffer,
                                      &file_size));

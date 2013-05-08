@@ -21,7 +21,7 @@ FilePath GetTestFilePath(const std::string& test_file) {
 }
 
 bool ReadTestFileIntoBuffer(const std::string& file,
-                            std::unique_ptr<uint8_t>* buffer,
+                            std::unique_ptr<uint8_t[]>* buffer,
                             int* file_size) {
   FilePath path(GetTestFilePath(file));
   std::ifstream f;
