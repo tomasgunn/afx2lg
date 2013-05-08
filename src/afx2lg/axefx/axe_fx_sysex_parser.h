@@ -25,7 +25,7 @@ class FirmwareData {
  public:
   explicit FirmwareData(const FirmwareBeginHeader& header);
 
-  void AddData(const FirmwareDataHeader& header, size_t size);
+  void AddData(const FirmwareDataHeader& header);
 
   bool Verify(const FirmwareChecksumHeader& header);
 

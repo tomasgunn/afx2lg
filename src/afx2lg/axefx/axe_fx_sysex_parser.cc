@@ -14,27 +14,10 @@ FirmwareData::FirmwareData(const FirmwareBeginHeader& header)
     : expected_total_words_(header.count.Decode()) {
 }
 
-void FirmwareData::AddData(const FirmwareDataHeader& header, size_t size) {
-  const uint8_t* end = (reinterpret_cast<const uint8_t*>(&header) + size) - 2;
+void FirmwareData::AddData(const FirmwareDataHeader& header) {
   uint16_t count = header.value_count.Decode();
-  if (count != 32)
-    std::cerr << "Data count: " << count << "\n";
-  //ASSERT(count == 32);
-  /*for (uint16_t i = 0; i < count; ++i) {
-    ASSERT(&header.values[i] < end);
+  for (uint16_t i = 0; i < count; ++i)
     data_.push_back(header.values[i].Decode());
-  }*/
-  const Fractal32bit* p = &header.values[0];
-  uint16_t read = 0;
-  while (p < reinterpret_cast<const Fractal32bit*>(end)) {
-    data_.push_back(p->Decode());
-    ++p;
-    read++;
-  }
-
-  if (read != count)
-    std::cerr << "read: " << read << " count: " << count << "\n";
-  //ASSERT(read == count);
 }
 
 bool FirmwareData::Verify(const FirmwareChecksumHeader& header) {
@@ -133,7 +116,7 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
 
         case IR_BEGIN: {
           ASSERT(!ir_data);
-          auto ir_header = static_cast<const IRIdHeader&>(header);
+          const auto& ir_header = static_cast<const IRIdHeader&>(header);
           ir_data.reset(new IRData(ir_header));
           break;
         }
@@ -174,8 +157,8 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
             std::cerr << "Received out of band firmware data.\n";
             return false;
           }
-          auto fw_data = static_cast<const FirmwareDataHeader&>(header);
-          firmware_->AddData(fw_data, size);
+          const auto& fw_data = static_cast<const FirmwareDataHeader&>(header);
+          firmware_->AddData(fw_data);
           break;
         }
 
@@ -185,7 +168,8 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
             std::cerr << "Received out of band firmware checksum.";
             return false;
           }
-          auto fw_checksum = static_cast<const FirmwareChecksumHeader&>(header);
+          const auto& fw_checksum =
+              static_cast<const FirmwareChecksumHeader&>(header);
           if (!firmware_->Verify(fw_checksum))
             return false;
           break;
@@ -215,7 +199,14 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
 
   ASSERT(!preset.get());  // Half way through parsing a preset?
 #ifndef NDEBUG
-  int success_count = !presets_.empty() + !ir_array_.empty() + !firmware_.get();
+  // The expectation is that we were only parsing one type of syx data stream.
+  int success_count = 0;
+  if (!presets_.empty())
+    ++success_count;
+  if (!ir_array_.empty())
+    ++success_count;
+  if (firmware_)
+    ++success_count;
   ASSERT(success_count == 1);
 #endif
   ASSERT(!sys_ex_begins);

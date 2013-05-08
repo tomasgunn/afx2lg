@@ -93,7 +93,10 @@ class AxeFxII : public testing::Test {
 };
 
 TEST(FractalTypes, Fractal16bit) {
-  Fractal16bit f = {0x45, 0x19, 0x3};
+  Fractal16bit f;
+  f.b1 = 0x45;
+  f.b2 = 0x19;
+  f.b3 = 0x3;
   EXPECT_EQ(0x0000ccc5, f.Decode());
   for (uint16_t i = 0; i < 0xffff; ++i) {
     f.Encode(i);
@@ -102,7 +105,12 @@ TEST(FractalTypes, Fractal16bit) {
 }
 
 TEST(FractalTypes, Fractal32bit) {
-  Fractal32bit f = {0x4F, 0x10, 0x01, 0x11, 0x04};
+  Fractal32bit f;
+  f.b1 = 0x4F;
+  f.b2 = 0x10;
+  f.b3 = 0x01;
+  f.b4 = 0x11;
+  f.b5 = 0x04;
   EXPECT_EQ(0x4F482042u, f.Decode());
   f.Encode(f.Decode());
   EXPECT_EQ(0x4Fu, f.b1);

@@ -56,12 +56,15 @@ enum FunctionId {
 
 // Convert two septets (7bit integers), into a 16 bit integer.
 struct SeptetPair {
-  SeptetPair() {}
-  SeptetPair(uint16_t value);
+  SeptetPair() : ms(), ls() {}
+  explicit SeptetPair(uint16_t value);
 
   uint8_t ms, ls;
 
   uint16_t As16bit() const;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(SeptetPair);
 };
 
 // AxeFx-II uses three bytes for 16bit values.  The bytes are stored in
@@ -71,33 +74,53 @@ struct SeptetPair {
 // models where there were only two bytes and the  most significant one
 // came first.
 struct Fractal16bit {
+  Fractal16bit() : b1(), b2(), b3() {}
+
   uint8_t b1, b2, b3;
 
   uint16_t Decode() const;
   void Encode(uint16_t value);
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(Fractal16bit);
 };
 
 // IR data is 32 bit where each 32bit chunk is encoded in 5 bytes.
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx#Obtaining_Parameter_Values_via_SYSEX_Messages
 struct Fractal32bit {
+  Fractal32bit() : b1(), b2(), b3(), b4(), b5() {}
+
   uint8_t b1, b2, b3, b4, b5;
 
   uint32_t Decode() const;
   void Encode(uint32_t value);
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(Fractal32bit);
 };
 
 struct Fractal28bit {
+  Fractal28bit() : b1(), b2(), b3(), b4() {}
+
   uint8_t b1, b2, b3, b4;
 
   uint32_t Decode() const;
   void Encode(uint32_t value);
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(Fractal28bit);
 };
 
 struct Fractal14bit {
+  Fractal14bit() : b1(), b2() {}
+
   uint8_t b1, b2;
 
   uint16_t Decode() const;
   void Encode(uint16_t value);
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(Fractal14bit);
 };
 
 struct FractalSysExHeader {
@@ -111,6 +134,9 @@ struct FractalSysExHeader {
 
   AxeFxModel model() const;
   FunctionId function() const;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(FractalSysExHeader);
 };
 
 struct FractalSysExEnd {
@@ -121,13 +147,16 @@ struct FractalSysExEnd {
 
   uint8_t checksum;
   uint8_t sys_ex_end;  // kSysExend.
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(FractalSysExEnd);
 };
 
 template<FunctionId func, typename UnknownType>
 struct IdHeader : public FractalSysExHeader {
   IdHeader() : FractalSysExHeader(func) {}
 
-  IdHeader(uint16_t entry_id)
+  explicit IdHeader(uint16_t entry_id)
       : FractalSysExHeader(func),
         id(entry_id),
         unknown(0x10) {
@@ -137,6 +166,9 @@ struct IdHeader : public FractalSysExHeader {
   SeptetPair id;
   UnknownType unknown;  // always 0x10
   FractalSysExEnd end;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(IdHeader);
 };
 
 typedef IdHeader<PRESET_ID, SeptetPair> PresetIdHeader;
@@ -145,7 +177,7 @@ typedef IdHeader<IR_BEGIN, uint8_t> IRIdHeader;
 // Common template class for header types that contain 7bit encoded data.
 template<typename ValueType, FunctionId func>
 struct DataBlockHeader : public FractalSysExHeader {
-  DataBlockHeader(uint8_t value_count)
+  explicit DataBlockHeader(uint8_t value_count)
       : FractalSysExHeader(func),
         value_count(value_count),
         reserved(0u) {
@@ -154,6 +186,9 @@ struct DataBlockHeader : public FractalSysExHeader {
   uint8_t value_count;  // Typically 0x40 (16bit) or 0x20 (32bit).
   uint8_t reserved;  // Always 0.
   ValueType values[1];  // Actual size is |value_count|.
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(DataBlockHeader);
 };
 
 typedef DataBlockHeader<Fractal16bit, PRESET_PARAMETERS> ParameterBlockHeader;
@@ -162,7 +197,7 @@ typedef DataBlockHeader<Fractal32bit, IR_DATA> IRBlockHeader;
 template<typename ChecksumType, typename int_type, FunctionId func>
 struct ChecksumHeader : public FractalSysExHeader {
   ChecksumHeader() : FractalSysExHeader(func) {}
-  ChecksumHeader(int_type sum) : FractalSysExHeader(func) {
+  explicit ChecksumHeader(int_type sum) : FractalSysExHeader(func) {
     checksum.Encode(sum);
     end.CalculateChecksum(this);
   }
@@ -173,6 +208,9 @@ struct ChecksumHeader : public FractalSysExHeader {
 
   ChecksumType checksum;
   FractalSysExEnd end;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(ChecksumHeader);
 };
 
 typedef ChecksumHeader<Fractal16bit, uint16_t, PRESET_CHECKSUM>
@@ -189,7 +227,7 @@ struct BankDumpRequest : public FractalSysExHeader {
     SYSTEM_BANK,
   };
 
-  BankDumpRequest(BankId id)
+  explicit BankDumpRequest(BankId id)
       : FractalSysExHeader(BANK_DUMP_REQUEST),
         bank_id(static_cast<uint8_t>(id)) {
     end.CalculateChecksum(this);
@@ -197,18 +235,24 @@ struct BankDumpRequest : public FractalSysExHeader {
 
   uint8_t bank_id;
   FractalSysExEnd end;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(BankDumpRequest);
 };
 
 struct GenericNoDataMessage : public FractalSysExHeader {
-  GenericNoDataMessage(FunctionId id)
+  explicit GenericNoDataMessage(FunctionId id)
       : FractalSysExHeader(id) {
     end.CalculateChecksum(this);
   }
   FractalSysExEnd end;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(GenericNoDataMessage);
 };
 
 struct PresetDumpRequest : public FractalSysExHeader {
-  PresetDumpRequest(uint16_t preset_id)
+  explicit PresetDumpRequest(uint16_t preset_id)
       : FractalSysExHeader(REQUEST_PRESET_DUMP),
         preset_id_(preset_id) {
     end.CalculateChecksum(this);
@@ -223,6 +267,9 @@ struct PresetDumpRequest : public FractalSysExHeader {
 
   SeptetPair preset_id_;
   FractalSysExEnd end;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(PresetDumpRequest);
 };
 
 struct FirmwareBeginHeader : public FractalSysExHeader {
@@ -231,6 +278,9 @@ struct FirmwareBeginHeader : public FractalSysExHeader {
   }
   Fractal28bit count;
   FractalSysExEnd end;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(FirmwareBeginHeader);
 };
 
 struct FirmwareDataHeader : public FractalSysExHeader {
@@ -238,6 +288,9 @@ struct FirmwareDataHeader : public FractalSysExHeader {
   Fractal14bit value_count;
   Fractal32bit values[1];  // Actual size determined by |value_count|.
   // checksum + F7 follows.
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(FirmwareDataHeader);
 };
 
 #pragma pack(pop)
