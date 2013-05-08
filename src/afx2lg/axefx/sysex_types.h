@@ -7,7 +7,9 @@
 
 #include "common/common_types.h"
 
+#include <algorithm>
 #include <string>
+#include <vector>
 
 namespace axefx {
 
@@ -19,6 +21,18 @@ const uint16_t kEditBufferId = (0x7F << 7u);  // Used for presets and IR data.
 
 bool IsFractalSysEx(const uint8_t* sys_ex, size_t size);
 bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, size_t size);
+
+template<typename T>
+T CalculateChecksum(const T* begin, const T* end) {
+  T checksum = 0;
+  std::for_each(begin, end, [&checksum](const T& val) { checksum ^= val; });
+  return checksum;
+}
+
+template<typename T>
+T CalculateChecksum(const std::vector<T>& v) {
+  return v.empty() ? 0 : CalculateChecksum(&v[0], &v[0] + v.size());
+}
 
 // http://wiki.fractalaudio.com/axefx2/index.php?title=MIDI_SysEx
 uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, size_t size);

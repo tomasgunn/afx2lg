@@ -33,11 +33,8 @@ bool IsFractalSysExNoChecksum(const uint8_t* sys_ex, size_t size) {
 }
 
 uint8_t CalculateSysExChecksum(const uint8_t* sys_ex, size_t size) {
-  uint8_t checksum = 0;
-  for (size_t i = 0; i < size - 2; ++i)
-    checksum ^= sys_ex[i];
-  checksum &= 0x7F;
-  return checksum;
+  return CalculateChecksum(&sys_ex[0],
+      &sys_ex[size - sizeof(FractalSysExEnd)]) & 0x7F;
 }
 
 SeptetPair::SeptetPair(uint16_t value)

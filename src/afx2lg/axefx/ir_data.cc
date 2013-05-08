@@ -35,14 +35,8 @@ std::string IRData::name() const {
   return ret;
 }
 
-// TODO: Move all these checksum algorithms (8, 16 and 32 bit) to a
-// common place.
 uint32_t IRData::Checksum() const {
-  uint32_t checksum = 0;
-  std::vector<uint32_t>::const_iterator it;
-  for (it = data_.begin(); it != data_.end(); ++it)
-    checksum ^= *it;
-  return checksum;
+  return CalculateChecksum(data_);
 }
 
 bool IRData::AppendFromSysEx(const IRBlockHeader& header, size_t header_size) {

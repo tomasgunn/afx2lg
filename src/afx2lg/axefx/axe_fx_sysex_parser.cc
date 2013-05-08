@@ -10,6 +10,7 @@
 #include <iostream>
 
 namespace axefx {
+
 FirmwareData::FirmwareData(const FirmwareBeginHeader& header)
     : expected_total_words_(header.count.Decode()) {
 }
@@ -26,11 +27,8 @@ bool FirmwareData::Verify(const FirmwareChecksumHeader& header) {
               << " words, but got " << data_.size() << ".\n";
     return false;
   }
-  // TODO: Keep all checksum calculation code in one place.
-  uint32_t checksum = 0;
-  for (const auto& i: data_)
-    checksum ^= i;
 
+  uint32_t checksum = CalculateChecksum(data_);
   if (checksum != header.package_checksum()) {
     std::cerr << "Firmware checksum doesn't match.  Header says: " << std::hex
               << header.package_checksum() << ", calculated: " << checksum

@@ -29,10 +29,7 @@ bool PresetParameters::AppendFromSysEx(const ParameterBlockHeader& header,
 }
 
 uint16_t PresetParameters::Checksum() const {
-  uint16_t checksum = 0;
-  for (const_iterator it = begin(); it != end(); ++it)
-    checksum ^= *it;
-  return checksum;
+  return CalculateChecksum(*this);
 }
 
 bool PresetParameters::Serialize(const SysExCallback& callback) const {
