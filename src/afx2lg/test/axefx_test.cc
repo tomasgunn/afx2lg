@@ -38,13 +38,23 @@ class ParserTestUtil {
     if (data.size() != static_cast<size_t>(file_size_))
       return false;
 #ifndef NDEBUG
+    bool match = true;
+    int error_count = 0;
     for (size_t i = 0; i < static_cast<size_t>(file_size_); ++i) {
       if (data[i] != file_contents_[i]) {
-        std::cerr << "File contents don't match @ offset: " << i;
-        return false;
+        uint8_t difference = data[i] ^ file_contents_[i];
+        std::cerr << "File contents don't match @ offset: " << std::dec << i
+                  << " difference: " << std::hex
+                  << static_cast<uint32_t>(difference) << "\n";
+        match = false;
+        ++error_count;
+        if (error_count >= 100) {
+          std::cerr << "etc...\n";
+          break;
+        }
       }
     }
-    return true;
+    return match;
 #else
     return memcmp(&data[0], file_contents_.get(), file_size_) == 0;
 #endif

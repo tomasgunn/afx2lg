@@ -23,13 +23,20 @@ void FirmwareData::AddData(const FirmwareDataHeader& header) {
   for (uint16_t i = 0; i < count; ++i) {
     uint32_t value = header.values[i].Decode();
     data_.push_back(value);
-#if !defined(NDEBUG) && 0
+#if !defined(NDEBUG)
     // There appears to be a bug in the encoder that's used to encode firmware
     // data, which causes the 4 upper most bits of the 5byte midi data to be
     // used when they should be 0.  This means that we can't compare bit for bit
     // the output of our serialization and the original fw file.
     Fractal32bit test(value);
     ASSERT(test.Decode() == value);
+    test.b5 |= (header.values[i].b5 & 0x70);
+    int mysterious_value = (header.values[i].b5 & 0x70) >> 4;
+    if (!mysterious_value) {
+      // std::cout << "mysterious_value is 0 for index " << i << "\n";
+    } else {
+      ASSERT(mysterious_value == 7);
+    }
     ASSERT(memcmp(&test, &header.values[i], sizeof(test)) == 0);
 #endif
   }
@@ -116,6 +123,7 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
 
   shared_ptr<Preset> preset;
   unique_ptr<IRData> ir_data;
+  unique_ptr<FirmwareData> firmware;
 
   while (pos < end) {
     if (pos[0] == kSysExStart) {
@@ -208,33 +216,34 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
         }
 
         case FIRMWARE_BEGIN: {
-          ASSERT(!firmware_.get());
-          firmware_.reset(new FirmwareData(
+          ASSERT(!firmware.get());
+          firmware.reset(new FirmwareData(
               static_cast<const FirmwareBeginHeader&>(header)));
           break;
         }
 
         case FIRMWARE_DATA: {
-          ASSERT(firmware_.get());
-          if (!firmware_.get()) {
+          ASSERT(firmware.get());
+          if (!firmware.get()) {
             std::cerr << "Received out of band firmware data.\n";
             return false;
           }
           const auto& fw_data = static_cast<const FirmwareDataHeader&>(header);
-          firmware_->AddData(fw_data);
+          firmware->AddData(fw_data);
           break;
         }
 
         case FIRMWARE_END: {
-          ASSERT(firmware_.get());
-          if (!firmware_.get()) {
+          ASSERT(firmware.get());
+          if (!firmware.get()) {
             std::cerr << "Received out of band firmware checksum.";
             return false;
           }
           const auto& fw_checksum =
               static_cast<const FirmwareChecksumHeader&>(header);
-          if (!firmware_->Verify(fw_checksum))
+          if (!firmware->Verify(fw_checksum))
             return false;
+          firmware_.swap(firmware);
           break;
         }
 
