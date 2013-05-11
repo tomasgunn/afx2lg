@@ -290,7 +290,6 @@
       },
       'conditions': [
         [ 'OS=="win"', {
-          # TODO(bradnelson): add a gyp mechanism to make this more graceful.
           'Debug_x64': {
             'inherit_from': ['Common_Base', 'x64_Base', 'Debug_Base'],
           },
@@ -971,28 +970,6 @@
         'target_conditions': [
           ['_type=="executable"', {
             'postbuilds': [
-              #{
-                 # TODO(tommi): Do we need this?
-
-            #    # Arranges for data (heap) pages to be protected against
-            #    # code execution when running on Mac OS X 10.7 ("Lion"), and
-            #    # ensures that the position-independent executable (PIE) bit
-            #    # is set for ASLR when running on Mac OS X 10.5 ("Leopard").
-            #    'variables': {
-            #      # Define change_mach_o_flags in a variable ending in _path
-            #      # so that GYP understands it's a path and performs proper
-            #      # relativization during dict merging.
-            #      'change_mach_o_flags_path':
-            #          'mac/change_mach_o_flags_from_xcode.sh',
-            #      'change_mach_o_flags_options%': [
-            #      ],
-            #    },
-            #    'postbuild_name': 'Change Mach-O Flags',
-            #    'action': [
-            #      '<(change_mach_o_flags_path)',
-            #      '>@(change_mach_o_flags_options)',
-            #    ],
-              #},
             ],
             'conditions': [
               ['asan==1', {

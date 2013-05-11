@@ -2,32 +2,15 @@
 // All rights reserved.
 
 #include "axefx/axe_fx_sysex_parser.h"
+#include "common/file_utils.h"
 #include "lg/lg_parser.h"
 
 #include <climits>
 #include <fstream>
 #include <iostream>
 
-bool ReadFileIntoBuffer(const std::string& path, std::unique_ptr<char>* out,
-                        size_t* file_size) {
-  std::ifstream f;
-  f.open(path.c_str(), std::fstream::in | std::ios::binary);
-  if (!f.is_open())
-    return false;
-
-  f.seekg(0, std::ios::end);
-  std::streampos size = f.tellg();
-  f.seekg(0, std::ios::beg);
-
-  if (size >= INT_MAX)
-    return false;
-
-  *file_size = static_cast<size_t>(size);
-  out->reset(new char[*file_size]);
-  f.read(out->get(), *file_size);
-  
-  return true;
-}
+using base::FileExists;
+using base::ReadFileIntoBuffer;
 
 class LgSetupFileWriter : public lg::LgParserCallback {
  public:
@@ -136,11 +119,6 @@ class SysExFileParam {
   std::string path_;
   std::vector<IDRange> ranges_;
 };
-
-bool FileExists(const std::string& path) {
-  std::ifstream file(path);
-  return file.good();
-}
 
 bool PromptUser(const std::string& prompt, std::string* ret) {
   std::cout << prompt;
@@ -260,10 +238,10 @@ int main(int argc, char* argv[]) {
   axefx::PresetMap presets;
   axefx::SysExParser parser;
   for (size_t i = 0; i < syx_files.size(); ++i) {
-    std::unique_ptr<char> buffer;
+    std::unique_ptr<uint8_t[]> buffer;
     size_t size = 0;
     if (ReadFileIntoBuffer(syx_files[i].path(), &buffer, &size)) {
-      const uint8_t* b = reinterpret_cast<const uint8_t*>(buffer.get());
+      const uint8_t* b = &buffer[0];
       if (!parser.ParseSysExBuffer(b, b + size, true)) {
         std::cerr << "Failed to parse " << syx_files[i].path() << std::endl;
         return -1;
@@ -274,18 +252,18 @@ int main(int argc, char* argv[]) {
           presets.insert(*it);
       }
     } else {
-
       std::cerr << "Failed to open " << syx_files[i].path() << std::endl;
       return -1;
     }
   }
 
   lg::LgParser lg_parser;
-  std::unique_ptr<char> buffer;
+  std::unique_ptr<uint8_t[]> buffer;
   size_t size = 0;
   if (ReadFileIntoBuffer(input_template, &buffer, &size)) {
     LgSetupFileWriter callback(presets);
-    lg_parser.ParseBuffer(&callback, buffer.get(), buffer.get() + size);
+    lg_parser.ParseBuffer(&callback, reinterpret_cast<char*>(buffer.get()),
+        reinterpret_cast<char*>(buffer.get()) + size);
   } else {
     std::cerr << "Failed to open " << input_template << std::endl;
   }

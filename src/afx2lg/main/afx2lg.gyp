@@ -14,10 +14,10 @@
       ],
       'dependencies': [
         '../axefx/axefx.gyp:axefx',
+        '../common/base.gyp:*',
         '../lg/lg.gyp:lg',
       ],
       'sources': [
-        '../common/common_types.h',
         'main.cc',
       ],
     },

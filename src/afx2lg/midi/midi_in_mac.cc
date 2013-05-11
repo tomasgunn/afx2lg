@@ -16,7 +16,7 @@ namespace midi {
 class MidiInMac : public MidiIn {
  public:
   MidiInMac(const shared_ptr<MidiDeviceInfo>& device,
-            const shared_ptr<common::ThreadLoop>& worker_thread)
+            const shared_ptr<base::ThreadLoop>& worker_thread)
       : MidiIn(device, worker_thread),
         midi_in_(NULL) {
   }
@@ -64,7 +64,7 @@ class MidiInMac : public MidiIn {
   }
 
   void OnCallback(const MIDIPacketList* packets) {
-    shared_ptr<common::ThreadLoop> worker(worker_.lock());
+    shared_ptr<base::ThreadLoop> worker(worker_.lock());
     if (!worker)
       return;
 
@@ -103,7 +103,7 @@ class MidiInMac : public MidiIn {
 // static
 shared_ptr<MidiIn> MidiIn::Create(
     const shared_ptr<MidiDeviceInfo>& device,
-    const shared_ptr<common::ThreadLoop>& worker_thread) {
+    const shared_ptr<base::ThreadLoop>& worker_thread) {
   shared_ptr<MidiInMac> ret(new MidiInMac(device, worker_thread));
   if (!ret->Init(ret))
     ret.reset();

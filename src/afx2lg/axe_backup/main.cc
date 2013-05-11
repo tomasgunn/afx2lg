@@ -5,6 +5,7 @@
 
 #include "axefx/preset.h"
 #include "axefx/sysex_types.h"
+#include "common/file_utils.h"
 #include "json/writer.h"
 #include "midi/midi_in.h"
 #include "midi/midi_out.h"
@@ -16,10 +17,10 @@
 #include <sstream>
 
 using axefx::BankDumpRequest;
+using base::FileExists;
+using base::SharedThreadLoop;
 using std::placeholders::_1;
 using std::placeholders::_2;
-
-typedef std::shared_ptr<common::ThreadLoop> SharedThreadLoop;
 
 void PrintUsage() {
   std::cerr <<
@@ -109,12 +110,6 @@ std::string GetDate() {
          << std::setw(2) << timeinfo.tm_hour
          << std::setw(2) << timeinfo.tm_min;
   return stream.str();
-}
-
-// TODO: Move to common and remove duplicates.
-bool FileExists(const std::string& path) {
-  std::ifstream file(path);
-  return file.good();
 }
 
 bool CreateOutputFile(std::string* name, std::ofstream* file) {
@@ -288,7 +283,7 @@ int main(int argc, char* argv[]) {
 
   std::cout << "Opening MIDI devices...\n";
 
-  SharedThreadLoop loop(new common::ThreadLoop());
+  SharedThreadLoop loop(new base::ThreadLoop());
   shared_ptr<midi::MidiIn> midi_in(midi::MidiIn::OpenAxeFx(loop));
   unique_ptr<midi::MidiOut> midi_out(midi::MidiOut::OpenAxeFx());
   if (!midi_in || !midi_out) {

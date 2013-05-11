@@ -12,7 +12,7 @@ namespace midi {
 class MidiInWin : public MidiIn {
  public:
   MidiInWin(const shared_ptr<MidiDeviceInfo>& device,
-            const shared_ptr<common::ThreadLoop>& worker_thread)
+            const shared_ptr<base::ThreadLoop>& worker_thread)
       : MidiIn(device, worker_thread),
         midi_in_(NULL),
         headers_(),
@@ -78,7 +78,7 @@ class MidiInWin : public MidiIn {
     if (header->dwBytesRecorded) {
       // We need to add the buffer asynchronously. We can't do it from here or
       // we'll deadlock.
-      shared_ptr<common::ThreadLoop> worker(worker_.lock());
+      shared_ptr<base::ThreadLoop> worker(worker_.lock());
       if (worker) {
         worker->QueueTask(std::bind(&MidiInWin::OnProcessBuffer, weak_this_,
                           header));
@@ -126,7 +126,7 @@ class MidiInWin : public MidiIn {
 // static
 shared_ptr<MidiIn> MidiIn::Create(
     const shared_ptr<MidiDeviceInfo>& device,
-    const shared_ptr<common::ThreadLoop>& worker_thread) {
+    const shared_ptr<base::ThreadLoop>& worker_thread) {
   shared_ptr<MidiInWin> ret(new MidiInWin(device, worker_thread));
   if (!ret->Init(ret))
     ret.reset();

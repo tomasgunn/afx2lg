@@ -21,10 +21,10 @@ class MidiIn {
   // Create an instance of MidiIn.
   static shared_ptr<MidiIn> Create(
       const shared_ptr<MidiDeviceInfo>& device,
-      const shared_ptr<common::ThreadLoop>& worker_thread);
+      const shared_ptr<base::ThreadLoop>& worker_thread);
 
   static shared_ptr<MidiIn> OpenAxeFx(
-      const shared_ptr<common::ThreadLoop>& worker_thread);
+      const shared_ptr<base::ThreadLoop>& worker_thread);
 
   // Enumerate all midi output devices.
   static bool EnumerateDevices(DeviceInfos* devices);
@@ -38,10 +38,10 @@ class MidiIn {
 
  protected:
   MidiIn(const shared_ptr<MidiDeviceInfo>& device,
-         const shared_ptr<common::ThreadLoop>& worker_thread);
+         const shared_ptr<base::ThreadLoop>& worker_thread);
 
   shared_ptr<MidiDeviceInfo> device_;
-  std::weak_ptr<common::ThreadLoop> worker_;
+  std::weak_ptr<base::ThreadLoop> worker_;
   DataAvailable data_available_;
 };
 
@@ -65,6 +65,23 @@ class SysExDataBuffer {
 
   OnSysEx on_sysex_;
   Message buffer_;
+};
+
+// Convenience class to attach a SysExDataBuffer to a MidiIn object
+// and automatically detach at the end of scope.
+// This is convenient when the buffer is on the stack.
+class ScopedBufferAttach {
+ public:
+  ScopedBufferAttach(const shared_ptr<MidiIn>& midi_in,
+                     SysExDataBuffer* buffer)
+      : midi_in_(midi_in) {
+    buffer->Attach(midi_in);
+  }
+  ~ScopedBufferAttach() {
+    midi_in_->set_ondataavailable(nullptr);
+  }
+ private:
+  shared_ptr<MidiIn> midi_in_;
 };
 
 }  // namespace midi

@@ -12,13 +12,14 @@
 #include "midi/midi_out.h"
 #include "test_utils.h"
 
+using base::ThreadLoop;
+using base::SharedThreadLoop;
+
 using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
 
 namespace midi {
-
-typedef std::shared_ptr<common::ThreadLoop> SharedThreadLoop;
 
 bool IsTempoOrTuner(Message* msg) {
   return msg->IsFractalMessageType(axefx::TEMPO_HEARTBEAT) ||
@@ -61,7 +62,7 @@ TEST(MidiIn, OpenInputDevice) {
   DeviceInfos devices;
   EXPECT_TRUE(MidiIn::EnumerateDevices(&devices));
   ASSERT_FALSE(devices.empty());
-  shared_ptr<common::ThreadLoop> loop(new common::ThreadLoop());
+  shared_ptr<ThreadLoop> loop(new ThreadLoop());
   for (auto it = devices.begin(); it != devices.end(); ++it) {
     shared_ptr<MidiIn> m(MidiIn::Create(*it, loop));
     ASSERT_TRUE(m.get() != NULL);
@@ -81,14 +82,14 @@ TEST(MidiOut, SendSysExToAxeFx) {
   unique_ptr<Message> message(new Message(&request, sizeof(request)));
 
   // TODO: Use a timeout thread or something to catch timeouts and end the loop.
-  shared_ptr<common::ThreadLoop> loop(new common::ThreadLoop());
-  auto fn = std::bind(&common::ThreadLoop::Quit, loop);
+  shared_ptr<ThreadLoop> loop(new ThreadLoop());
+  auto fn = std::bind(&ThreadLoop::Quit, loop);
   EXPECT_TRUE(axefx->Send(std::move(message), fn));
   EXPECT_TRUE(loop->Run());
 }
 
 void AssignToBufferAndQuit(Message* new_message,
-                           const shared_ptr<common::ThreadLoop>& loop,
+                           const shared_ptr<ThreadLoop>& loop,
                            Message* message) {
   if (!new_message->IsSysEx()) {
     std::cerr << "Ignoring non-sysex (partial?) message\n";
@@ -101,7 +102,7 @@ void AssignToBufferAndQuit(Message* new_message,
 }
 
 TEST(Midi, GetPresetName) {
-  SharedThreadLoop loop(new common::ThreadLoop());
+  SharedThreadLoop loop(new ThreadLoop());
   shared_ptr<MidiIn> in_device(MidiIn::OpenAxeFx(loop));
   ASSERT_TRUE(in_device.get() != NULL);
   unique_ptr<MidiOut> out_device(MidiOut::OpenAxeFx());
@@ -145,7 +146,7 @@ TEST(Midi, GetPresetName) {
 // This test is disabled by default since it changes the state of the AxeFx
 // and I don't know how to unset that state (except for rebooting the unit).
 TEST(Midi, DISABLED_SwitchToFirmwareUpdatePage) {
-  SharedThreadLoop loop(new common::ThreadLoop());
+  SharedThreadLoop loop(new ThreadLoop());
   shared_ptr<MidiIn> in_device(MidiIn::OpenAxeFx(loop));
   ASSERT_TRUE(in_device.get() != NULL);
   unique_ptr<MidiOut> out_device(MidiOut::OpenAxeFx());
@@ -194,7 +195,7 @@ TEST(Midi, DISABLED_SwitchToFirmwareUpdatePage) {
 //  Perhaps there is a way to get a message+id from the axefx so that we can
 //  be sure that the id matches the name.
 TEST(Midi, DISABLED_PresetNameMonitor) {
-  SharedThreadLoop loop(new common::ThreadLoop());
+  SharedThreadLoop loop(new ThreadLoop());
   shared_ptr<MidiIn> midi_in(MidiIn::OpenAxeFx(loop));
   ASSERT_TRUE(midi_in.get() != NULL);
   unique_ptr<MidiOut> midi_out(MidiOut::OpenAxeFx());
@@ -243,7 +244,7 @@ TEST(Midi, DISABLED_PresetNameMonitor) {
 }
 
 TEST(Midi, GetSystemBankDump) {
-  SharedThreadLoop loop(new common::ThreadLoop());
+  SharedThreadLoop loop(new ThreadLoop());
   shared_ptr<MidiIn> midi_in(MidiIn::OpenAxeFx(loop));
   ASSERT_TRUE(midi_in.get() != NULL);
   unique_ptr<MidiOut> midi_out(MidiOut::OpenAxeFx());
@@ -277,7 +278,7 @@ TEST(Midi, GetSystemBankDump) {
 }
 
 TEST(Midi, GetPresetDump) {
-  SharedThreadLoop loop(new common::ThreadLoop());
+  SharedThreadLoop loop(new ThreadLoop());
   // Set the timeout between buffer receives to be 1 second.
   // We'll quit 1 second after receiving the last message.
   loop->set_timeout(std::chrono::milliseconds(1000));
@@ -326,7 +327,7 @@ TEST(Midi, GetPresetDump) {
 
 TEST(Midi, SelectPreset) {
   // TODO: Refactor this and the other methods that are basically the same.
-  SharedThreadLoop loop(new common::ThreadLoop());
+  SharedThreadLoop loop(new ThreadLoop());
   loop->set_timeout(std::chrono::milliseconds(1000));
 
   shared_ptr<MidiIn> midi_in(MidiIn::OpenAxeFx(loop));

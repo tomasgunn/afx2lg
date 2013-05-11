@@ -32,6 +32,7 @@ uint16_t PresetParameters::Checksum() const {
   return CalculateChecksum(*this);
 }
 
+// TODO: Combine this implementation with the IR and Firmware implementations.
 bool PresetParameters::Serialize(const SysExCallback& callback) const {
   ASSERT(!empty());
 

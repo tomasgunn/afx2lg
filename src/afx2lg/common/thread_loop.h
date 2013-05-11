@@ -13,7 +13,7 @@
 #include <queue>
 #include <thread>
 
-namespace common {
+namespace base {
 
 class ThreadLoop {
  public:
@@ -45,6 +45,8 @@ class ThreadLoop {
   bool is_running_;
 };
 
-}  // namespace common
+typedef std::shared_ptr<ThreadLoop> SharedThreadLoop;
+
+}  // namespace base
 
 #endif  // COMMON_THREAD_LOOP_H_

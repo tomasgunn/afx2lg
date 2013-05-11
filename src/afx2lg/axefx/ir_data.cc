@@ -87,9 +87,14 @@ bool IRData::Serialize(const SysExCallback& callback) const {
 
   if (value_index != (kIRValuesPerHeader - 1)) {
     // TODO: Does this ever happen in practice?
+    // A: Maybe not for IRs, but it does for firmware files.
+    // TODO: Consolidate these two implementations.
     ASSERT(false);
     auto checksum = new (&header->values[value_index + 1]) FractalSysExEnd();
     checksum->CalculateChecksum(header);
+    data.resize(data.size() -
+                ((kIRValuesPerHeader - (value_index + 1)) *
+                 sizeof(Fractal32bit)));
     callback(data);
   }
 

@@ -16,7 +16,9 @@
       ],
       'sources': [
         'common_types.h',
-        'thread_loop.cc',  # todo: rename common->base
+        'file_utils.cc',
+        'file_utils.h',
+        'thread_loop.cc',
         'thread_loop.h',
       ],
     },

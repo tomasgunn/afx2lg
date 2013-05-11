@@ -20,7 +20,7 @@ namespace midi {
 // static
 shared_ptr<MidiIn> MidiIn::Create(
     const shared_ptr<MidiDeviceInfo>& device,
-    const shared_ptr<common::ThreadLoop>& worker_thread) {
+    const shared_ptr<base::ThreadLoop>& worker_thread) {
   return nullptr;
 }
 
@@ -31,13 +31,13 @@ bool MidiIn::EnumerateDevices(DeviceInfos* devices) {
 #endif
 
 MidiIn::MidiIn(const shared_ptr<MidiDeviceInfo>& device,
-                const shared_ptr<common::ThreadLoop>& worker_thread)
+                const shared_ptr<base::ThreadLoop>& worker_thread)
     : device_(device), worker_(worker_thread) {
 }
 
 // static
 shared_ptr<MidiIn> MidiIn::OpenAxeFx(
-    const shared_ptr<common::ThreadLoop>& worker_thread) {
+    const shared_ptr<base::ThreadLoop>& worker_thread) {
   DeviceInfos devices;
   EnumerateDevices(&devices);
   DeviceInfos::const_iterator found = devices.FindAxeFx();

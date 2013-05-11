@@ -16,6 +16,10 @@ class LgParserCallback {
  public:
   virtual const axefx::PresetMap& GetPresetMap() = 0;
   virtual void WriteLine(const char* line, size_t length) = 0;
+
+  void WriteLine(const std::string& line) {
+    WriteLine(line.c_str(), line.length());
+  }
 };
 
 class LgParser {

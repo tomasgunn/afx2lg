@@ -3,7 +3,7 @@
 
 #include "common/thread_loop.h"
 
-namespace common {
+namespace base {
 
 #if defined(OS_WIN)
 using std::cv_status::cv_status;
@@ -84,4 +84,4 @@ bool ThreadLoop::PopTask(ThreadLoop::Task* task) {
   return true;
 }
 
-}  // namespace common
+}  // namespace base

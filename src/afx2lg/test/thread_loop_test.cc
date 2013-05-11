@@ -5,7 +5,7 @@
 
 #include "common/thread_loop.h"
 
-namespace common {
+namespace base {
 namespace {
 template<typename T>
 void Assign(T* t, const T& val) { *t = val; }
@@ -45,4 +45,4 @@ TEST(ThreadLoop, QueueTaskFromTask) {
   EXPECT_TRUE(loop.Run());
 }
 
-}  // namespace common
+}  // namespace base

@@ -34,7 +34,7 @@ void LgEntry::AppendLine(const char* line, const char* eol) {
 void LgEntry::WriteLines(LgParserCallback* callback) {
   std::vector<std::string>::const_iterator it = lines_.begin();
   for (; it != lines_.end(); ++it)
-    callback->WriteLine(it->c_str(), it->length());
+    callback->WriteLine(*it);
 }
 
 void NamedEntry::SetName(const std::string& name) {
@@ -92,26 +92,25 @@ void Bank::WriteLines(LgParserCallback* callback) {
     return;
 
   std::vector<std::string>::const_iterator it = lines_.begin();
-  callback->WriteLine(it->c_str(), it->length());
+  callback->WriteLine(*it);
   ++it;
 
   if (!inherited_from_name_.empty()) {
     std::string line("DERIVED FROM ");
     line += inherited_from_name_;
     line += '\n';
-    // TODO: Just change the callback to use std::string.
-    callback->WriteLine(line.c_str(), line.length());
+    callback->WriteLine(line);
   }
 
   if (!default_preset_.empty()) {
     std::string line("DEFAULTPRESET ");
     line += default_preset_;
     line += '\n';
-    callback->WriteLine(line.c_str(), line.length());
+    callback->WriteLine(line);
   }
 
   for (; it != lines_.end(); ++it)
-    callback->WriteLine(it->c_str(), it->length());
+    callback->WriteLine(*it);
 
   if (!IsComment(lines_.back().c_str())) {
     const char separator[] =

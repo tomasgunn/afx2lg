@@ -178,12 +178,8 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
             ASSERT(preset->valid());
             presets_.insert(std::make_pair(preset->id(), preset));
           } else {
-            // TODO: If we intend to be able to rewrite the sysex file
-            // we must save this block as is and write it at this position
-            // unchanged.  Perhaps if Finalize() fails, we could still store
-            // the preset in the map, but not clear |params_| and set all
-            // other member variables to invalid values. Writing the params_
-            // as is, should still work.
+            std::cerr << "Failed to parse preset data." << std::endl;
+            return false;
           }
           preset.reset();
           break;
