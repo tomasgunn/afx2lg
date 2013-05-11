@@ -142,7 +142,49 @@ TEST(Midi, GetPresetName) {
 #endif
 }
 
-// TODO: Disable by default since there's no definite end point.
+// This test is disabled by default since it changes the state of the AxeFx
+// and I don't know how to unset that state (except for rebooting the unit).
+TEST(Midi, DISABLED_SwitchToFirmwareUpdatePage) {
+  SharedThreadLoop loop(new common::ThreadLoop());
+  shared_ptr<MidiIn> in_device(MidiIn::OpenAxeFx(loop));
+  ASSERT_TRUE(in_device.get() != NULL);
+  unique_ptr<MidiOut> out_device(MidiOut::OpenAxeFx());
+  ASSERT_TRUE(out_device.get() != NULL);
+
+  loop->set_timeout(std::chrono::milliseconds(5000));
+
+  axefx::GenericNoDataMessage request(axefx::FIRMWARE_UPDATE);
+  unique_ptr<Message> message(new Message(&request, sizeof(request)));
+
+  Message data;
+  SysExDataBuffer buffer(
+      std::bind(&AssignToBufferAndQuit, _1, loop, &data));
+  buffer.Attach(in_device);
+  EXPECT_TRUE(out_device->Send(std::move(message), nullptr));
+
+  while (loop->Run()) {
+    if (!IsTempoOrTuner(&data)) {
+      if (axefx::IsFractalSysEx(&data[0], data.size()))
+        break;
+    }
+    data.clear();
+  }
+
+  ASSERT_TRUE(axefx::IsFractalSysEx(&data[0], data.size()));
+  auto p = reinterpret_cast<const axefx::FractalSysExHeader*>(&data[0]);
+  ASSERT_EQ(axefx::REPLY, p->function());
+  auto r = static_cast<const axefx::ReplyMessage*>(p);
+  EXPECT_EQ(axefx::FIRMWARE_UPDATE, r->reply_to());
+  // 0x14 appears to be the error value we get if we've already switched to
+  // firmware update mode.
+  if (r->error_id == 0x14) {
+    std::cerr << "Device already in fw update mode.\n";
+  } else {
+    EXPECT_EQ(0, r->error_id);
+  }
+}
+
+// TODO: Disabled by default since there's no definite end point.
 // Used to test capturing preset names while scrolling through presets
 // on the AxeFx unit.
 // NOTE: There appears to be a race in how this works.

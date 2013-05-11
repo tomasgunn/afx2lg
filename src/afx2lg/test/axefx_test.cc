@@ -48,7 +48,7 @@ class ParserTestUtil {
                   << static_cast<uint32_t>(difference) << "\n";
         match = false;
         ++error_count;
-        if (error_count >= 100) {
+        if (error_count >= 10) {
           std::cerr << "etc...\n";
           break;
         }
@@ -60,6 +60,7 @@ class ParserTestUtil {
 #endif
   }
 
+  SysExParser::DataType type() const { return parser_->type(); }
   size_t preset_count() const { return parser_->presets().size(); }
   const PresetMap& presets() const { return parser_->presets(); }
   IRDataArray& ir_array() { return parser_->ir_array(); }
@@ -182,11 +183,13 @@ TEST(FractalTypes, BlockSceneState) {
 
 TEST_F(AxeFxII, ParseBankFile) {
   ASSERT_TRUE(ParseFile("axefx2/V7_Bank_A.syx"));
+  EXPECT_EQ(SysExParser::PRESET_ARCHIVE, parser_.type());
   EXPECT_EQ(128u, parser_.preset_count());
 }
 
 TEST_F(AxeFxII, ParseFw9bBankFile) {
   ASSERT_TRUE(ParseFile("axefx2/9b_A.syx"));
+  EXPECT_EQ(SysExParser::PRESET_ARCHIVE, parser_.type());
   EXPECT_EQ(128u, parser_.preset_count());
 
 #if !defined(NDEBUG) && 0
@@ -231,17 +234,20 @@ TEST_F(AxeFxII, ParseMultipleBankFilesV10) {
   for (size_t i = 0; i < arraysize(files); ++i)
     EXPECT_TRUE(ParseFile(files[i]));
 
+  EXPECT_EQ(SysExParser::PRESET_ARCHIVE, parser_.type());
   EXPECT_EQ(arraysize(files) * 128u, parser_.preset_count());
 }
 
 TEST_F(AxeFxII, ParseHugeBankFileV10) {
   EXPECT_TRUE(ParseFile("axefx2/v10/V10_All_Banks.syx"));
+  EXPECT_EQ(SysExParser::PRESET_ARCHIVE, parser_.type());
   EXPECT_EQ(3 * 128u, parser_.preset_count());
 }
 
 // Disabled while the work is in progress.
 TEST_F(AxeFxII, ParseFirmwareFileV10) {
   EXPECT_TRUE(ParseFile("axefx2/v10/axefx2_10p02.syx"));
+  EXPECT_EQ(SysExParser::FIRMWARE, parser_.type());
   std::vector<uint8_t> serialized;
   parser_.Serialize(&serialized);
   EXPECT_FALSE(serialized.empty());
@@ -260,6 +266,7 @@ TEST_F(AxeFxII, ParseFirmwareFileV10) {
 
 TEST_F(AxeFxII, ParsePresetFile) {
   ASSERT_TRUE(ParseFile("axefx2/p000318_DynamicJCM800.syx"));
+  EXPECT_EQ(SysExParser::PRESET, parser_.type());
   const PresetMap& presets = parser_.presets();
   EXPECT_EQ(1u, presets.size());
   PresetMap::const_iterator front = presets.begin();
@@ -272,6 +279,7 @@ TEST_F(AxeFxII, ParsePresetFile) {
 
 TEST_F(AxeFxII, ParseCompressedPresetFile) {
   ASSERT_TRUE(ParseFile("axefx2/tone_match_preset.syx"));
+  EXPECT_EQ(SysExParser::PRESET, parser_.type());
   const PresetMap& presets = parser_.presets();
   EXPECT_EQ(1u, presets.size());
   PresetMap::const_iterator front = presets.begin();
@@ -292,6 +300,7 @@ TEST_F(AxeFxII, SerializePresetFile) {
   for (size_t i = 0; i < arraysize(test_files); ++i) {
     // First read and parse a preset file.
     ASSERT_TRUE(ParseFile(test_files[i]));
+    EXPECT_EQ(SysExParser::PRESET, parser_.type());
     ASSERT_EQ(1u, parser_.preset_count());
     std::vector<uint8_t> serialized;
     parser_.Serialize(&serialized);
@@ -305,6 +314,7 @@ TEST_F(AxeFxII, SerializePresetFile) {
 
 TEST_F(AxeFxII, ParseXyPresetFile) {
   ASSERT_TRUE(ParseFile("axefx2/xy_test2.syx"));
+  EXPECT_EQ(SysExParser::PRESET, parser_.type());
   const PresetMap& presets = parser_.presets();
   EXPECT_EQ(1u, presets.size());
   EXPECT_EQ("Y Is Default", presets.begin()->second->name());
@@ -312,6 +322,7 @@ TEST_F(AxeFxII, ParseXyPresetFile) {
 
 TEST_F(AxeFxII, ParseScenesXYBypassFile) {
   ASSERT_TRUE(ParseFile("axefx2/one_amp_8scenes_xy_1.syx"));
+  EXPECT_EQ(SysExParser::PRESET, parser_.type());
   const PresetMap& presets = parser_.presets();
   ASSERT_EQ(1u, presets.size());
 
@@ -388,6 +399,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
   // This is currently done on a best effort basis.  There's plenty of stuff
   // in there that I have no idea what is :)
   ASSERT_TRUE(ParseFile("axefx2/system_backup.syx"));
+  EXPECT_EQ(SysExParser::PRESET_ARCHIVE, parser_.type());
 
   // The global system backup file contains 128 preset slots by default.
   // All are simple BYPASS presets by default with version=261.
@@ -463,6 +475,7 @@ TEST_F(AxeFxII, ParseSystemBackup) {
 
 TEST_F(AxeFxII, PresetToJson) {
   ASSERT_TRUE(ParseFile("axefx2/tone_match_preset.syx"));
+  EXPECT_EQ(SysExParser::PRESET, parser_.type());
   const PresetMap& presets = parser_.presets();
   ASSERT_EQ(1u, presets.size());
 
@@ -471,12 +484,17 @@ TEST_F(AxeFxII, PresetToJson) {
   p.ToJson(&preset);
   Json::Value root;
   root["my_preset"] = preset;
+#if 0
+  // TODO: Write this to a file instead.  We could compare the output to a
+  // known-to-be-correct reference file to guard against regressions.
   Json::StyledWriter writer;
   std::cout << writer.write(root);
+#endif
 }
 
 TEST_F(AxeFxII, ParseIRFile) {
   ASSERT_TRUE(ParseFile("axefx2/FreakIR.syx"));
+  EXPECT_EQ(SysExParser::IR, parser_.type());
   EXPECT_TRUE(parser_.presets().empty());
   const IRDataArray& ir = parser_.ir_array();
   ASSERT_EQ(1u, ir.size());
@@ -487,6 +505,7 @@ TEST_F(AxeFxII, ParseIRFile) {
 TEST_F(AxeFxII, SerializeIRFile) {
   // First read and parse a preset file.
   ASSERT_TRUE(ParseFile("axefx2/FreakIR.syx"));
+  EXPECT_EQ(SysExParser::IR, parser_.type());
   EXPECT_TRUE(parser_.presets().empty());
   const IRDataArray& ir = parser_.ir_array();
   ASSERT_EQ(1u, ir.size());

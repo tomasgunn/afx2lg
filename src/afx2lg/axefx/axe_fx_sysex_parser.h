@@ -41,12 +41,21 @@ class SysExParser {
   SysExParser();
   ~SysExParser();
 
+  enum DataType {
+    UNKNOWN,
+    PRESET,
+    PRESET_ARCHIVE,
+    IR,
+    FIRMWARE,
+  };
+
   bool ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
                         bool parse_parameter_data);
 
   const PresetMap& presets() const { return presets_; }
   PresetMap& presets() { return presets_; }
   IRDataArray& ir_array() { return ir_array_; }
+  DataType type() const { return type_; }
 
   bool Serialize(const SysExCallback& callback) const;
 
@@ -54,6 +63,9 @@ class SysExParser {
   PresetMap presets_;
   IRDataArray ir_array_;
   unique_ptr<FirmwareData> firmware_;
+  DataType type_;
+
+  DISALLOW_COPY_AND_ASSIGN(SysExParser);
 };
 
 }  // namespace axefx

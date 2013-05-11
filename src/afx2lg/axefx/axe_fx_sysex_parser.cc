@@ -110,7 +110,7 @@ bool FirmwareData::Serialize(const SysExCallback& callback) const {
   return true;
 }
 
-SysExParser::SysExParser() {
+SysExParser::SysExParser() : type_(UNKNOWN) {
 }
 
 SysExParser::~SysExParser() {
@@ -118,6 +118,10 @@ SysExParser::~SysExParser() {
 
 bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
                                    bool parse_parameter_data) {
+  ASSERT(!firmware_);
+  ASSERT(ir_array_.empty());
+  ASSERT(presets_.empty() || (type_ == PRESET || type_ == PRESET_ARCHIVE));
+
   const uint8_t* sys_ex_begins = NULL;
   const uint8_t* pos = begin;
 
@@ -274,15 +278,25 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
 
   // The expectation is that we were only parsing one type of syx data stream.
   int success_count = 0;
-  if (!presets_.empty())
+  if (!presets_.empty()) {
+    type_ = presets_.size() == 1 ? PRESET : PRESET_ARCHIVE;
     ++success_count;
-  if (!ir_array_.empty())
+  }
+
+  if (!ir_array_.empty()) {
+    type_ = IR;
     ++success_count;
-  if (firmware_)
+  }
+
+  if (firmware_) {
+    type_ = FIRMWARE;
     ++success_count;
+  }
+
   ASSERT(success_count == 1);
 
   if (success_count != 1) {
+    type_ = UNKNOWN;
     std::cerr << "Received a mix bag of data. Not safe to continue...\n";
     return false;
   }

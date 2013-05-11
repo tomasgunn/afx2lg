@@ -45,6 +45,7 @@ enum AxeFxModel {
 };
 
 enum FunctionId {
+  INVALID_FUNCTION = 0xFF,
   // To request a dump of the current preset, send REQUEST_PRESET_DUMP
   // and set id to 7f 00 (edit buffer id).
   REQUEST_PRESET_DUMP = 0x03,  // Includes SeptedPair == preset id.
@@ -54,6 +55,8 @@ enum FunctionId {
   PRESET_CHANGE = 0x14,  // Includes SeptedPair == preset id.
   BANK_DUMP_REQUEST = 0x1C,
   PARAMETER_CHANGED = 0x21,  // Just a notification. Use GenericNoDataMessage.
+  FIRMWARE_UPDATE = 0x25,  // Switch to the fw update page.
+  REPLY = 0x64,  // Reply/confirmation message from the AxeFx.
   PRESET_ID = 0x77,  // Use PresetIdHeader.
   PRESET_PARAMETERS = 0x78,  // Use ParameterBlockHeader.
   PRESET_CHECKSUM = 0x79,  // Use PresetChecksumHeader.
@@ -310,6 +313,20 @@ struct FirmwareDataHeader : public FractalSysExHeader {
 
  private:
   DISALLOW_COPY_AND_ASSIGN(FirmwareDataHeader);
+};
+
+struct ReplyMessage : public FractalSysExHeader {
+  explicit ReplyMessage() : FractalSysExHeader(REPLY) {}
+
+  FunctionId reply_to() const {
+    return static_cast<FunctionId>(reply_to_id);
+  }
+
+  uint8_t reply_to_id;  // Contains the function id of the original command.
+  uint8_t error_id;  // 0 means success.
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(ReplyMessage);
 };
 
 #pragma pack(pop)
