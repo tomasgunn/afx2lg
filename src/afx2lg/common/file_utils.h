@@ -9,13 +9,6 @@
 
 #include "common_types.h"
 
-/*
-#include <condition_variable>
-#include <functional>
-#include <mutex>
-#include <queue>
-#include <thread>
-*/
 namespace base {
 
 bool FileExists(const std::string& path);

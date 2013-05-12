@@ -289,6 +289,9 @@ bool SysExParser::ParseSysExBuffer(const uint8_t* begin, const uint8_t* end,
     ++success_count;
   }
 
+  if (success_count == 0)
+    return false;
+
   ASSERT(success_count == 1);
 
   if (success_count != 1) {
