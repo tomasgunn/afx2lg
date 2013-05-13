@@ -4,8 +4,8 @@
 // This is a generated file created by the Jucer!
 
 #pragma once
-#ifndef __JUCER_HEADER_MAINVIEWBASE_MAINWND_1EDCBC8A__
-#define __JUCER_HEADER_MAINVIEWBASE_MAINWND_1EDCBC8A__
+#ifndef __JUCER_HEADER_MAINVIEWBASE_MAINWND_B8249427__
+#define __JUCER_HEADER_MAINVIEWBASE_MAINWND_B8249427__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "juce/JuceHeader.h"
@@ -34,6 +34,8 @@ class MainViewBase  : public Component,
   TreeView* tree_view() { return tree_view_; }
   TextButton* open_btn() { return open_btn_; }
   TextButton* send_btn() { return send_btn_; }
+  TextButton* export_all_btn() { return export_all_btn_; }
+  TextButton* export_sel_btn() { return export_sel_btn_; }
   ToggleButton* edit_buffer_chk() { return edit_buffer_chk_; }
   //[/UserMethods]
 
@@ -53,6 +55,8 @@ class MainViewBase  : public Component,
   TextButton* open_btn_;
   TextButton* send_btn_;
   ToggleButton* edit_buffer_chk_;
+  TextButton* export_all_btn_;
+  TextButton* export_sel_btn_;
 
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainViewBase);
@@ -61,4 +65,4 @@ class MainViewBase  : public Component,
 //[EndFile] You can add extra defines here...
 //[/EndFile]
 
-#endif   // __JUCER_HEADER_MAINVIEWBASE_MAINWND_1EDCBC8A__
+#endif   // __JUCER_HEADER_MAINVIEWBASE_MAINWND_B8249427__

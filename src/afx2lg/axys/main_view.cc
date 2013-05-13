@@ -192,6 +192,8 @@ void MainView::buttonClicked(Button* btn) {
   } handlers[] = {
     { close_btn(), &MainView::OnClose },
     { open_btn(), &MainView::OnOpenSysEx },
+    { export_all_btn(), &MainView::OnExportAll },
+    { export_sel_btn(), &MainView::OnExportSel },
   };
 
   for (auto& h : handlers) {
@@ -206,6 +208,22 @@ void MainView::OnOpenSysEx() {
   FileChooser dlg("Open SysEx file", File::nonexistent, "*.syx", true);
   if (dlg.browseForFileToOpen())
     OpenFile(dlg.getResult());
+}
+
+void MainView::OnExportAll() {
+  FileChooser dlg("Save SysEx file", File::nonexistent, "*.syx", true);
+  // dlg.browseForDirectory();
+  // dlg.browseForFileToSave();
+  if (dlg.browseForFileToSave(true))
+    ExportAllToFile(dlg.getResult());
+}
+
+void MainView::OnExportSel() {
+  FileChooser dlg("Save SysEx file", File::nonexistent, "*.syx", true);
+  // dlg.browseForDirectory();
+  // dlg.browseForFileToSave();
+  if (dlg.browseForFileToSave(true))
+    ExportSelectionToFile(dlg.getResult());
 }
 
 void MainView::OnClose() {
@@ -274,6 +292,16 @@ bool MainView::OpenFile(const File& file) {
   root_.sortSubItems(comparator);
 
   return presets_added;
+}
+
+bool MainView::ExportAllToFile(const juce::File& file) {
+  // TODO.
+  return false;
+}
+
+bool MainView::ExportSelectionToFile(const juce::File& file) {
+  // TODO.
+  return false;
 }
 
 void MainView::ShowError(const String& text) {

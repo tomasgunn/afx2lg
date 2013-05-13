@@ -75,9 +75,13 @@ class MainView
   virtual void buttonClicked(Button* btn);
 
   void OnOpenSysEx();
+  void OnExportAll();
+  void OnExportSel();
   void OnClose();
   bool OpenFile(const juce::String& path);
   bool OpenFile(const juce::File& file);
+  bool ExportAllToFile(const juce::File& file);
+  bool ExportSelectionToFile(const juce::File& file);
 
   void ShowError(const juce::String& text);
 

@@ -18,13 +18,16 @@ MainViewBase::MainViewBase()
       tree_view_ (0),
       open_btn_ (0),
       send_btn_ (0),
-      edit_buffer_chk_ (0)
+      edit_buffer_chk_ (0),
+      export_all_btn_ (0),
+      export_sel_btn_ (0)
 {
   addAndMakeVisible (preset_group_ = new GroupComponent ("Presets",
                                                          "presets"));
 
   addAndMakeVisible (close_btn_ = new TextButton ("Close"));
   close_btn_->setExplicitFocusOrder (4);
+  close_btn_->setConnectedEdges (Button::ConnectedOnRight);
   close_btn_->addListener (this);
 
   addAndMakeVisible (tree_view_ = new TreeView ("tree"));
@@ -35,18 +38,33 @@ MainViewBase::MainViewBase()
   addAndMakeVisible (open_btn_ = new TextButton ("Open"));
   open_btn_->setExplicitFocusOrder (1);
   open_btn_->setButtonText ("Open...");
+  open_btn_->setConnectedEdges (Button::ConnectedOnRight);
   open_btn_->addListener (this);
 
   addAndMakeVisible (send_btn_ = new TextButton ("Send"));
   send_btn_->setExplicitFocusOrder (2);
+  send_btn_->setConnectedEdges (Button::ConnectedOnRight);
   send_btn_->addListener (this);
 
   addAndMakeVisible (edit_buffer_chk_ = new ToggleButton ("Edit Buffer"));
   edit_buffer_chk_->setTooltip ("For single presets only - override the target ID by sending it to the edit buffer (no overwrite).");
   edit_buffer_chk_->setExplicitFocusOrder (3);
   edit_buffer_chk_->setButtonText ("Target edit buffer");
+  edit_buffer_chk_->setConnectedEdges (Button::ConnectedOnRight);
   edit_buffer_chk_->addListener (this);
   edit_buffer_chk_->setToggleState (true, false);
+
+  addAndMakeVisible (export_all_btn_ = new TextButton ("ExportAll"));
+  export_all_btn_->setExplicitFocusOrder (1);
+  export_all_btn_->setButtonText ("Save all...");
+  export_all_btn_->setConnectedEdges (Button::ConnectedOnRight);
+  export_all_btn_->addListener (this);
+
+  addAndMakeVisible (export_sel_btn_ = new TextButton ("ExportSel"));
+  export_sel_btn_->setExplicitFocusOrder (1);
+  export_sel_btn_->setButtonText ("Save selection...");
+  export_sel_btn_->setConnectedEdges (Button::ConnectedOnRight);
+  export_sel_btn_->addListener (this);
 
 
   //[UserPreSize]
@@ -69,6 +87,8 @@ MainViewBase::~MainViewBase() {
   deleteAndZero (open_btn_);
   deleteAndZero (send_btn_);
   deleteAndZero (edit_buffer_chk_);
+  deleteAndZero (export_all_btn_);
+  deleteAndZero (export_sel_btn_);
 
 
   //[Destructor]. You can add your own custom destruction code here..
@@ -92,8 +112,10 @@ void MainViewBase::resized()
     close_btn_->setBounds (480, 368, 110, 24);
     tree_view_->setBounds (8, 16, 464, 376);
     open_btn_->setBounds (480, 8, 110, 24);
-    send_btn_->setBounds (480, 40, 110, 24);
-    edit_buffer_chk_->setBounds (480, 64, 104, 24);
+    send_btn_->setBounds (480, 320, 110, 24);
+    edit_buffer_chk_->setBounds (480, 344, 104, 24);
+    export_all_btn_->setBounds (480, 40, 110, 24);
+    export_sel_btn_->setBounds (480, 72, 110, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -124,6 +146,16 @@ void MainViewBase::buttonClicked (Button* buttonThatWasClicked)
         //[UserButtonCode_edit_buffer_chk_] -- add your button handler code here..
         //[/UserButtonCode_edit_buffer_chk_]
     }
+    else if (buttonThatWasClicked == export_all_btn_)
+    {
+        //[UserButtonCode_export_all_btn_] -- add your button handler code here..
+        //[/UserButtonCode_export_all_btn_]
+    }
+    else if (buttonThatWasClicked == export_sel_btn_)
+    {
+        //[UserButtonCode_export_sel_btn_] -- add your button handler code here..
+        //[/UserButtonCode_export_sel_btn_]
+    }
 
     //[UserbuttonClicked_Post]
     //[/UserbuttonClicked_Post]
@@ -150,20 +182,26 @@ BEGIN_JUCER_METADATA
                   virtualName="" explicitFocusOrder="0" pos="0 0 480 400" title="presets"/>
   <TEXTBUTTON name="Close" id="42801a59912a14a4" memberName="close_btn_" virtualName=""
               explicitFocusOrder="4" pos="480 368 110 24" buttonText="Close"
-              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+              connectedEdges="2" needsCallback="1" radioGroupId="0"/>
   <TREEVIEW name="tree" id="47015bbd5cceb2c6" memberName="tree_view_" virtualName=""
             explicitFocusOrder="5" pos="8 16 464 376" backgroundColour="fff8f8f8"
             linecol="ffffffff" rootVisible="1" openByDefault="0"/>
   <TEXTBUTTON name="Open" id="f125429dc95f3592" memberName="open_btn_" virtualName=""
               explicitFocusOrder="1" pos="480 8 110 24" buttonText="Open..."
-              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+              connectedEdges="2" needsCallback="1" radioGroupId="0"/>
   <TEXTBUTTON name="Send" id="d2081c26999967e6" memberName="send_btn_" virtualName=""
-              explicitFocusOrder="2" pos="480 40 110 24" buttonText="Send"
-              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+              explicitFocusOrder="2" pos="480 320 110 24" buttonText="Send"
+              connectedEdges="2" needsCallback="1" radioGroupId="0"/>
   <TOGGLEBUTTON name="Edit Buffer" id="a1836a23878e44ca" memberName="edit_buffer_chk_"
-                virtualName="" explicitFocusOrder="3" pos="480 64 104 24" tooltip="For single presets only - override the target ID by sending it to the edit buffer (no overwrite)."
-                buttonText="Target edit buffer" connectedEdges="0" needsCallback="1"
+                virtualName="" explicitFocusOrder="3" pos="480 344 104 24" tooltip="For single presets only - override the target ID by sending it to the edit buffer (no overwrite)."
+                buttonText="Target edit buffer" connectedEdges="2" needsCallback="1"
                 radioGroupId="0" state="1"/>
+  <TEXTBUTTON name="ExportAll" id="4ff071a05498b425" memberName="export_all_btn_"
+              virtualName="" explicitFocusOrder="1" pos="480 40 110 24" buttonText="Save all..."
+              connectedEdges="2" needsCallback="1" radioGroupId="0"/>
+  <TEXTBUTTON name="ExportSel" id="f9a9b3a0348e775d" memberName="export_sel_btn_"
+              virtualName="" explicitFocusOrder="1" pos="480 72 110 24" buttonText="Save selection..."
+              connectedEdges="2" needsCallback="1" radioGroupId="0"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA
