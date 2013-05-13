@@ -27,12 +27,9 @@
   //[Destructor]. You can add your own custom destruction code here..
   //[/Destructor]
 }
-
 %%methodDefinitions%%
-
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 //[/MiscUserCode]
-
 #if 0
 /*  -- Jucer information section --
 
@@ -44,8 +41,6 @@ BEGIN_JUCER_METADATA
 END_JUCER_METADATA
 */
 #endif
-
 %%staticMemberDefinitions%%
-
 //[EndFile] You can add extra defines here...
 //[/EndFile]

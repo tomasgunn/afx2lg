@@ -5,6 +5,24 @@
 {
   'targets': [
     {
+      'target_name': 'axys_lib',
+      'type': 'static_library',
+      'include_dirs': [
+        '..',
+      ],
+      'dependencies': [
+        '../axefx/axefx.gyp:*',
+        '../common/base.gyp:*',
+        '../juce/juce.gyp:*',
+      ],
+      'sources': [
+        'tree_preset_item.cc',
+        'tree_preset_item.cc',
+        'tree_root_item.cc',
+        'tree_root_item.h',
+      ],
+    },
+    {
       'target_name': 'axys',
       'product_name': 'Axys',
       'type': 'executable',
@@ -18,9 +36,9 @@
         '../common/base.gyp:*',
         '../juce/juce.gyp:*',
         '../midi/midi.gyp:*',
+        'axys_lib',
       ],
       'sources': [
-        '../common/common_types.h',
         'main.cc',
         'main_view.cc',
         'main_view.h',

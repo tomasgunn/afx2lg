@@ -23,15 +23,13 @@
 
   //[UserMethods]     -- You can add your own custom methods in this section.
   //[/UserMethods]
-
   %%publicMemberDeclarations%%
- private:
+ protected:
   //[UserVariables]   -- You can add your own custom variables in this section.
   //[/UserVariables]
 
   // Member variables added by the jucer.
   %%privateMemberDeclarations%%
-
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(%%className%%);
 };
 
