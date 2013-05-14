@@ -3,42 +3,89 @@
 
 #include "main/main_view.h"
 
-MainView::MainView() : root_(this, false) {
+#include "axefx/axe_fx_sysex_parser.h"
+#include "axys/tree_preset_item.h"
+#include "lg/lg_parser.h"
+
+namespace {
+class SetupFileWriter : public lg::LgParserCallback {
+ public:
+  explicit SetupFileWriter() {}
+  ~SetupFileWriter() {}
+
+  bool Initialize(const File& f) {
+    file_.reset(f.createOutputStream());
+    return file_.get() != NULL;
+  }
+
+  bool AddPreset(const shared_ptr<axefx::Preset>& p) {
+    if (p->from_edit_buffer())
+      return false;
+
+    if (presets_.find(p->id()) != presets_.end())
+      return false;
+
+    presets_.insert(std::make_pair(p->id(), p));
+
+    return true;
+  }
+
+ private:
+  virtual void WriteLine(const char* line, size_t length) {
+    file_->write(line, length);
+  }
+
+  virtual const axefx::PresetMap& GetPresetMap() {
+    return presets_;
+  }
+
+  axefx::PresetMap presets_;
+  unique_ptr<juce::FileOutputStream> file_;
+  DISALLOW_COPY_AND_ASSIGN(SetupFileWriter);
+};
+}  // namespace
+
+MainView::MainView() : root_(this, false, false) {
   tree_view_->setRootItem(&root_);
   tree_view_->setRootItemVisible(false);
   tree_view_->setMultiSelectEnabled(true);
+  tree_view_->setWantsKeyboardFocus(true);
+  // Maybe we can set the root up as the key listener instead?
+  tree_view_->addKeyListener(this);
 }
 
 MainView::~MainView() {}
-
-void MainView::mouseEnter(const MouseEvent& event) {
-  DBG(__FUNCTION__);
-}
 
 bool MainView::isInterestedInFileDrag(const StringArray& files) {
   return true;  // Accept files dropped regardless of extension.
 }
 
-void MainView::fileDragEnter(const StringArray& files, int x, int y) {
-  DBG(__FUNCTION__);
-}
-
-void MainView::fileDragMove(const StringArray& files, int x, int y) {
-  DBG(__FUNCTION__);
-}
-
 void MainView::filesDropped(const StringArray& files, int x, int y) {
-  // TODO: Support a way to batch up error messages so that we don't
-  // display a series of dialog boxes when things go bad.
+  String err;
+  int err_count = 0;
   for (const auto& f : files) {
     File file(f);
+    String e;
     if (file.getFileExtension().equalsIgnoreCase(".txt")) {
       OpenTemplate(file);
     } else {
       // Assume a sysex file.
-      OpenSysExFile(file);
+      root_.addPresetsFromFile(file, &e);
+    }
+
+    if (e.length() && err_count < 10) {
+      ++err_count;
+      if (err_count == 10) {
+        err += "(etc)";
+      } else {
+        err += e;
+        err += "\n";
+      }
     }
   }
+
+  if (err.length())
+    ShowError(err);
 }
 
 void MainView::buttonClicked(Button* btn) {
@@ -58,6 +105,22 @@ void MainView::buttonClicked(Button* btn) {
   }
 }
 
+bool MainView::keyPressed(const KeyPress& key,
+                          Component* originatingComponent) {
+  if (originatingComponent == tree_view_) {
+#ifdef OS_MACOSX
+    if (key.isKeyCode(KeyPress::deleteKey) ||
+        key.isKeyCode(KeyPress::backspaceKey)) {
+#else
+    if (key.isKeyCode(KeyPress::deleteKey)) {
+#endif
+      root_.deleteSelection();
+      return true;
+    }
+  }
+  return false;
+}
+
 void MainView::OnOpenTemplate() {
   FileChooser dlg("Open LG setup template", File::nonexistent, "*.txt", true);
   if (dlg.browseForFileToOpen())
@@ -70,16 +133,54 @@ void MainView::OnGenerateSetup() {
     ShowError("Please select a template file first.");
     return;
   }
+
+  FileChooser dlg("Save output as", File::nonexistent, "*.txt", true);
+  if (!dlg.browseForFileToSave(true))
+    return;
+
+  SetupFileWriter writer;
+  if (!writer.Initialize(dlg.getResult())) {
+    ShowError("Failed to write to the output file.");
+    return;
+  }
+
+  int count = root_.getNumSubItems();
+  for (int i = 0; i < count; ++i)
+    writer.AddPreset(root_.getPreset(i)->preset());
+
+  MemoryBlock mem;
+  if (!template_file_.loadFileAsData(mem)) {
+    ShowError("Failed to read from the template file: " +
+        template_file_.getFullPathName());
+    return;
+  }
+
+  lg::LgParser lg_parser;
+  lg_parser.ParseBuffer(&writer, reinterpret_cast<char*>(mem.getData()),
+      reinterpret_cast<char*>(mem.getData()) + mem.getSize());
+
+  NativeMessageBox::showMessageBoxAsync(AlertWindow::InfoIcon,
+      "Done",
+      "A new setup file has been successfully generated.\n"
+      "The next step is to import this file into the LG Control Center.",
+      this,
+      nullptr);
 }
 
 bool MainView::OpenTemplate(const File& f) {
   DBG(__FUNCTION__);
-  return false;
+  if (!f.existsAsFile())
+    return false;
+
+  template_file_ = f;
+  template_path_->setText(f.getFullPathName(), sendNotification);
+
+  return true;
 }
 
 bool MainView::OpenSysExFile(const File& f) {
   String err;
-  int ret = root_.AddPresetsFromFile(f, &err);
+  int ret = root_.addPresetsFromFile(f, &err);
   if (ret == -1) {
     ShowError(err);
     return false;

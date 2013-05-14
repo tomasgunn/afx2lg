@@ -28,6 +28,10 @@ void PresetItem::set_id(int id) {
     preset_->set_id(id);
 }
 
+const shared_ptr<axefx::Preset>& PresetItem::preset() const {
+  return preset_;
+}
+
 bool PresetItem::mightContainSubItems() {
   return false;  // For now at least.
 }

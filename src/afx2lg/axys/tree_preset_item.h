@@ -23,6 +23,8 @@ class PresetItem : public juce::TreeViewItem {
   int id() const;
   void set_id(int id);
 
+  const shared_ptr<axefx::Preset>& preset() const;
+
  private:
   virtual bool mightContainSubItems();
   virtual juce::var getDragSourceDescription();

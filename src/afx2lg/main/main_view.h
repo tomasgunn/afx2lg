@@ -13,20 +13,20 @@ using namespace juce;
 class MainView
     : public MainViewBase,
       public DragAndDropContainer,
-      public FileDragAndDropTarget {
+      public FileDragAndDropTarget,
+      public KeyListener {
  public:
   MainView();
   virtual ~MainView();
 
  private:
-  virtual void mouseEnter(const MouseEvent& event);
-
   virtual bool isInterestedInFileDrag(const StringArray& files);
-  virtual void fileDragEnter(const StringArray& files, int x, int y);
-  virtual void fileDragMove(const StringArray& files, int x, int y);
   virtual void filesDropped(const StringArray& files, int x, int y);
 
   virtual void buttonClicked(Button* btn);
+
+  virtual bool keyPressed(const KeyPress& key,
+                          Component* originatingComponent);
 
   void OnOpenTemplate();
   void OnGenerateSetup();

@@ -8,20 +8,24 @@
 #include "common/common_types.h"
 #include "juce/JuceHeader.h"
 
+class PresetItem;
+
 class TreeRootItem : public juce::TreeViewItem {
  public:
   TreeRootItem(juce::FileDragAndDropTarget* delegate,
-               bool allow_drag_drop_of_presets)
-      : delegate_(delegate),
-        allow_drag_drop_of_presets_(allow_drag_drop_of_presets) {
-  }
-  virtual ~TreeRootItem() {}
+               bool allow_drag_drop_of_presets,
+               bool allow_edit_buffer_presets);
+  virtual ~TreeRootItem();
 
   // Sorts presets using the default compare function (IDs).
   void sortPresets();
 
   // Returns the number of presets added, or -1 in the case of an error.
-  int AddPresetsFromFile(const juce::File& file, juce::String* err);
+  int addPresetsFromFile(const juce::File& file, juce::String* err);
+
+  PresetItem* getPreset(int index) const;
+
+  void deleteSelection();
 
  private:
   virtual bool mightContainSubItems() { return true; }
@@ -42,6 +46,7 @@ class TreeRootItem : public juce::TreeViewItem {
 
   juce::FileDragAndDropTarget* delegate_;
   bool allow_drag_drop_of_presets_;
+  bool allow_edit_buffer_presets_;
 };
 
 #endif  // AXYS_TREE_ROOT_ITEM_H_

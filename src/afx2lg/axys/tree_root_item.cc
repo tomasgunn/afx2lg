@@ -27,12 +27,22 @@ class ComparePresets {
 };
 }  // namespace
 
+TreeRootItem::TreeRootItem(juce::FileDragAndDropTarget* delegate,
+                           bool allow_drag_drop_of_presets,
+                           bool allow_edit_buffer_presets)
+    : delegate_(delegate),
+      allow_drag_drop_of_presets_(allow_drag_drop_of_presets),
+      allow_edit_buffer_presets_(allow_edit_buffer_presets) {
+}
+
+TreeRootItem::~TreeRootItem() {}
+
 void TreeRootItem::sortPresets() {
   ComparePresets comparator;
   sortSubItems(comparator);
 }
 
-int TreeRootItem::AddPresetsFromFile(const File& file, String* err) {
+int TreeRootItem::addPresetsFromFile(const File& file, String* err) {
   jassert(err);
   if (!file.existsAsFile()) {
     *err = "File not found: " + file.getFullPathName();
@@ -69,29 +79,50 @@ int TreeRootItem::AddPresetsFromFile(const File& file, String* err) {
   //
 
   bool presets_added = false;
-  bool attempt_to_insert_system_data = false;
+  int failed_add_count = 0;
 
   const auto& presets = parser.presets();
   for (auto& p : presets) {
     //  We don't support system data banks.
-    if (!p.second->is_global_setting()) {
-      PresetItem* item = new PresetItem(p.second);
+    const auto& preset = p.second;
+    bool add = !preset->is_global_setting();
+    if (add && !allow_edit_buffer_presets_)
+      add = !preset->from_edit_buffer();
+    if (add) {
       // This hands ownership over to the root_.
-      addSubItem(item);
+      addSubItem(new PresetItem(preset));
       presets_added = true;
     } else {
-      attempt_to_insert_system_data = true;
+      ++failed_add_count;
     }
   }
 
-  if (attempt_to_insert_system_data && !presets_added) {
-    *err = "Cannot add system backup: " + file.getFullPathName();
+  if (!presets_added) {
+    if (failed_add_count) {
+      *err = "Could not add presets from this file: " + file.getFullPathName() +
+             "\nEither the file contains system data or preset(s) without an ID.";
+    } else {
+      *err = "No presets were found in this file :-|";
+    }
     return -1;
   }
 
   sortPresets();
 
-  return presets_added;
+  return true;
+}
+
+PresetItem* TreeRootItem::getPreset(int index) const {
+  return static_cast<PresetItem*>(getSubItem(index));
+}
+
+void TreeRootItem::deleteSelection() {
+  int count = getNumSubItems();
+  for (int i = count - 1; i >= 0; --i) {
+    if (getPreset(i)->isSelected()) {
+      removeSubItem(i, true);
+    }
+  }
 }
 
 bool TreeRootItem::isInterestedInDragSource(
@@ -120,7 +151,7 @@ void TreeRootItem::itemDropped(
 
   // Process all selected items _before_ the insert point.
   for (int i = 0; i < insert_index; ++i) {
-    preset = static_cast<PresetItem*>(getSubItem(i));
+    preset = getPreset(i);
     if (preset->isSelected())
       selected.add(preset);
 
@@ -137,7 +168,7 @@ void TreeRootItem::itemDropped(
   jassert(count > 0);  // otherwise we shouldn't have reached here.
 
   for (int i = count - 1; i >= insert_index; --i) {
-    preset = static_cast<PresetItem*>(getSubItem(i));
+    preset = getPreset(i);
     if (preset->isSelected())
       selected.add(preset);
 

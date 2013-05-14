@@ -10,7 +10,7 @@
 using axefx::SysExParser;
 using namespace juce;
 
-MainView::MainView() : root_(this, true) {
+MainView::MainView() : root_(this, true, true) {
   tree_view()->setRootItem(&root_);
   tree_view()->setRootItemVisible(false);
   tree_view()->setMultiSelectEnabled(true);
@@ -95,7 +95,7 @@ bool MainView::OpenFile(const String& path) {
 
 bool MainView::OpenFile(const File& file) {
   String err;
-  int ret = root_.AddPresetsFromFile(file, &err);
+  int ret = root_.addPresetsFromFile(file, &err);
   if (ret == -1) {
     ShowError(err);
     return false;
