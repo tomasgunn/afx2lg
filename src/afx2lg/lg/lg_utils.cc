@@ -17,9 +17,9 @@ const size_t kMaxNameLength = 16u;
 static const char kSectionStart[] = ";=";
 static const char kEntryStart[] = "* ";
 static const char kComentStart[] = ";";
-const char kPatchStart[] = "* PATCH :";
-static const char kBankStart[] = "* BANK :";
-static const char kBankListStart[] = "* BANKLIST :";
+const char kPatchStart[] = "* PATCH ";
+static const char kBankStart[] = "* BANK ";
+static const char kBankListStart[] = "* BANKLIST ";
 
 std::string GenerateUniqueName(const ReservedNames& taken_names,
                                const std::string& original_name) {

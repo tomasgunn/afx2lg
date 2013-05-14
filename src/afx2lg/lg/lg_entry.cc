@@ -120,7 +120,7 @@ void Bank::WriteLines(LgParserCallback* callback) {
 }
 
 void Bank::SetBankList(const shared_ptr<BankList>& bank_list) {
-  ASSERT(!bank_list_.get());
+  ASSERT(!bank_list_.get() || bank_list_.get() == bank_list.get());
   bank_list_ = bank_list;
 }
 
