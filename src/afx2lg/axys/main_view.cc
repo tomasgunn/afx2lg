@@ -3,46 +3,51 @@
 
 #include "axys/main_view.h"
 
+#include <functional>
+
 #include "axefx/axe_fx_sysex_parser.h"
 #include "axefx/preset.h"
 #include "axys/tree_preset_item.h"
+
+using std::placeholders::_1;
 
 using axefx::SysExParser;
 using namespace juce;
 
 MainView::MainView() : root_(this, &undo_manager_, true, true) {
-  tree_view()->setRootItem(&root_);
-  tree_view()->setRootItemVisible(false);
-  tree_view()->setMultiSelectEnabled(true);
-  tree_view()->setWantsKeyboardFocus(true);
-  tree_view()->addKeyListener(&root_);
+  tree_view_->setRootItem(&root_);
+  tree_view_->setRootItemVisible(false);
+  tree_view_->setMultiSelectEnabled(true);
+  tree_view_->setWantsKeyboardFocus(true);
+  tree_view_->addKeyListener(&root_);
 }
 
 MainView::~MainView() {}
-
-void MainView::mouseEnter(const MouseEvent& event) {
-  DBG(__FUNCTION__);
-}
 
 bool MainView::isInterestedInFileDrag(const StringArray& files) {
   return true;  // Accept files dropped regardless of extension.
 }
 
-void MainView::fileDragEnter(const StringArray& files, int x, int y) {
-  DBG(__FUNCTION__);
-}
-
-void MainView::fileDragMove(const StringArray& files, int x, int y) {
-  DBG(__FUNCTION__);
-}
-
 void MainView::filesDropped(const StringArray& files, int x, int y) {
+  String err;
+  int err_count = 0;
+
   for (const auto& f : files) {
-    if (!OpenFile(f)) {
-      // TODO: Support a way to batch up error messages so that we don't
-      // display a series of dialog boxes when things go bad.
+    String e;
+    OpenFile(f, &e);
+    if (e.length() && err_count < 10) {
+      ++err_count;
+      if (err_count == 10) {
+        err += "(etc)";
+      } else {
+        err += e;
+        err += "\n";
+      }
     }
   }
+
+  if (err.length())
+    ShowError(err);
 }
 
 void MainView::buttonClicked(Button* btn) {
@@ -50,10 +55,9 @@ void MainView::buttonClicked(Button* btn) {
     Button* btn;
     void (MainView::*handler)();
   } handlers[] = {
-    { close_btn(), &MainView::OnClose },
-    { open_btn(), &MainView::OnOpenSysEx },
-    { export_all_btn(), &MainView::OnExportAll },
-    { export_sel_btn(), &MainView::OnExportSel },
+    { open_btn_, &MainView::OnOpenSysEx },
+    { export_all_btn_, &MainView::OnExportAll },
+    { export_sel_btn_, &MainView::OnExportSel },
   };
 
   for (auto& h : handlers) {
@@ -66,54 +70,75 @@ void MainView::buttonClicked(Button* btn) {
 
 void MainView::OnOpenSysEx() {
   FileChooser dlg("Open SysEx file", File::nonexistent, "*.syx", true);
-  if (dlg.browseForFileToOpen())
-    OpenFile(dlg.getResult());
+  if (dlg.browseForFileToOpen()) {
+    String err;
+    if (!OpenFile(dlg.getResult(), &err))
+      ShowError(err);
+  }
 }
 
 void MainView::OnExportAll() {
   FileChooser dlg("Save SysEx file", File::nonexistent, "*.syx", true);
-  // dlg.browseForDirectory();
-  // dlg.browseForFileToSave();
   if (dlg.browseForFileToSave(true))
-    ExportAllToFile(dlg.getResult());
+    ExportToFile(dlg.getResult(), false);
 }
 
 void MainView::OnExportSel() {
+  bool has_selected_items = false;
+  int count = root_.getNumSubItems();
+  for (int i = 0; i < count && !has_selected_items; ++i)
+    has_selected_items = root_.getPreset(i)->isSelected();
+  if (!has_selected_items) {
+    ShowError("No presets are selected.");
+    return;
+  }
+
   FileChooser dlg("Save SysEx file", File::nonexistent, "*.syx", true);
-  // dlg.browseForDirectory();
-  // dlg.browseForFileToSave();
   if (dlg.browseForFileToSave(true))
-    ExportSelectionToFile(dlg.getResult());
+    ExportToFile(dlg.getResult(), true);
 }
 
-void MainView::OnClose() {
-  JUCEApplication::quit();
-}
-
-bool MainView::OpenFile(const String& path) {
+bool MainView::OpenFile(const String& path, String* err) {
   DBG(path);
-  return OpenFile(File(path));
+  return OpenFile(File(path), err);
 }
 
-bool MainView::OpenFile(const File& file) {
-  String err;
-  int ret = root_.addPresetsFromFile(file, &err);
-  if (ret == -1) {
-    ShowError(err);
+bool MainView::OpenFile(const File& file, juce::String* err) {
+  int ret = root_.addPresetsFromFile(file, err);
+  return ret != -1;
+}
+
+bool MainView::ExportToFile(const juce::File& file, bool only_selection) {
+  struct Callback {
+    Callback() {}
+    ~Callback() {}
+
+    void OnData(const std::vector<uint8_t>& data) {
+      output->write(&data[0], data.size());
+    }
+
+    unique_ptr<FileOutputStream> output;
+  };
+
+  // Delete any previously existing file.
+  file.deleteFile();
+
+  Callback callback;
+  callback.output.reset(file.createOutputStream());
+  if (!callback.output) {
+    ShowError("Failed to open file for writing: " + file.getFullPathName());
     return false;
   }
 
-  return ret != 0;
-}
+  axefx::SysExCallback cb = std::bind(&Callback::OnData, &callback, _1);
+  int count = root_.getNumSubItems();
+  for (int i = 0; i < count; ++i) {
+    auto* p = root_.getPreset(i);
+    if (!only_selection || p->isSelected())
+      p->preset()->Serialize(cb);
+  }
 
-bool MainView::ExportAllToFile(const juce::File& file) {
-  // TODO.
-  return false;
-}
-
-bool MainView::ExportSelectionToFile(const juce::File& file) {
-  // TODO.
-  return false;
+  return true;
 }
 
 void MainView::ShowError(const String& text) {

@@ -34,30 +34,36 @@ class ParserTestUtil {
     return ok;
   }
 
-  bool MatchesFileContent(const std::vector<uint8_t>& data) const {
+  // Compares our serialized data with the original file data.
+  // There appear to be bugs in the way some of the .syx files from Fractal
+  // have been written, so there's support here to ignore known inconsistencies.
+  // Examples of this include when preset names are sometimes
+  // (non-deterministicly) prematurely zero terminated in preset files and
+  // when unused bits are non-zero in firmware files (non-deterministically).
+  bool MatchesFileContent(const std::vector<uint8_t>& data,
+                          uint8_t ignore_difference_of) const {
     if (data.size() != static_cast<size_t>(file_size_))
       return false;
-#ifndef NDEBUG
+
     bool match = true;
     int error_count = 0;
     for (size_t i = 0; i < static_cast<size_t>(file_size_); ++i) {
       if (data[i] != file_contents_[i]) {
         uint8_t difference = data[i] ^ file_contents_[i];
-        std::cerr << "File contents don't match @ offset: " << std::dec << i
-                  << " difference: " << std::hex
-                  << static_cast<uint32_t>(difference) << "\n";
-        match = false;
-        ++error_count;
-        if (error_count >= 10) {
-          std::cerr << "etc...\n";
-          break;
+        if (difference != ignore_difference_of) {
+          std::cerr << "File contents don't match @ offset: " << std::dec << i
+                    << " difference: " << std::hex
+                    << static_cast<uint32_t>(difference) << "\n";
+          match = false;
+          ++error_count;
+          if (error_count >= 10) {
+            std::cerr << "etc...\n";
+            break;
+          }
         }
       }
     }
     return match;
-#else
-    return memcmp(&data[0], file_contents_.get(), file_size_) == 0;
-#endif
   }
 
   SysExParser::DataType type() const { return parser_->type(); }
@@ -252,8 +258,8 @@ TEST_F(AxeFxII, ParseFirmwareFileV10) {
   parser_.Serialize(&serialized);
   EXPECT_FALSE(serialized.empty());
   EXPECT_EQ(parser_.file_size(), static_cast<int>(serialized.size()));
-#if 0
-  EXPECT_TRUE(parser_.MatchesFileContent(serialized));
+#if 1
+  EXPECT_TRUE(parser_.MatchesFileContent(serialized, 0x70));
 #else
   if (!parser_.MatchesFileContent(serialized)) {
     // See comment in FirmwareData::AddData for why we only print a
@@ -306,9 +312,22 @@ TEST_F(AxeFxII, SerializePresetFile) {
     parser_.Serialize(&serialized);
     EXPECT_FALSE(serialized.empty());
     if (!serialized.empty()) {
-      EXPECT_TRUE(parser_.MatchesFileContent(serialized));
+      EXPECT_TRUE(parser_.MatchesFileContent(serialized, 0));
     }
     parser_.Reset();
+  }
+}
+
+TEST_F(AxeFxII, SerializeBankFile) {
+  ASSERT_TRUE(ParseFile("axefx2/V7_Bank_A.syx"));
+  ASSERT_EQ(SysExParser::PRESET_ARCHIVE, parser_.type());
+  std::vector<uint8_t> serialized;
+  parser_.Serialize(&serialized);
+  EXPECT_FALSE(serialized.empty());
+  if (!serialized.empty()) {
+    // Ignore errors when some presets are prematurely zero terminated
+    // whereas we insert spaces.
+    EXPECT_TRUE(parser_.MatchesFileContent(serialized, ' '));
   }
 }
 
@@ -513,7 +532,7 @@ TEST_F(AxeFxII, SerializeIRFile) {
   parser_.Serialize(&serialized);
   EXPECT_FALSE(serialized.empty());
   if (!serialized.empty()) {
-    EXPECT_TRUE(parser_.MatchesFileContent(serialized));
+    EXPECT_TRUE(parser_.MatchesFileContent(serialized, 0));
   }
 }
 
