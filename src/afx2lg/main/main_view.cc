@@ -45,13 +45,12 @@ class SetupFileWriter : public lg::LgParserCallback {
 };
 }  // namespace
 
-MainView::MainView() : root_(this, false, false) {
+MainView::MainView() : root_(this, &undo_manager_, false, false) {
   tree_view_->setRootItem(&root_);
   tree_view_->setRootItemVisible(false);
   tree_view_->setMultiSelectEnabled(true);
   tree_view_->setWantsKeyboardFocus(true);
-  // Maybe we can set the root up as the key listener instead?
-  tree_view_->addKeyListener(this);
+  tree_view_->addKeyListener(&root_);
 }
 
 MainView::~MainView() {}
@@ -103,22 +102,6 @@ void MainView::buttonClicked(Button* btn) {
       break;
     }
   }
-}
-
-bool MainView::keyPressed(const KeyPress& key,
-                          Component* originatingComponent) {
-  if (originatingComponent == tree_view_) {
-#ifdef OS_MACOSX
-    if (key.isKeyCode(KeyPress::deleteKey) ||
-        key.isKeyCode(KeyPress::backspaceKey)) {
-#else
-    if (key.isKeyCode(KeyPress::deleteKey)) {
-#endif
-      root_.deleteSelection();
-      return true;
-    }
-  }
-  return false;
 }
 
 void MainView::OnOpenTemplate() {

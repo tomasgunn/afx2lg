@@ -38,6 +38,7 @@ class MainView
 
   void ShowError(const juce::String& text);
 
+  juce::UndoManager undo_manager_;
   TreeRootItem root_;
 };
 

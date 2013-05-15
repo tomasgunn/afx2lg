@@ -13,8 +13,7 @@ using namespace juce;
 class MainView
     : public MainViewBase,
       public DragAndDropContainer,
-      public FileDragAndDropTarget,
-      public KeyListener {
+      public FileDragAndDropTarget {
  public:
   MainView();
   virtual ~MainView();
@@ -25,9 +24,6 @@ class MainView
 
   virtual void buttonClicked(Button* btn);
 
-  virtual bool keyPressed(const KeyPress& key,
-                          Component* originatingComponent);
-
   void OnOpenTemplate();
   void OnGenerateSetup();
 
@@ -36,6 +32,7 @@ class MainView
 
   void ShowError(const String& text);
 
+  UndoManager undo_manager_;
   TreeRootItem root_;
   File template_file_;
 };

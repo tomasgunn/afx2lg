@@ -10,10 +10,12 @@
 using axefx::SysExParser;
 using namespace juce;
 
-MainView::MainView() : root_(this, true, true) {
+MainView::MainView() : root_(this, &undo_manager_, true, true) {
   tree_view()->setRootItem(&root_);
   tree_view()->setRootItemVisible(false);
   tree_view()->setMultiSelectEnabled(true);
+  tree_view()->setWantsKeyboardFocus(true);
+  tree_view()->addKeyListener(&root_);
 }
 
 MainView::~MainView() {}

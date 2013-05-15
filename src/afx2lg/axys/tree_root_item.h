@@ -10,9 +10,12 @@
 
 class PresetItem;
 
-class TreeRootItem : public juce::TreeViewItem {
+class TreeRootItem
+    : public juce::TreeViewItem,
+      public juce::KeyListener {
  public:
   TreeRootItem(juce::FileDragAndDropTarget* delegate,
+               juce::UndoManager* undo_manager,
                bool allow_drag_drop_of_presets,
                bool allow_edit_buffer_presets);
   virtual ~TreeRootItem();
@@ -26,6 +29,8 @@ class TreeRootItem : public juce::TreeViewItem {
   PresetItem* getPreset(int index) const;
 
   void deleteSelection();
+  void moveSelectionUp();
+  void moveSelectionDown();
 
  private:
   virtual bool mightContainSubItems() { return true; }
@@ -44,6 +49,10 @@ class TreeRootItem : public juce::TreeViewItem {
     delegate_->filesDropped(files, 0, 0);
   }
 
+  virtual bool keyPressed(const juce::KeyPress& key,
+      juce::Component* originatingComponent);
+
+  juce::UndoManager* undo_manager_;
   juce::FileDragAndDropTarget* delegate_;
   bool allow_drag_drop_of_presets_;
   bool allow_edit_buffer_presets_;
