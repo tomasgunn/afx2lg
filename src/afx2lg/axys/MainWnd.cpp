@@ -10,17 +10,25 @@
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
 using namespace juce;
+namespace axys {
 //[/MiscUserDefs]
 
 MainViewBase::MainViewBase()
-    : preset_group_ (0),
+    : grid_group_ (0),
+      preset_group_ (0),
       tree_view_ (0),
       open_btn_ (0),
       send_btn_ (0),
       edit_buffer_chk_ (0),
       export_all_btn_ (0),
-      export_sel_btn_ (0)
+      export_sel_btn_ (0),
+      copy_scenes_ (0)
 {
+  addAndMakeVisible (grid_group_ = new GroupComponent ("gridgroup",
+                                                       "Grid"));
+  grid_group_->setColour (GroupComponent::outlineColourId, Colour (0x66ffffff));
+  grid_group_->setColour (GroupComponent::textColourId, Colours::white);
+
   addAndMakeVisible (preset_group_ = new GroupComponent ("Presets",
                                                          "Presets (drop .syx files here)"));
   preset_group_->setColour (GroupComponent::outlineColourId, Colour (0x66fffefe));
@@ -75,11 +83,20 @@ MainViewBase::MainViewBase()
   export_sel_btn_->setColour (TextButton::textColourOnId, Colours::white);
   export_sel_btn_->setColour (TextButton::textColourOffId, Colours::white);
 
+  addAndMakeVisible (copy_scenes_ = new TextButton ("CopyScenes"));
+  copy_scenes_->setExplicitFocusOrder (2);
+  copy_scenes_->setButtonText ("Copy scenes...");
+  copy_scenes_->setConnectedEdges (Button::ConnectedOnRight);
+  copy_scenes_->addListener (this);
+  copy_scenes_->setColour (TextButton::buttonColourId, Colour (0xff58585c));
+  copy_scenes_->setColour (TextButton::textColourOnId, Colours::white);
+  copy_scenes_->setColour (TextButton::textColourOffId, Colours::white);
+
 
   //[UserPreSize]
   //[/UserPreSize]
 
-  setSize (600, 400);
+  setSize (800, 600);
 
 
   //[Constructor] You can add your own custom stuff here..
@@ -90,6 +107,7 @@ MainViewBase::~MainViewBase() {
   //[Destructor_pre]. You can add your own custom destruction code here..
   //[/Destructor_pre]
 
+  deleteAndZero (grid_group_);
   deleteAndZero (preset_group_);
   deleteAndZero (tree_view_);
   deleteAndZero (open_btn_);
@@ -97,6 +115,7 @@ MainViewBase::~MainViewBase() {
   deleteAndZero (edit_buffer_chk_);
   deleteAndZero (export_all_btn_);
   deleteAndZero (export_sel_btn_);
+  deleteAndZero (copy_scenes_);
 
 
   //[Destructor]. You can add your own custom destruction code here..
@@ -115,13 +134,15 @@ void MainViewBase::paint (Graphics& g)
 
 void MainViewBase::resized()
 {
-    preset_group_->setBounds (0, 0, 480, 400);
-    tree_view_->setBounds (8, 16, 464, 376);
-    open_btn_->setBounds (480, 8, 110, 24);
-    send_btn_->setBounds (480, 104, 110, 24);
-    edit_buffer_chk_->setBounds (480, 128, 112, 24);
-    export_all_btn_->setBounds (480, 40, 110, 24);
-    export_sel_btn_->setBounds (480, 72, 110, 24);
+    grid_group_->setBounds (8, 400, 784, 200);
+    preset_group_->setBounds (0, 0, 672, 400);
+    tree_view_->setBounds (8, 16, 656, 376);
+    open_btn_->setBounds (680, 8, 110, 24);
+    send_btn_->setBounds (680, 104, 110, 24);
+    edit_buffer_chk_->setBounds (680, 128, 112, 24);
+    export_all_btn_->setBounds (680, 40, 110, 24);
+    export_sel_btn_->setBounds (680, 72, 110, 24);
+    copy_scenes_->setBounds (680, 152, 110, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -157,6 +178,11 @@ void MainViewBase::buttonClicked (Button* buttonThatWasClicked)
         //[UserButtonCode_export_sel_btn_] -- add your button handler code here..
         //[/UserButtonCode_export_sel_btn_]
     }
+    else if (buttonThatWasClicked == copy_scenes_)
+    {
+        //[UserButtonCode_copy_scenes_] -- add your button handler code here..
+        //[/UserButtonCode_copy_scenes_]
+    }
 
     //[UserbuttonClicked_Post]
     //[/UserbuttonClicked_Post]
@@ -175,33 +201,40 @@ BEGIN_JUCER_METADATA
 <JUCER_COMPONENT documentType="Component" className="MainViewBase" componentName=""
                  parentClasses="public Component" constructorParams="" variableInitialisers=""
                  snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330000013"
-                 fixedSize="1" initialWidth="600" initialHeight="400">
+                 fixedSize="1" initialWidth="800" initialHeight="600">
   <BACKGROUND backgroundColour="ff200606"/>
+  <GROUPCOMPONENT name="gridgroup" id="721debe9e465cc7" memberName="grid_group_"
+                  virtualName="" explicitFocusOrder="0" pos="8 400 784 200" outlinecol="66ffffff"
+                  textcol="ffffffff" title="Grid"/>
   <GROUPCOMPONENT name="Presets" id="474e528d5750f64f" memberName="preset_group_"
-                  virtualName="" explicitFocusOrder="0" pos="0 0 480 400" outlinecol="66fffefe"
+                  virtualName="" explicitFocusOrder="0" pos="0 0 672 400" outlinecol="66fffefe"
                   textcol="ffffffff" title="Presets (drop .syx files here)"/>
   <TREEVIEW name="tree" id="47015bbd5cceb2c6" memberName="tree_view_" virtualName=""
-            explicitFocusOrder="5" pos="8 16 464 376" backgroundColour="fff8f8f8"
+            explicitFocusOrder="5" pos="8 16 656 376" backgroundColour="fff8f8f8"
             linecol="ffffffff" rootVisible="1" openByDefault="0"/>
   <TEXTBUTTON name="Open" id="f125429dc95f3592" memberName="open_btn_" virtualName=""
-              explicitFocusOrder="1" pos="480 8 110 24" bgColOff="ff58585c"
+              explicitFocusOrder="1" pos="680 8 110 24" bgColOff="ff58585c"
               textCol="ffffffff" textColOn="ffffffff" buttonText="Open..."
               connectedEdges="2" needsCallback="1" radioGroupId="0"/>
   <TEXTBUTTON name="Send" id="d2081c26999967e6" memberName="send_btn_" virtualName=""
-              explicitFocusOrder="2" pos="480 104 110 24" bgColOff="ff58585c"
+              explicitFocusOrder="2" pos="680 104 110 24" bgColOff="ff58585c"
               textCol="ffffffff" textColOn="ffffffff" buttonText="Send" connectedEdges="2"
               needsCallback="1" radioGroupId="0"/>
   <TOGGLEBUTTON name="Edit Buffer" id="a1836a23878e44ca" memberName="edit_buffer_chk_"
-                virtualName="" explicitFocusOrder="3" pos="480 128 112 24" tooltip="For single presets only - override the target ID by sending it to the edit buffer (no overwrite)."
+                virtualName="" explicitFocusOrder="3" pos="680 128 112 24" tooltip="For single presets only - override the target ID by sending it to the edit buffer (no overwrite)."
                 txtcol="ffffffff" buttonText="...to edit buffer" connectedEdges="2"
                 needsCallback="1" radioGroupId="0" state="1"/>
   <TEXTBUTTON name="ExportAll" id="4ff071a05498b425" memberName="export_all_btn_"
-              virtualName="" explicitFocusOrder="1" pos="480 40 110 24" bgColOff="ff58585c"
+              virtualName="" explicitFocusOrder="1" pos="680 40 110 24" bgColOff="ff58585c"
               textCol="ffffffff" textColOn="ffffffff" buttonText="Save all..."
               connectedEdges="2" needsCallback="1" radioGroupId="0"/>
   <TEXTBUTTON name="ExportSel" id="f9a9b3a0348e775d" memberName="export_sel_btn_"
-              virtualName="" explicitFocusOrder="1" pos="480 72 110 24" bgColOff="ff58585c"
+              virtualName="" explicitFocusOrder="1" pos="680 72 110 24" bgColOff="ff58585c"
               textCol="ffffffff" textColOn="ffffffff" buttonText="Save selection..."
+              connectedEdges="2" needsCallback="1" radioGroupId="0"/>
+  <TEXTBUTTON name="CopyScenes" id="8b0cef5fb2c14a1" memberName="copy_scenes_"
+              virtualName="" explicitFocusOrder="2" pos="680 152 110 24" bgColOff="ff58585c"
+              textCol="ffffffff" textColOn="ffffffff" buttonText="Copy scenes..."
               connectedEdges="2" needsCallback="1" radioGroupId="0"/>
 </JUCER_COMPONENT>
 
@@ -210,4 +243,5 @@ END_JUCER_METADATA
 #endif
 
 //[EndFile] You can add extra defines here...
+}  // namespace axys
 //[/EndFile]

@@ -20,6 +20,41 @@ MainView::MainView() : root_(this, &undo_manager_, true, true) {
   tree_view_->setMultiSelectEnabled(true);
   tree_view_->setWantsKeyboardFocus(true);
   tree_view_->addKeyListener(&root_);
+
+  Rectangle<int> rc = grid_group_->getBoundsInParent();
+
+  static const int kBlockWidth = 52;
+  static const int kBlockHeight = 38;
+
+  rc.removeFromTop(20);
+  rc.removeFromBottom(5);
+  rc.reduce(10, 0);
+
+  const int kHorizSpacing =
+      (rc.getWidth() - (axefx::kMatrixColumns * kBlockWidth)) /
+      (axefx::kMatrixColumns - 1);
+  const int kVerticalSpacing =
+      (rc.getHeight() - (axefx::kMatrixRows * kBlockHeight)) /
+      (axefx::kMatrixRows - 1);
+
+  int block_x = rc.getTopLeft().getX();
+  int block_y = rc.getTopLeft().getY();
+  for (auto& r : grid) {
+    for (auto& b : r.blocks) {
+      addAndMakeVisible(&b, -1);
+      b.setLookAndFeel(&old_school_);
+      b.setButtonText("block");
+      b.setConnectedEdges(
+          Button::ConnectedOnLeft | Button::ConnectedOnRight |
+          Button::ConnectedOnTop  | Button::ConnectedOnBottom);
+      b.setBounds(block_x, block_y, kBlockWidth, kBlockHeight);
+      block_x += kBlockWidth + kHorizSpacing;
+    }
+    block_y += kBlockHeight + kVerticalSpacing;
+    block_x = rc.getTopLeft().getX();
+  }
+
+  grid_group_->toBack();
 }
 
 MainView::~MainView() {}

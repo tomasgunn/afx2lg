@@ -4,8 +4,8 @@
 // This is a generated file created by the Jucer!
 
 #pragma once
-#ifndef __JUCER_HEADER_MAINVIEWBASE_MAINWND_3692B25D__
-#define __JUCER_HEADER_MAINVIEWBASE_MAINWND_3692B25D__
+#ifndef __JUCER_HEADER_MAINVIEWBASE_MAINWND_C8110597__
+#define __JUCER_HEADER_MAINVIEWBASE_MAINWND_C8110597__
 
 //[Headers]     -- You can add your own extra header files here --
 #include "juce/JuceHeader.h"
@@ -17,6 +17,7 @@ using juce::ToggleButton;
 using juce::TreeView;
 using juce::Graphics;
 using juce::GroupComponent;
+namespace axys {
 //[/Headers]
 
 
@@ -41,6 +42,7 @@ class MainViewBase  : public Component,
   //[/UserVariables]
 
   // Member variables added by the jucer.
+  GroupComponent* grid_group_;
   GroupComponent* preset_group_;
   TreeView* tree_view_;
   TextButton* open_btn_;
@@ -48,11 +50,13 @@ class MainViewBase  : public Component,
   ToggleButton* edit_buffer_chk_;
   TextButton* export_all_btn_;
   TextButton* export_sel_btn_;
+  TextButton* copy_scenes_;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainViewBase);
 };
 
 //[EndFile] You can add extra defines here...
+}  // namespace axys
 //[/EndFile]
 
-#endif   // __JUCER_HEADER_MAINVIEWBASE_MAINWND_3692B25D__
+#endif   // __JUCER_HEADER_MAINVIEWBASE_MAINWND_C8110597__

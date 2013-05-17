@@ -5,12 +5,13 @@
 #ifndef AXYS_MAIN_VIEW_H_
 #define AXYS_MAIN_VIEW_H_
 
+#include "axefx/blocks.h"
 #include "axys/MainWnd.h"
 #include "axys/tree_root_item.h"
 #include "common/common_types.h"
 
 class MainView
-    : public MainViewBase,
+    : public axys::MainViewBase,
       public juce::DragAndDropContainer,
       public juce::FileDragAndDropTarget {
  public:
@@ -34,6 +35,13 @@ class MainView
 
   juce::UndoManager undo_manager_;
   TreeRootItem root_;
+
+  juce::OldSchoolLookAndFeel old_school_;
+
+  struct GridRow {
+    TextButton blocks[axefx::kMatrixColumns];
+  };
+  GridRow grid[axefx::kMatrixRows];
 };
 
 #endif  // AXYS_MAIN_VIEW_H_
