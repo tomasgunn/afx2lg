@@ -203,7 +203,7 @@ void Patch::SetName(const std::string& name) {
 
   if (lines_.empty()) {
     std::string str(kPatchStart);
-    str += " " + name + "\n";
+    str += ": " + name + "\n";
     lines_.push_back(str);
     name_ = name;
   } else {
@@ -221,7 +221,7 @@ void Patch::Update(const axefx::Preset& p) {
 
   if (lines_.empty()) {
     std::string str(kPatchStart);
-    str += " " + name + "\n";
+    str += ": " + name + "\n";
     lines_.push_back(str);
     name_ = name;
     SetPreset(p.id());
