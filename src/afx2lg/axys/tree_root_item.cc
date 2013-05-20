@@ -191,8 +191,8 @@ TreeRootItem::TreeRootItem(juce::FileDragAndDropTarget* delegate,
                            juce::UndoManager* undo_manager,
                            bool allow_drag_drop_of_presets,
                            bool allow_edit_buffer_presets)
-    : delegate_(delegate),
-      undo_manager_(undo_manager),
+    : undo_manager_(undo_manager),
+      delegate_(delegate),
       allow_drag_drop_of_presets_(allow_drag_drop_of_presets),
       allow_edit_buffer_presets_(allow_edit_buffer_presets) {
 }
