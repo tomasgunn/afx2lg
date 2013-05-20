@@ -2,7 +2,7 @@
 ;=====   LittleGiant2 setup                                =====
 ;=====                                                     =====
 ;===== Filename : C:/src/tommi/src/distribution/example_setup =====
-;===== Created  : 14/05/2013                               =====
+;===== Created  : 20/05/2013                               =====
 ;===== Version  : 3.0                                      =====
 ;===============================================================
 
@@ -14,7 +14,7 @@ DEFAULTEXPR 01        Ext1
 DEFAULTEXPR 02        Ext2
 CONTROLLER_TYPE       LG
 SLAVECONTROLLER_TYPE  FCB
-OPERATIONMODE         REGULAR
+OPERATIONMODE         Regular mode
 TRIGGERNOTEOFFSET     0
 DIM_LED_MODE          neverDim
 NR_OF_FCBS            1
@@ -133,105 +133,27 @@ IF  E.Tuner
 -   Tuner
 ENDIF           
 ;---------------------------------------------------------------
-* MACRO : CurrentOff
-IF  V001 EQ  000
--*  Scene1
-ENDIF           
-IF  V001 EQ  001
--*  Scene2
-ENDIF           
-IF  V001 EQ  002
--*  Scene3
-ENDIF           
-IF  V001 EQ  003
--*  Scene4
-ENDIF           
-IF  V001 EQ  004
--*  Scene5
-ENDIF           
-IF  V001 EQ  005
--*  Scene6
-ENDIF           
-IF  V001 EQ  006
--*  Scene7
-ENDIF           
-IF  V001 EQ  007
--*  Scene8
-ENDIF           
-;---------------------------------------------------------------
-* MACRO : AllButCurrentOff
-IF !V001 EQ  000
--*  Scene1
-ENDIF           
-IF !V001 EQ  001
--*  Scene2
-ENDIF           
-IF !V001 EQ  002
--*  Scene3
-ENDIF           
-IF !V001 EQ  003
--*  Scene4
-ENDIF           
-IF !V001 EQ  004
--*  Scene5
-ENDIF           
-IF !V001 EQ  005
--*  Scene6
-ENDIF           
-IF !V001 EQ  006
--*  Scene7
-ENDIF           
-IF !V001 EQ  007
--*  Scene8
-ENDIF           
-;---------------------------------------------------------------
-* MACRO : CurrentOn
-IF  V001 EQ  000
-+*  Scene1
-ENDIF           
-IF  V001 EQ  001
-+*  Scene2
-ENDIF           
-IF  V001 EQ  002
-+*  Scene3
-ENDIF           
-IF  V001 EQ  003
-+*  Scene4
-ENDIF           
-IF  V001 EQ  004
-+*  Scene5
-ENDIF           
-IF  V001 EQ  005
-+*  Scene6
-ENDIF           
-IF  V001 EQ  006
-+*  Scene7
-ENDIF           
-IF  V001 EQ  007
-+*  Scene8
-ENDIF           
-;---------------------------------------------------------------
 
 ;===============================================================
 ;=====   PRESET DATA                                       =====
 ;===============================================================
 
-* PATCH : PATCH 001
+* PATCH    : PATCH 001
 + 01 CC    000 000
 + 01 PC    000    
 + [M] ResetScene
 ;---------------------------------------------------------------
-* PATCH : PATCH 002
+* PATCH    : PATCH 002
 + 01 CC    000 000
 + 01 PC    001    
 + [M] ResetScene
 ;---------------------------------------------------------------
-* PATCH : PATCH 003
+* PATCH    : PATCH 003
 + 01 CC    000 000
 + 01 PC    002    
 + [M] ResetScene
 ;---------------------------------------------------------------
-* PATCH : PATCH 004
+* PATCH    : PATCH 004
 + 01 CC    000 000
 + 01 PC    003    
 + [M] ResetScene
@@ -269,11 +191,11 @@ ENDIF
 + 01 CC    034 002
 + -*  Scene2
 + -*  Scene1
-+ -*  Scene1
-+ -*  Scene1
-+ -*  Scene1
-+ -*  Scene1
 + -*  Scene4
++ -*  Scene5
++ -*  Scene6
++ -*  Scene7
++ -*  Scene8
 - IF  V001 EQ  002
 - +*  Scene3
 - ENDIF           
@@ -388,7 +310,7 @@ ENDIF
 + 01 CC    049 127
 - 01 CC    049 000
 ;---------------------------------------------------------------
-* EFFECT : TapAndTune
+* EFFECT   : TapAndTune
 + IF !E.Tuner
 + 01 CC    014 000
 + LONGPR.DELAY 018
@@ -397,13 +319,13 @@ ENDIF
 + -   Tuner
 + ENDIF           
 ;---------------------------------------------------------------
-* EFFECT : VolIncr
+* EFFECT   : VolIncr
 + 01 CC    035 127
 ;---------------------------------------------------------------
-* EFFECT : VolDecr
+* EFFECT   : VolDecr
 + 01 CC    036 127
 ;---------------------------------------------------------------
-* EFFECT : metronome/undo
+* EFFECT   : metronome/undo
 + LONGPR.DELAY 016
 + 01 CC    121 127
 - IF  E.Metronome
@@ -412,14 +334,14 @@ ENDIF
 - +   Metronome
 - ENDIF           
 ;---------------------------------------------------------------
-* EFFECT : loop_once
+* EFFECT   : loop_once
 + 01 CC    030 127
 + IF !E.loop_play
 + +*  loop_play
 + ENDIF           
 + -*  loop_play
 ;---------------------------------------------------------------
-* EFFECT : previous_bank
+* EFFECT   : previous_bank
 + RESTORE BANK    
 ;---------------------------------------------------------------
 
@@ -498,6 +420,28 @@ switch 08 : ME VolIncr
 * BANKLIST : BANKLIST 001
 ;-------------------------------
 MainPresetBank   
+;---------------------------------------------------------------
+
+;===============================================================
+;=====   SETLIST DATA                                      =====
+;===============================================================
+
+
+
+;---------------------------------------------------------------
+
+;===============================================================
+;=====   SONG DATA                                         =====
+;===============================================================
+
+
+;===============================================================
+;=====   BANKLIST DATA                                     =====
+;===============================================================
+
+* BANKLIST : BANKLIST 001
+;-------------------------------
+MainPresetBank
 ;---------------------------------------------------------------
 
 ;===============================================================
