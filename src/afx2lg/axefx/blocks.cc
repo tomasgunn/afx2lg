@@ -84,13 +84,13 @@ void BlockSceneState::ToJson(bool supports_xy, Json::Value* out) const {
   Json::Value& j = *out;
   Json::Value enabled;
   // A value of true means the block is active in that scene.
-  for (size_t i = 0; i < 8; ++i)
+  for (int i = 0; i < 8; ++i)
     enabled.append(!IsBypassedInScene(i));
   j["enabled"] = enabled;
 
   if (supports_xy) {
     Json::Value xy;
-    for (size_t i = 0; i < 8; ++i)
+    for (int i = 0; i < 8; ++i)
       xy.append(Json::Value(IsConfigYEnabledInScene(i) ? "y" : "x"));
     j["xy"] = xy;
   }

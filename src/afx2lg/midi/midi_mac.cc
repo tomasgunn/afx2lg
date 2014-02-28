@@ -8,7 +8,7 @@
 
 namespace midi {
 
-MacMidiClient::MacMidiClient() : client_(nullptr) {
+MacMidiClient::MacMidiClient() {
   MIDIClientCreate(CFSTR("afx2lg"), NULL, NULL, &client_);
 }
 
@@ -103,10 +103,10 @@ CFStringRef ConnectedEndpointName(MIDIEndpointRef endpoint) {
   if (connections != NULL) {
     // It has connections, follow them
     // Concatenate the names of all connected devices
-    int count = CFDataGetLength(connections) / sizeof(MIDIUniqueID);
+    size_t count = CFDataGetLength(connections) / sizeof(MIDIUniqueID);
     if (count) {
       const SInt32* pid = (const SInt32 *)(CFDataGetBytePtr(connections));
-      for (int i = 0; i < count; ++i, ++pid) {
+      for (size_t i = 0; i < count; ++i, ++pid) {
         MIDIUniqueID id = EndianS32_BtoN(*pid);
         MIDIObjectRef connObject;
         MIDIObjectType connObjectType;

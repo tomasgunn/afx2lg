@@ -52,7 +52,7 @@ class MidiOutMac : public MidiOut {
     memset(sysex, 0, sizeof(*sysex));
     sysex->destination = end_point_;
     sysex->data = &(message->at(0));
-    sysex->bytesToSend = message->size();
+    sysex->bytesToSend = static_cast<UInt32>(message->size());
     sysex->complete = false;
     sysex->completionProc = &OnDone;
 
@@ -100,7 +100,8 @@ bool MidiOut::EnumerateDevices(DeviceInfos* devices) {
         kCFStringEncodingUTF8 );
     CFRelease(name);
     devices->push_back(
-        shared_ptr<MidiDeviceInfo>(new MidiDeviceInfo(i, name_buffer)));
+        shared_ptr<MidiDeviceInfo>(
+            new MidiDeviceInfo(static_cast<int>(i), name_buffer)));
   }
   return true;
 }

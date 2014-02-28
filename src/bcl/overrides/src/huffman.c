@@ -506,5 +506,5 @@ unsigned int Huffman_Uncompress( unsigned char *in, unsigned char *out,
     *buf ++ = (unsigned char) node->Symbol;
   }
 
-  return buf - out;
+  return (unsigned int)(buf - out);
 }

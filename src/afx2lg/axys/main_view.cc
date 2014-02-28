@@ -42,7 +42,6 @@ MainView::MainView() : root_(this, &undo_manager_, true, true) {
   for (auto& r : grid) {
     for (auto& b : r.blocks) {
       addAndMakeVisible(&b, -1);
-      b.setLookAndFeel(&old_school_);
       b.setButtonText("block");
       b.setConnectedEdges(
           Button::ConnectedOnLeft | Button::ConnectedOnRight |

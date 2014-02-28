@@ -121,7 +121,8 @@ bool MidiIn::EnumerateDevices(DeviceInfos* devices) {
         kCFStringEncodingUTF8);
     CFRelease(name);
     devices->push_back(
-        shared_ptr<MidiDeviceInfo>(new MidiDeviceInfo(i, name_buffer)));
+        shared_ptr<MidiDeviceInfo>(
+            new MidiDeviceInfo(static_cast<int>(i), name_buffer)));
   }
   return true;
 }

@@ -910,6 +910,7 @@
           ],
           'ALWAYS_SEARCH_USER_PATHS': 'NO',
           #'ARCHS': '$(ARCHS_STANDARD_64_BIT)',
+          'ARCHS': '$(ARCHS_STANDARD_32_BIT)',
           'CLANG_CXX_LANGUAGE_STANDARD': 'gnu++0x',
           'CLANG_CXX_LIBRARY': 'libc++',
           'CLANG_ENABLE_OBJC_ARC': 'YES',

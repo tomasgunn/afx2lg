@@ -36,8 +36,6 @@ class MainView
   juce::UndoManager undo_manager_;
   TreeRootItem root_;
 
-  juce::OldSchoolLookAndFeel old_school_;
-
   struct GridRow {
     TextButton blocks[axefx::kMatrixColumns];
   };

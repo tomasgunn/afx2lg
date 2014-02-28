@@ -68,7 +68,7 @@ bool FirmwareData::Serialize(const SysExCallback& callback) const {
   // Write the firmware header;
   std::vector<uint8_t> data;
   data.resize(sizeof(FirmwareBeginHeader));
-  new (&data[0]) FirmwareBeginHeader(data_.size());
+  new (&data[0]) FirmwareBeginHeader(static_cast<uint32_t>(data_.size()));
   callback(data);
 
   // Write all the firmware data, 32 words at a time.

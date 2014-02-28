@@ -158,7 +158,8 @@ bool Preset::Finalize(const PresetChecksumHeader* header, size_t size,
         reinterpret_cast<uint8_t*>(&p[0]),
         reinterpret_cast<uint8_t*>(&decompressed[0]),
         compressed_bytes,
-        decompressed.size() * sizeof(decompressed[0]));
+        static_cast<unsigned int>(decompressed.size() *
+                                  sizeof(decompressed[0])));
 
     decompressed.resize(uncompressed_size / sizeof(decompressed[0]));
 
@@ -289,7 +290,7 @@ void Preset::FillParameters(PresetParameters* params) const {
     compressed_size = static_cast<uint16_t>(Huffman_Compress(
         reinterpret_cast<uint8_t*>(&p[matrix_begins]),
         reinterpret_cast<uint8_t*>(&compressed[0]),
-        compressed.size() * sizeof(p[0])));
+        static_cast<unsigned int>(compressed.size() * sizeof(p[0]))));
     compressed.resize(compressed_size / sizeof(compressed[0]));
 
     // Overwrite the parameters etc with the compressed equivalent.
