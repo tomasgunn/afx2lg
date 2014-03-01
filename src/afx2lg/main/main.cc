@@ -262,8 +262,11 @@ int main(int argc, char* argv[]) {
   size_t size = 0;
   if (ReadFileIntoBuffer(input_template, &buffer, &size)) {
     LgSetupFileWriter callback(presets);
-    lg_parser.ParseBuffer(&callback, reinterpret_cast<char*>(buffer.get()),
-        reinterpret_cast<char*>(buffer.get()) + size);
+    if (!lg_parser.ParseBuffer(&callback, reinterpret_cast<char*>(buffer.get()),
+            reinterpret_cast<char*>(buffer.get()) + size)) {
+      std::cerr << "No patches found in " << input_template << std::endl;
+      return -1;
+    }
   } else {
     std::cerr << "Failed to open " << input_template << std::endl;
   }

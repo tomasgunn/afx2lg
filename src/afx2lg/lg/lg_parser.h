@@ -27,7 +27,7 @@ class LgParser {
   LgParser();
   ~LgParser();
 
-  void ParseBuffer(LgParserCallback* callback, const char* begin,
+  bool ParseBuffer(LgParserCallback* callback, const char* begin,
       const char* end);
 
  protected:

@@ -24,7 +24,7 @@ LgParser::LgParser() {
 LgParser::~LgParser() {
 }
 
-void LgParser::ParseBuffer(LgParserCallback* callback,
+bool LgParser::ParseBuffer(LgParserCallback* callback,
                            const char* begin,
                            const char* end) {
   const char* pos = begin;
@@ -41,7 +41,7 @@ void LgParser::ParseBuffer(LgParserCallback* callback,
   if (patches_.empty()) {
     // TODO: Create a default patch, default bank and banklist.
     std::cerr << "No patches found in setup file.  Cannot continue.\n";
-    return;
+    return false;
   }
 
   // Begin quick-n-dirty O(n^2) algos. :-|
@@ -121,6 +121,8 @@ void LgParser::ParseBuffer(LgParserCallback* callback,
        it != entries_.end(); ++it) {
     (*it)->WriteLines(callback);
   }
+
+  return true;
 }
 
 void LgParser::ConnectBanksToBankLists() {

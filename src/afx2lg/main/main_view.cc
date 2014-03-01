@@ -139,8 +139,12 @@ void MainView::OnGenerateSetup() {
   }
 
   lg::LgParser lg_parser;
-  lg_parser.ParseBuffer(&writer, reinterpret_cast<char*>(mem.getData()),
-      reinterpret_cast<char*>(mem.getData()) + mem.getSize());
+  if (!lg_parser.ParseBuffer(&writer, reinterpret_cast<char*>(mem.getData()),
+          reinterpret_cast<char*>(mem.getData()) + mem.getSize())) {
+    ShowError("No patches found in the template file.\n" +
+        template_file_.getFullPathName());
+    return;
+  }
 
   NativeMessageBox::showMessageBoxAsync(AlertWindow::InfoIcon,
       "Done",

@@ -33,8 +33,9 @@ TEST(LittleGiant, BasicReadInputFile) {
                                      &file_size));
   MockCallback callback;
   LgParser parser;
-  parser.ParseBuffer(&callback, reinterpret_cast<const char*>(buffer.get()),
-                     reinterpret_cast<const char*>(buffer.get()) + file_size);
+  EXPECT_TRUE(parser.ParseBuffer(&callback,
+      reinterpret_cast<const char*>(buffer.get()),
+      reinterpret_cast<const char*>(buffer.get()) + file_size));
   // The output will basically be the same as input.txt, but
   // contains no presets.
   EXPECT_FALSE(callback.lines_.empty());
