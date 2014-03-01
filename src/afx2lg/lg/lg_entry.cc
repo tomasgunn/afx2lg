@@ -125,7 +125,7 @@ void Bank::SetBankList(const shared_ptr<BankList>& bank_list) {
 }
 
 void Bank::OnPatchNameChange(const std::string& old_name,
-                                       const std::string& new_name) {
+                             const std::string& new_name) {
   if (lines_.empty())
     return;
 

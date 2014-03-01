@@ -94,6 +94,7 @@ class UndoablePresetAction : public juce::UndoableAction {
       root_->addSubItem(p);
     presets_owned_ = false;
     refreshTree(root_, true);
+    DBG(__FUNCTION__ << " scrolling for item " << presets_[0]->id());
     root_->getOwnerView()->scrollToKeepItemVisible(presets_[0]);
   }
 
@@ -135,7 +136,8 @@ class UndoablePresetAction : public juce::UndoableAction {
 
 class UndoablePresetIdAction : public juce::UndoableAction {
  public:
-  UndoablePresetIdAction(TreeRootItem* root) : root_(root) {}
+  UndoablePresetIdAction(TreeRootItem* root, bool auto_scroll)
+      : root_(root), auto_scroll_(auto_scroll) {}
   virtual ~UndoablePresetIdAction() {}
 
   void AddPreset(PresetItem* p, int new_id) {
@@ -150,7 +152,10 @@ class UndoablePresetIdAction : public juce::UndoableAction {
     for (PresetIdChange* p : presets_)
       p->preset->set_id(switch_to_new ? p->new_id : p->original_id);
     refreshTree(root_, true);
-    root_->getOwnerView()->scrollToKeepItemVisible(presets_[0]->preset);
+    if (auto_scroll_) {
+      DBG(__FUNCTION__ << " scrolling for item " << presets_[0]->preset->id());
+      root_->getOwnerView()->scrollToKeepItemVisible(presets_[0]->preset);
+    }
   }
 
   virtual bool perform() {
@@ -181,6 +186,7 @@ class UndoablePresetIdAction : public juce::UndoableAction {
 
   TreeRootItem* root_;
   OwnedArray<PresetIdChange> presets_;
+  bool auto_scroll_;
 
   DISALLOW_COPY_AND_ASSIGN(UndoablePresetIdAction);
 };
@@ -300,13 +306,15 @@ void TreeRootItem::moveSelectionUp() {
   if (!allow_drag_drop_of_presets_)
     return;
 
-  unique_ptr<UndoablePresetIdAction> action(new UndoablePresetIdAction(this));
+  unique_ptr<UndoablePresetIdAction> action(
+      new UndoablePresetIdAction(this, true));
   int count = getNumSubItems();
   PresetItem* previous = NULL;
   for (int i = 0; i < count; ++i) {
     auto* p = getPreset(i);
     if (previous && p->isSelected() && !previous->isSelected()) {
       int new_id = previous->id();
+      jassert(new_id >= 0);
       do {
         action->AddPreset(p, new_id++);
         ++i;
@@ -328,7 +336,8 @@ void TreeRootItem::moveSelectionDown() {
   if (!allow_drag_drop_of_presets_)
     return;
 
-  unique_ptr<UndoablePresetIdAction> action(new UndoablePresetIdAction(this));
+  unique_ptr<UndoablePresetIdAction> action(
+      new UndoablePresetIdAction(this, true));
   int count = getNumSubItems();
   PresetItem* previous = NULL;
   for (int i = count - 1; i >= 0; --i) {
@@ -354,7 +363,7 @@ void TreeRootItem::moveSelectionDown() {
 
 bool TreeRootItem::isInterestedInDragSource(
     const juce::DragAndDropTarget::SourceDetails& source_details) {
-  DBG(__FUNCTION__);
+  // DBG(__FUNCTION__);
 
   if (!source_details.description.isInt() ||
       static_cast<int>(source_details.description) !=
@@ -368,48 +377,74 @@ bool TreeRootItem::isInterestedInDragSource(
 void TreeRootItem::itemDropped(
     const juce::DragAndDropTarget::SourceDetails& source_details,
     int insert_index) {
-  DBG(__FUNCTION__ << " " << insert_index);
+  DBG(__FUNCTION__ << " insert index:" << insert_index);
   jassert(source_details.description.isInt());
   jassert(static_cast<int>(source_details.description) ==
           PresetItem::kMagicPresetNumber);
 
   Array<PresetItem*> selected;
   PresetItem* preset = NULL;
+  int new_id = -1;
 
   unique_ptr<UndoablePresetIdAction> action(
-      new UndoablePresetIdAction(this));
+      new UndoablePresetIdAction(this, false));
 
-  // Process all selected items _before_ the insert point.
-  for (int i = 0; i < insert_index; ++i) {
-    preset = getPreset(i);
-    if (preset->isSelected())
-      selected.add(preset);
+  // Process items that are above the insert point first.
+  if (insert_index > 0) {
+    for (int i = 0; i < insert_index; ++i) {
+      preset = getPreset(i);
+      if (preset->isSelected()) {
+        selected.add(preset);
+      } else {
+        action->AddPreset(preset, preset->id() - selected.size());
+      }
+    }
 
-    if (selected.size())
-      action->AddPreset(preset, preset->id() - selected.size());
+    preset = getPreset(insert_index);
+    if (preset->id() == -1) {
+      for (auto* n : selected)
+        action->AddPreset(n, -1);
+    } else {
+      new_id = preset->id() - selected.size();
+      DBG(__FUNCTION__ << " first new id: " << new_id);
+      jassert(new_id >= 0);
+      for (auto* n : selected)
+        action->AddPreset(n, new_id++);
+    }
+    selected.clear();
   }
 
-  int new_id = preset ? preset->id() + 1 : 0;
-  for (auto* n : selected)
-    n->set_id(new_id++);
-  selected.clear();
+  jassert(!selected.size());
 
+  // Now go through the selected items below the insert point.
   int count = getNumSubItems();
-  jassert(count > 0);  // otherwise we shouldn't have reached here.
+  jassert(count > 0);
+  DBG(__FUNCTION__ << " item count: " << count);
+  if (insert_index < count - 1) {
+    for (int i = count - 1; i >= insert_index; --i) {
+      preset = getPreset(i);
+      if (preset->isSelected()) {
+        selected.add(preset);
+      } else {
+        action->AddPreset(preset, preset->id() + selected.size());
+      }
+    }
 
-  for (int i = count - 1; i >= insert_index; --i) {
-    preset = getPreset(i);
-    if (preset->isSelected())
-      selected.add(preset);
+    // Add the currently selected items in reverse order.
+    if (new_id == -1)
+      new_id = getPreset(insert_index)->id();
 
-    if (selected.size())
-      action->AddPreset(preset, preset->id() + selected.size());
+    if (new_id == -1) {
+      for (auto* n : selected)
+        action->AddPreset(n, -1);
+    } else {
+      new_id += selected.size();
+      for (auto* n : selected)
+        action->AddPreset(n, --new_id);
+    }
+
+    selected.clear();
   }
-
-  // Add the currently selected items in reverse order.
-  new_id += selected.size();
-  for (auto* n : selected)
-    action->AddPreset(n, --new_id);
 
   if (action->presetCount()) {
     undo_manager_->beginNewTransaction();

@@ -38,7 +38,7 @@ bool PresetItem::mightContainSubItems() {
 
 bool PresetItem::isInterestedInDragSource(
     const DragAndDropTarget::SourceDetails& source_details) {
-  DBG(__FUNCTION__);
+  // DBG(__FUNCTION__);
   return false;
 }
 
