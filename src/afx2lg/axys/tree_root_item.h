@@ -17,7 +17,8 @@ class TreeRootItem
   TreeRootItem(juce::FileDragAndDropTarget* delegate,
                juce::UndoManager* undo_manager,
                bool allow_drag_drop_of_presets,
-               bool allow_edit_buffer_presets);
+               bool allow_edit_buffer_presets,
+               bool update_id_on_move);
   virtual ~TreeRootItem();
 
   // Sorts presets using the default compare function (IDs).
@@ -56,6 +57,7 @@ class TreeRootItem
   juce::FileDragAndDropTarget* delegate_;
   bool allow_drag_drop_of_presets_;
   bool allow_edit_buffer_presets_;
+  bool update_id_on_move_;
 };
 
 #endif  // AXYS_TREE_ROOT_ITEM_H_

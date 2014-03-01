@@ -14,7 +14,7 @@ using std::placeholders::_1;
 using axefx::SysExParser;
 using namespace juce;
 
-MainView::MainView() : root_(this, &undo_manager_, true, true) {
+MainView::MainView() : root_(this, &undo_manager_, true, true, true) {
   tree_view_->setRootItem(&root_);
   tree_view_->setRootItemVisible(false);
   tree_view_->setMultiSelectEnabled(true);

@@ -45,11 +45,7 @@ class SetupFileWriter : public lg::LgParserCallback {
 };
 }  // namespace
 
-// TODO: Enable drag'n'drop in the root item:
-// root_(this, &undo_manager_, true, false).
-// Currently this is disabled since the drag operation changes the ProgIDs of
-// the presets that are moved, but we don't want that for Afx2Lg.
-MainView::MainView() : root_(this, &undo_manager_, false, false) {
+MainView::MainView() : root_(this, &undo_manager_, true, false, false) {
   tree_view_->setRootItem(&root_);
   tree_view_->setRootItemVisible(false);
   tree_view_->setMultiSelectEnabled(true);

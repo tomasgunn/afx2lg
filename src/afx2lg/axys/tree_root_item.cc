@@ -11,7 +11,7 @@ using axefx::SysExParser;
 using namespace juce;
 
 namespace {
-class ComparePresets {
+class ComparePresetsById {
  public:
   int compareElements(TreeViewItem* first, TreeViewItem* second) {
     auto p1 = static_cast<const PresetItem*>(first);
@@ -196,17 +196,22 @@ class UndoablePresetIdAction : public juce::UndoableAction {
 TreeRootItem::TreeRootItem(juce::FileDragAndDropTarget* delegate,
                            juce::UndoManager* undo_manager,
                            bool allow_drag_drop_of_presets,
-                           bool allow_edit_buffer_presets)
+                           bool allow_edit_buffer_presets,
+                           bool update_id_on_move)
     : undo_manager_(undo_manager),
       delegate_(delegate),
       allow_drag_drop_of_presets_(allow_drag_drop_of_presets),
-      allow_edit_buffer_presets_(allow_edit_buffer_presets) {
+      allow_edit_buffer_presets_(allow_edit_buffer_presets),
+      update_id_on_move_(update_id_on_move) {
 }
 
 TreeRootItem::~TreeRootItem() {}
 
 void TreeRootItem::sortPresets() {
-  ComparePresets comparator;
+  if (!update_id_on_move_)
+    return;
+
+  ComparePresetsById comparator;
   sortSubItems(comparator);
 }
 
@@ -306,6 +311,11 @@ void TreeRootItem::moveSelectionUp() {
   if (!allow_drag_drop_of_presets_)
     return;
 
+  if (!update_id_on_move_) {
+    // TODO: Handle this.
+    return;
+  }
+
   unique_ptr<UndoablePresetIdAction> action(
       new UndoablePresetIdAction(this, true));
   int count = getNumSubItems();
@@ -335,6 +345,11 @@ void TreeRootItem::moveSelectionUp() {
 void TreeRootItem::moveSelectionDown() {
   if (!allow_drag_drop_of_presets_)
     return;
+
+  if (!update_id_on_move_) {
+    // TODO: Handle this.
+    return;
+  }
 
   unique_ptr<UndoablePresetIdAction> action(
       new UndoablePresetIdAction(this, true));
@@ -382,8 +397,34 @@ void TreeRootItem::itemDropped(
   jassert(static_cast<int>(source_details.description) ==
           PresetItem::kMagicPresetNumber);
 
-  Array<PresetItem*> selected;
   PresetItem* preset = NULL;
+
+  if (!update_id_on_move_) {
+    // TODO: Support undo in this case.
+    // Refactor this code.
+
+    int count = getNumSubItems();
+    for (int i = insert_index; i < count; ++i) {
+      preset = getPreset(i);
+      if (preset->isSelected()) {
+        removeSubItem(i, false);
+        addSubItem(preset, insert_index);
+      }
+    }
+
+    for (int i = insert_index - 1; i >= 0; --i) {
+      preset = getPreset(i);
+      if (preset->isSelected()) {
+        removeSubItem(i, false);
+        addSubItem(preset, insert_index);
+      }
+    }
+
+    refreshTree(this, false);
+    return;
+  }
+
+  Array<PresetItem*> selected;
   int new_id = -1;
 
   unique_ptr<UndoablePresetIdAction> action(
