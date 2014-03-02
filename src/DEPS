@@ -8,10 +8,10 @@ vars = {
 
 deps = {
   "src/gtest": "http://googletest.googlecode.com/svn/trunk",
-  "src/jsoncpp": "https://jsoncpp.svn.sourceforge.net/svnroot/jsoncpp/trunk/jsoncpp",
+  "src/jsoncpp": "https://svn.code.sf.net/p/jsoncpp/code/trunk/jsoncpp",
   "src/JUCE": "git://github.com/julianstorer/JUCE.git",
   "src/tools/gyp": "http://gyp.googlecode.com/svn/trunk",
-  "src/bcl/source": "https://bcl.svn.sourceforge.net/svnroot/bcl/trunk",
+  "src/bcl/source": "https://svn.code.sf.net/p/bcl/code/trunk",
 }
 
 deps_os = {
