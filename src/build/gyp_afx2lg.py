@@ -11,9 +11,7 @@ import sys
 
 # Get the GYP source into the path before importing gyp.
 script_dir = os.path.dirname(os.path.realpath(__file__))
-print "%s" % script_dir
 src_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
-print "%s" % src_dir
 sys.path.insert(0, os.path.join(src_dir, 'tools', 'gyp', 'pylib'))
 import gyp
 
