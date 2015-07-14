@@ -21,7 +21,7 @@ bool IsVersionSupported(uint16_t version) {
   // Versions 0x01nn seem to be using the same format, so we optimistically
   // allow them to pass.  We also assume that all version with major version
   // 0x02 will have the same format.
-  return version >= 0x0100 && version < 0x0300;
+  return version >= 0x0100 && version < 0x0310;
 }
 
 }  // namespace
