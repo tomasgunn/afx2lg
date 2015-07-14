@@ -1,15 +1,14 @@
 .DS_Store
 .gclient
 .gclient_entries
-_bad_scm/
 src/.DS_Store
-src/JUCE/
-src/README.md
 src/afx2lg/all.xcodeproj/
 src/afx2lg/axe_backup/axe_backup.xcodeproj/
 src/afx2lg/axe_http/axe_http.xcodeproj/
 src/afx2lg/axe_loader/axe_loader.xcodeproj/
 src/afx2lg/axefx/axefx.xcodeproj/
+src/afx2lg/axefx/axefx_ii_ids.cc
+src/afx2lg/axefx/axefx_ii_ids.h
 src/afx2lg/axys/axys.xcodeproj/
 src/afx2lg/common/base.xcodeproj/
 src/afx2lg/gtest/gtest.xcodeproj/
@@ -23,4 +22,7 @@ src/bcl/bcl.xcodeproj/
 src/bcl/source/
 src/gtest/
 src/jsoncpp/
+src/JUCE/
+src/README.md
 src/tools/
+src/xcodebuild/
